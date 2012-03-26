@@ -138,7 +138,8 @@ class LevelGen:
 						
 					_center = len(_room[0])/2
 					self.landmarks.append((_room[_center]))
-						
+			
+			for 
 	
 	def out(self):
 		for y in range(self.size[0]):
