@@ -7,7 +7,7 @@ class LevelGen:
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 10
+		self.max_rooms = 11
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
@@ -141,19 +141,33 @@ class LevelGen:
 				else:
 					_found = False
 			
-			for l in range(len(self.landmarks)):
-				if not l: continue
+		_done = []
+		for l1 in self.landmarks:
+			_lowest = {'where':None,'dist':9000}
+			for l2 in self.landmarks:
+				if l1 == l2 or l2 in _done: continue
 				
-				_line = draw.draw_line(self.landmarks[l-1],self.landmarks[l])
+				_dist = abs(l2[0]-l1[0])+abs(l2[1]-l1[1])
 				
-				for pos in _line:
-					if not self.map[pos[0]][pos[1]]:
-						self.map[pos[0]][pos[1]] = 2
-						if not pos in self.walking_space:
-							self.walking_space.append(pos)
-						
-						if pos in self.walls:
-							self.walls.remove(pos)
+				if _dist<_lowest['dist']:
+					_lowest['dist'] = _dist
+					_lowest['where'] = l2
+			
+			if not _lowest['where']: break
+			
+			_line = draw.draw_line(l1,_lowest['where'])
+			
+			for pos in _line:
+				if not self.map[pos[0]][pos[1]]:
+					self.map[pos[0]][pos[1]] = 2
+					if not pos in self.walking_space:
+						self.walking_space.append(pos)
+					
+					if pos in self.walls:
+						self.walls.remove(pos)
+				
+			_done.append(l1)
+			#_done.append(l2)
 				
 	def out(self):
 		for y in range(self.size[1]):
@@ -163,3 +177,7 @@ class LevelGen:
 				else: print _tile,
 			
 			print
+
+#l = LevelGen()
+#l.generate()
+#l.out()

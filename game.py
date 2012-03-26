@@ -13,7 +13,6 @@ var.view.autoupdate = False
 
 _m = levelgen.LevelGen()
 _m.generate()
-_m.out()
 
 tile_map = {'0':'#',
 	'1':' ',
