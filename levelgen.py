@@ -1,12 +1,13 @@
-import random
+import draw
+import random, time
 
 class LevelGen:
-	def __init__(self,size=(30,30)):
+	def __init__(self,size=(60,40)):
 		self.size = size
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 5
+		self.max_rooms = 10
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
@@ -22,10 +23,6 @@ class LevelGen:
 			self.map.append(_y)
 		
 	def generate(self, entrance=(4,4)):
-		#Some level generators place rooms randomly
-		#then connect them with tunnels.
-		#This works, but I feel the end result
-		#is usually very boring.
 		#We'll be generating the level "in-line",
 		#which means the entire level in generated in
 		#order. (Room, tunnel, room, tunnel.)
@@ -105,20 +102,21 @@ class LevelGen:
 			#we want to randomly select a position and compare
 			#it to our landmark list...
 			_found = False
+			_room_size = (random.randint(3,8),random.randint(3,8))
 			
 			while not _found:
 				_found = True
 				_room = []
 				_pos = random.choice(self.walls)
 				
-				for x in range(-3,2):
+				for x in range(-_room_size[0]/2,_room_size[0]/2):
 					_x = _pos[0]+x
 					
 					#Save us some time by checking to see if we're
 					#outside the map...
 					if 1>_x or _x>=self.size[0]-1: _found = False;break
 					
-					for y in range(-3,2):
+					for y in range(-_room_size[1]/2,_room_size[1]/2):
 						_y = _pos[1]+y
 						
 						if 1<_y<self.size[1]-2:
@@ -130,24 +128,38 @@ class LevelGen:
 					
 					if not _found: break
 				
-				if _found:
+				if _found and len(_room)>=9:
 					for pos in _room:
 						self.map[pos[0]][pos[1]] = 1
 						self.walking_space.append(pos)
-						self.walls.remove(pos)
 						
-					_center = len(_room[0])/2
+						if pos in self.walls:
+							self.walls.remove(pos)
+						
+					_center = random.randint(0,len(_room[0]))
 					self.landmarks.append((_room[_center]))
+				else:
+					_found = False
 			
-			for 
-	
+			for l in range(len(self.landmarks)):
+				if not l: continue
+				
+				_line = draw.draw_line(self.landmarks[l-1],self.landmarks[l])
+				
+				for pos in _line:
+					if not self.map[pos[0]][pos[1]]:
+						self.map[pos[0]][pos[1]] = 2
+						if not pos in self.walking_space:
+							self.walking_space.append(pos)
+						
+						if pos in self.walls:
+							self.walls.remove(pos)
+				
 	def out(self):
-		for y in range(self.size[0]):
-			for x in range(self.size[1]):
-				print self.map[x][y],
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				_tile = self.map[x][y]
+				if not _tile: print ' ',
+				else: print _tile,
 			
 			print
-
-_m = LevelGen()
-_m.generate()
-_m.out()
