@@ -38,6 +38,7 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['color'] = color
 		self.lmap[pos[0]][pos[1]]['life'] = life
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
+		self.lmap[pos[0]][pos[1]]['children'] =[]
 	
 	def dofov(self,pos,x,y):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
@@ -71,22 +72,22 @@ class LevelGen:
 	def tick_lights(self):
 		for _l in self.lights:
 			light = self.lmap[_l[0]][_l[1]]
-			
-			if light['source']:
-				for _pos in draw.draw_circle(_l,light['brightness']):
-					if not _pos in self.lights:
-						self.lights.append(_pos)
-						self.lmap[_pos[0]][_pos[1]]['color'] = light['color']
-						self.lmap[_pos[0]][_pos[1]]['brightness'] = light['brightness']
-						self.lmap[_pos[0]][_pos[1]]['life'] = light['life']-1
-			
+
 			if self.lmap[_l[0]][_l[1]]['life']<=0:
 				self.lmap[_l[0]][_l[1]]['source'] = False
 				self.lmap[_l[0]][_l[1]]['color'] = (0,0,0)
 				self.lmap[_l[0]][_l[1]]['brightness'] = 0
 				self.lights.remove(_l)
+				continue
 			
 			self.lmap[_l[0]][_l[1]]['life']-=1
+			
+			if light['source']:
+				light['children'] = []
+				
+				for _pos in draw.draw_circle(_l,light['brightness']):
+					if not (_pos) in light['children']: 
+						light['children'].append(_pos)
 	
 	def decompose(self,times):
 		for i in range(times):
