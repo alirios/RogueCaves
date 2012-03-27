@@ -31,11 +31,12 @@ class LevelGen:
 			self.map.append(_y)
 			self.lmap.append(_l)
 		
-	def add_light(self,pos,color,brightness):
+	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
 		
 		self.lmap[pos[0]][pos[1]]['source'] = True
 		self.lmap[pos[0]][pos[1]]['color'] = color
+		self.lmap[pos[0]][pos[1]]['life'] = life
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
 	
 	def dofov(self,pos,x,y):
@@ -73,18 +74,19 @@ class LevelGen:
 			
 			if light['source']:
 				for _pos in draw.draw_circle(_l,light['brightness']):
-					self.lmap[_pos[0]][_pos[1]]['color'] = light['color']
-					self.lmap[_pos[0]][_pos[1]]['brightness'] = 2
-					
 					if not _pos in self.lights:
 						self.lights.append(_pos)
+						self.lmap[_pos[0]][_pos[1]]['color'] = light['color']
+						self.lmap[_pos[0]][_pos[1]]['brightness'] = light['brightness']
+						self.lmap[_pos[0]][_pos[1]]['life'] = light['life']-1
 			
-			if self.lmap[_l[0]][_l[1]]['brightness']<=0:
+			if self.lmap[_l[0]][_l[1]]['life']<=0:
 				self.lmap[_l[0]][_l[1]]['source'] = False
 				self.lmap[_l[0]][_l[1]]['color'] = (0,0,0)
+				self.lmap[_l[0]][_l[1]]['brightness'] = 0
 				self.lights.remove(_l)
 			
-			self.lmap[_l[0]][_l[1]]['brightness']-=1
+			self.lmap[_l[0]][_l[1]]['life']-=1
 	
 	def decompose(self,times):
 		for i in range(times):

@@ -39,7 +39,7 @@ var.player = life.human(player=True)
 var.player.pos = [_m.walking_space[0][0],_m.walking_space[0][1]]#[4,4]
 var.player.level = _m
 
-_m.add_light((var.player.pos[0],var.player.pos[1]),(128,0,0),10)
+_m.add_light((var.player.pos[0],var.player.pos[1]),(128,0,0),3,10)
 
 def draw_screen():	
 	region = (0,0,var.window_size[0],var.window_size[1])
