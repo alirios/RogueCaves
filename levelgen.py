@@ -7,7 +7,7 @@ class LevelGen:
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 16
+		self.max_rooms = 50
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []

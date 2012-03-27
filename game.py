@@ -31,7 +31,7 @@ var.view.autoupdate = False
 #Generate level
 _m = levelgen.LevelGen()
 _m.generate(entrance=(random.randint(4,_m.size[0]-4),random.randint(4,_m.size[1]-4)))
-_m.decompose(4)
+_m.decompose(6)
 
 #People
 var.player = life.human(player=True)
@@ -52,6 +52,9 @@ def draw_screen():
 			
 			if x>=_m.size[0]-1: x=_m.size[0]-1
 			if y>=_m.size[1]-1: y=_m.size[1]-1
+			if x<0: x=0
+			if y<0: y=0
+			
 			
 			try:
 				_tile = tile_map[str(_m.map[x][y])]
