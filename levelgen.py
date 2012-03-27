@@ -2,7 +2,7 @@ import draw, copy, math
 import random, time
 
 class LevelGen:
-	def __init__(self,size=(120,80)):
+	def __init__(self,size=(80,80)):
 		self.size = size
 		
 		self.map = []
@@ -30,6 +30,7 @@ class LevelGen:
 			self.fmap.append([0] * self.size[1])
 		
 	def dofov(self,pos,x,y):
+		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
 		#I translated it to Python. You are welcome to use this code instead of writing your own :)
 		i = 0
 		ox = 0
@@ -46,9 +47,7 @@ class LevelGen:
 			oy+=y;
 		
 	def light(self,pos):
-		self.lmap = []
-		for x in range(0,self.size[0]):
-			self.lmap.append([0] * self.size[1])
+		self.lmap = [[0] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0
@@ -226,7 +225,6 @@ class LevelGen:
 						self.walls.remove(pos)
 				
 			_done.append(l1)
-			#_done.append(l2)
 				
 	def out(self):
 		for y in range(self.size[1]):

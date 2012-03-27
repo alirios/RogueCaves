@@ -1,10 +1,11 @@
 import levelgen, life
-import pygcurse, pygame, random, var, sys
+import pygcurse, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
 
 #Setup stuff...
 var.clock = pygame.time.Clock()
+var.window_size = (84,32)
 var.life = []
 var.input = {'up':False,
 	'down':False}
@@ -21,7 +22,7 @@ pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
 _font = pygame.font.Font('ProggyClean.ttf', 16)
 
 #Surfaces...
-var.window = pygcurse.PygcurseWindow(76, 46,font=_font,caption='QuickRogue')
+var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='QuickRogue')
 var.view = pygcurse.PygcurseSurface(100, 100,font=_font,windowsurface=var.window._windowsurface)
 
 #Stuff...
@@ -38,38 +39,42 @@ var.player = life.human(player=True)
 var.player.pos = [_m.walking_space[0][0],_m.walking_space[0][1]]#[4,4]
 var.player.level = _m
 
-def draw_screen():
-	var.view.setscreencolors('white','black',clear=True)
+def draw_screen():	
+	region = (0,0,var.window_size[0],var.window_size[1])
+	var.view.fill('black','black',region=region)
+	var.view.setbrightness(0, region=region)
 	
 	_m.light(var.player.pos)
 	
-	for __x in range(var.player.pos[0]-38,var.player.pos[0]+38):
-		for __y in range(var.player.pos[1]-23,var.player.pos[1]+23):
-			x = int(__x)
-			y = int(__y)
-			_x = int(__x)-(var.player.pos[0]-38)
-			_y = int(__y)-(var.player.pos[1]-23)
+	for __x in range(var.player.pos[0]-(var.window_size[0]/2),var.player.pos[0]+(var.window_size[0]/2)):
+		x = __x
+		_x = __x-(var.player.pos[0]-(var.window_size[0]/2))
+		
+		if x>=_m.size[0]-1: x=_m.size[0]-1
+		if x<0: x=0
+		
+		for __y in range(var.player.pos[1]-(var.window_size[1]/2),var.player.pos[1]+(var.window_size[1]/2)):
+			y = __y
+			_y = __y-(var.player.pos[1]-(var.window_size[1]/2))
 			
-			if x>=_m.size[0]-1: x=_m.size[0]-1
 			if y>=_m.size[1]-1: y=_m.size[1]-1
-			if x<0: x=0
 			if y<0: y=0
 			
-			
-			try:
-				_tile = tile_map[str(_m.map[x][y])]
-			except:
-				print x,y
+			_tile = None
 			
 			for life in var.life:
 				if life.pos == [x,y]:
 					_tile = life.icon
 			
 			if _m.lmap[x][y]:
+				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='darkgray')
 			elif _m.fmap[x][y]:
+				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='altgray')
 				var.view.darken(100,(_x,_y,1,1))
+			else:
+				var.view.putchar(' ',x=_x,y=_y,fgcolor='black',bgcolor='black')
 	
 	var.view.update()
 
@@ -103,6 +108,6 @@ def get_input():
 				var.player.walk(key)
 				draw_screen()
 	
-	var.clock.tick(12)
+	var.clock.tick(30)
 				
 while 1: get_input()
