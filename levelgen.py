@@ -12,23 +12,32 @@ class LevelGen:
 		self.walking_space = []
 		self.walls = []
 		
-		#Lighting...
-		self.fmap = []
+		#Lights and maps...
+		self.lights = []
+		self.vmap = []
+		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
 		self.lmap = []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in range(self.size[0]):
 			_y = []
+			_l = []
 			
 			for y in range(self.size[1]):
 				_y.append(0)
+				_l.append({'source':False,'color':(0,0,0),'brightness':0})
 				self.walls.append((x,y))
 			
 			self.map.append(_y)
+			self.lmap.append(_l)
 		
-		for x in range(0,self.size[0]):
-			self.fmap.append([0] * self.size[1])
+	def add_light(self,pos,color,brightness):
+		self.lights.append(pos)
 		
+		self.lmap[pos[0]][pos[1]]['source'] = True
+		self.lmap[pos[0]][pos[1]]['color'] = color
+		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
+	
 	def dofov(self,pos,x,y):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
 		#I translated it to Python. You are welcome to use this code instead of writing your own :)
@@ -41,13 +50,13 @@ class LevelGen:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
 			self.fmap[int(ox)][int(oy)]=1
-			self.lmap[int(ox)][int(oy)]=1
+			self.vmap[int(ox)][int(oy)]=1
 			if self.map[int(ox)][int(oy)] == 0: return
 			ox+=x;
 			oy+=y;
 		
 	def light(self,pos):
-		self.lmap = [[0] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[0] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0
@@ -57,6 +66,25 @@ class LevelGen:
 			y=math.sin(i*0.01745);
 			self.dofov(pos,x,y);
 			i+=1
+	
+	def tick_lights(self):
+		for _l in self.lights:
+			light = self.lmap[_l[0]][_l[1]]
+			
+			if light['source']:
+				for _pos in draw.draw_circle(_l,light['brightness']):
+					self.lmap[_pos[0]][_pos[1]]['color'] = light['color']
+					self.lmap[_pos[0]][_pos[1]]['brightness'] = 2
+					
+					if not _pos in self.lights:
+						self.lights.append(_pos)
+			
+			if self.lmap[_l[0]][_l[1]]['brightness']<=0:
+				self.lmap[_l[0]][_l[1]]['source'] = False
+				self.lmap[_l[0]][_l[1]]['color'] = (0,0,0)
+				self.lights.remove(_l)
+			
+			self.lmap[_l[0]][_l[1]]['brightness']-=1
 	
 	def decompose(self,times):
 		for i in range(times):

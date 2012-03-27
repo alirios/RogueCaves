@@ -32,12 +32,14 @@ var.view.autoupdate = False
 #Generate level
 _m = levelgen.LevelGen()
 _m.generate(entrance=(random.randint(4,_m.size[0]-4),random.randint(4,_m.size[1]-4)))
-_m.decompose(6)
+_m.decompose(2)
 
 #People
 var.player = life.human(player=True)
 var.player.pos = [_m.walking_space[0][0],_m.walking_space[0][1]]#[4,4]
 var.player.level = _m
+
+_m.add_light((var.player.pos[0],var.player.pos[1]),(128,0,0),10)
 
 def draw_screen():	
 	region = (0,0,var.window_size[0],var.window_size[1])
@@ -45,6 +47,7 @@ def draw_screen():
 	var.view.setbrightness(0, region=region)
 	
 	_m.light(var.player.pos)
+	_m.tick_lights()
 	
 	for __x in range(var.player.pos[0]-(var.window_size[0]/2),var.player.pos[0]+(var.window_size[0]/2)):
 		x = __x
@@ -66,9 +69,13 @@ def draw_screen():
 				if life.pos == [x,y]:
 					_tile = life.icon
 			
-			if _m.lmap[x][y]:
+			if _m.vmap[x][y]:
 				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='darkgray')
+				
+				if _m.lmap[x][y]['brightness']:
+					var.view.settint(_m.lmap[x][y]['color'][0],_m.lmap[x][y]['color'][1],\
+						_m.lmap[x][y]['color'][2],(_x,_y,1,1))
 			elif _m.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='altgray')
