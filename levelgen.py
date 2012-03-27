@@ -2,12 +2,12 @@ import draw, copy, math
 import random, time
 
 class LevelGen:
-	def __init__(self,size=(60,40)):
+	def __init__(self,size=(120,80)):
 		self.size = size
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 13
+		self.max_rooms = 16
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
@@ -36,7 +36,7 @@ class LevelGen:
 		oy = 0
 		ox = pos[0]+0.5
 		oy = pos[1]+0.5
-		while i<16:
+		while i<10:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
 			self.fmap[int(ox)][int(oy)]=1
@@ -161,7 +161,7 @@ class LevelGen:
 			#we want to randomly select a position and compare
 			#it to our landmark list...
 			_found = False
-			_room_size = (random.randint(3,8),random.randint(3,8))
+			_room_size = (random.randint(3,6),random.randint(3,6))
 			
 			while not _found:
 				_found = True
@@ -236,7 +236,3 @@ class LevelGen:
 				else: print _tile,
 			
 			print
-
-#l = LevelGen()
-#l.generate()
-#l.out()

@@ -21,8 +21,8 @@ pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
 _font = pygame.font.Font('ProggyClean.ttf', 16)
 
 #Surfaces...
-var.window = pygcurse.PygcurseWindow(75, 46,font=_font,caption='QuickRogue')
-var.view = pygcurse.PygcurseSurface(72, 40,font=_font,windowsurface=var.window._windowsurface)
+var.window = pygcurse.PygcurseWindow(76, 46,font=_font,caption='QuickRogue')
+var.view = pygcurse.PygcurseSurface(100, 100,font=_font,windowsurface=var.window._windowsurface)
 
 #Stuff...
 var.window.autoupdate = False
@@ -30,8 +30,8 @@ var.view.autoupdate = False
 
 #Generate level
 _m = levelgen.LevelGen()
-_m.generate(entrance=(random.randint(4,56),random.randint(4,36)))
-_m.decompose(6)
+_m.generate(entrance=(random.randint(4,_m.size[0]-4),random.randint(4,_m.size[1]-4)))
+_m.decompose(4)
 
 #People
 var.player = life.human(player=True)
@@ -43,20 +43,30 @@ def draw_screen():
 	
 	_m.light(var.player.pos)
 	
-	for x in range(_m.size[0]):
-		for y in range(_m.size[1]):
+	for __x in range(var.player.pos[0]-38,var.player.pos[0]+38):
+		for __y in range(var.player.pos[1]-23,var.player.pos[1]+23):
+			x = int(__x)
+			y = int(__y)
+			_x = int(__x)-(var.player.pos[0]-38)
+			_y = int(__y)-(var.player.pos[1]-23)
 			
-			_tile = tile_map[str(_m.map[x][y])]
+			if x>=_m.size[0]-1: x=_m.size[0]-1
+			if y>=_m.size[1]-1: y=_m.size[1]-1
+			
+			try:
+				_tile = tile_map[str(_m.map[x][y])]
+			except:
+				print x,y
 			
 			for life in var.life:
 				if life.pos == [x,y]:
 					_tile = life.icon
 			
 			if _m.lmap[x][y]:
-				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'],bgcolor='darkgray')
+				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='darkgray')
 			elif _m.fmap[x][y]:
-				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'],bgcolor='altgray')
-				var.view.darken(100,(x,y,1,1))
+				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='altgray')
+				var.view.darken(100,(_x,_y,1,1))
 	
 	var.view.update()
 
