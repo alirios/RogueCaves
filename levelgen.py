@@ -1,4 +1,4 @@
-import draw
+import draw, copy, math
 import random, time
 
 class LevelGen:
@@ -7,10 +7,14 @@ class LevelGen:
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 11
+		self.max_rooms = 13
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
+		
+		#Lighting...
+		self.fmap = []
+		self.lmap = []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in range(self.size[0]):
@@ -22,6 +26,61 @@ class LevelGen:
 			
 			self.map.append(_y)
 		
+		for x in range(0,self.size[0]):
+			self.fmap.append([0] * self.size[1])
+		
+	def dofov(self,pos,x,y):
+		#I translated it to Python. You are welcome to use this code instead of writing your own :)
+		i = 0
+		ox = 0
+		oy = 0
+		ox = pos[0]+0.5
+		oy = pos[1]+0.5
+		while i<16:
+			i+=1
+			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
+			self.fmap[int(ox)][int(oy)]=1
+			self.lmap[int(ox)][int(oy)]=1
+			if self.map[int(ox)][int(oy)] == 0: return
+			ox+=x;
+			oy+=y;
+		
+	def light(self,pos):
+		self.lmap = []
+		for x in range(0,self.size[0]):
+			self.lmap.append([0] * self.size[1])
+		
+		x = 0
+		y = 0
+		i = 0
+		while i<360:
+			x=math.cos(i*0.01745);
+			y=math.sin(i*0.01745);
+			self.dofov(pos,x,y);
+			i+=1
+	
+	def decompose(self,times):
+		for i in range(times):
+			_map = copy.deepcopy(self.map)
+			
+			for y in range(self.size[1]-1):
+				for x in range(self.size[0]-1):
+					_count = 0
+					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						_x = x+pos[0]
+						_y = y+pos[1]
+						
+						if 0>_x<self.size[0]-1: continue
+						if 0>_y<self.size[1]-1: continue
+						#print _x,_y
+						if self.map[_x][_y]:
+							_count+=1
+					
+					if _count>=4:
+						_map[x][y]=1
+		
+			self.map = _map
+	
 	def generate(self, entrance=(4,4)):
 		#We'll be generating the level "in-line",
 		#which means the entire level in generated in
