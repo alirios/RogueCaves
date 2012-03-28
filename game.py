@@ -5,7 +5,7 @@ pygame.font.init()
 
 #Setup stuff...
 var.clock = pygame.time.Clock()
-var.window_size = (84,32)
+var.window_size = (142,44)
 var.life = []
 var.history = []
 var.input = {'up':False,
@@ -64,7 +64,7 @@ def draw_screen():
 	_m.light(var.player.pos)
 	_m.tick_lights()
 	
-	for __x in range(var.player.pos[0]-(var.window_size[0]/2),var.player.pos[0]+(var.window_size[0]/2)):
+	for __x in range(var.player.pos[0]-(var.window_size[0]/2),var.player.pos[0]+(var.window_size[0]/2)-2):
 		x = __x
 		_x = __x-(var.player.pos[0]-(var.window_size[0]/2))
 		
@@ -73,10 +73,10 @@ def draw_screen():
 		
 		for __y in range(var.player.pos[1]-(var.window_size[1]/2),var.player.pos[1]+(var.window_size[1]/2)):
 			y = __y
-			_y = __y-(var.player.pos[1]-(var.window_size[1]/2))
 			
 			if y>=_m.size[1]-1: y=_m.size[1]-1
-			if y<0: y=0
+			if y<0: y=0;
+			_y = __y-(var.player.pos[1]-(var.window_size[1]/2))
 			
 			_tile = None
 			
