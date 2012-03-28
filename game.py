@@ -33,9 +33,9 @@ var.view.autoupdate = False
 var.log.autoupdate = False
 
 #Generate level
-_m = levelgen.LevelGen()
+_m = levelgen.LevelGen(rooms=20,size=(60,40),diagtunnels=False)
 _m.generate(entrance=(random.randint(4,_m.size[0]-4),random.randint(4,_m.size[1]-4)))
-_m.decompose(1)
+_m.decompose(2,edgesonly=False)
 
 #People
 var.player = life.human(player=True)

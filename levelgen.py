@@ -2,12 +2,14 @@ import draw, copy, math
 import random, time
 
 class LevelGen:
-	def __init__(self,size=(80,80)):
+	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True):
 		self.size = size
 		
 		self.map = []
 		self.rooms = []
-		self.max_rooms = 50
+		self.max_rooms = rooms
+		self.room_size = room_size
+		self.diagtunnels = diagtunnels
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
@@ -89,12 +91,13 @@ class LevelGen:
 					if not (_pos) in light['children']: 
 						light['children'].append(_pos)
 	
-	def decompose(self,times):
+	def decompose(self,times,edgesonly=True):
 		for i in range(times):
 			_map = copy.deepcopy(self.map)
 			
 			for y in range(self.size[1]-1):
 				for x in range(self.size[0]-1):
+					if self.map[x][y] and edgesonly: continue
 					_count = 0
 					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 						_x = x+pos[0]
@@ -191,7 +194,8 @@ class LevelGen:
 			#we want to randomly select a position and compare
 			#it to our landmark list...
 			_found = False
-			_room_size = (random.randint(3,6),random.randint(3,6))
+			_room_size = (random.randint(self.room_size[0],self.room_size[1]),\
+				random.randint(self.room_size[0],self.room_size[1]))
 			
 			while not _found:
 				_found = True
@@ -244,16 +248,38 @@ class LevelGen:
 			
 			if not _lowest['where']: break
 			
-			_line = draw.draw_line(l1,_lowest['where'])
+			if random.randint(0,1) and self.diagtunnels:
+				print 'diag'
+				_diag = True
+				_line = draw.draw_diag_line(l1,_lowest['where'])
+			else:
+				print 'nondiag'
+				_diag = False
+				_line = draw.draw_line(l1,_lowest['where'])
 			
 			for pos in _line:
 				if not self.map[pos[0]][pos[1]]:
-					self.map[pos[0]][pos[1]] = 2
-					if not pos in self.walking_space:
-						self.walking_space.append(pos)
-					
-					if pos in self.walls:
-						self.walls.remove(pos)
+					if _diag:
+						for _pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),(-1,1),(0,1),(1,1)]:
+							__pos = (pos[0]+_pos[0],pos[1]+_pos[1])
+							
+							if __pos[0]<0 or __pos[0]>=self.size[0]: continue
+							if __pos[1]<0 or __pos[1]>=self.size[1]: continue
+							
+							self.map[__pos[0]][__pos[1]] = 2
+							
+							if not __pos in self.walking_space:
+								self.walking_space.append(__pos)
+							
+							if __pos in self.walls:
+								self.walls.remove(__pos)
+					else:
+						self.map[pos[0]][pos[1]] = 2
+						if not pos in self.walking_space:
+							self.walking_space.append(pos)
+						
+						if pos in self.walls:
+							self.walls.remove(pos)
 				
 			_done.append(l1)
 				
