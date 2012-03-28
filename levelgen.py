@@ -249,11 +249,9 @@ class LevelGen:
 			if not _lowest['where']: break
 			
 			if random.randint(0,1) and self.diagtunnels:
-				print 'diag'
 				_diag = True
 				_line = draw.draw_diag_line(l1,_lowest['where'])
 			else:
-				print 'nondiag'
 				_diag = False
 				_line = draw.draw_line(l1,_lowest['where'])
 			
