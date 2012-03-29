@@ -98,12 +98,12 @@ def draw_screen():
 							#var.view.settint(_m.lmap[light[0]][light[1]]['color'][0],_m.lmap[light[0]][light[1]]['color'][1],\
 							#	_m.lmap[light[0]][light[1]]['color'][2],(_x,_y,1,1))
 							var.view.lighten(50,(_x,_y,1,1))
-			elif _m.fmap[x][y]>=0:
+			elif _m.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=_x,y=_y,fgcolor=_tile['color'],bgcolor='altgray')
 				var.view.darken(100,(_x,_y,1,1))
-			#else:
-			#	var.view.putchar(' ',x=_x,y=_y,fgcolor='black',bgcolor='black')
+			else:
+				var.view.putchar(' ',x=_x,y=_y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(66,var.window_size[1]-6,None,None))
 	var.log.putchars('%s the %s %s' % (var.player.name,var.player.alignment,var.player.race),\
