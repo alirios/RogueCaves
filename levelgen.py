@@ -17,9 +17,9 @@ class LevelGen:
 		
 		#Lights and maps...
 		self.lights = []
-		self.vmap = []
-		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
+		self.fmap = []
 		self.lmap = []
+		self.fov = []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in range(self.size[0]):
@@ -43,7 +43,7 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
 		self.lmap[pos[0]][pos[1]]['children'] =[]
 	
-	def dofov(self,pos,x,y):
+	def dofov(self,pos,x,y,dist,efov=False):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
 		#I translated it to Python. You are welcome to use this code instead of writing your own :)
 		i = 0
@@ -51,25 +51,27 @@ class LevelGen:
 		oy = 0
 		ox = pos[0]+0.5
 		oy = pos[1]+0.5
-		while i<10:
+		while i<dist:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
-			self.fmap[int(ox)][int(oy)]=1
-			self.vmap[int(ox)][int(oy)]=1
+			if not (int(ox),(int(oy))) in self.fmap:
+				self.fmap.append((int(ox),(int(oy))))#[int(ox)][int(oy)]=1
+			self.fov.append((int(ox),int(oy)))
 			if self.map[int(ox)][int(oy)] == 0: return
 			ox+=x;
 			oy+=y;
 		
 	def light(self,pos):
-		self.vmap = [[0] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[1] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0
 		i = 0
+		self.fov = []
 		while i<360:
 			x=math.cos(i*0.01745);
 			y=math.sin(i*0.01745);
-			self.dofov(pos,x,y);
+			self.dofov(pos,x,y,10);
 			i+=1
 	
 	def tick_lights(self):
@@ -229,8 +231,8 @@ class LevelGen:
 				_walls.pop(_walls.index(_pos))
 				
 				#Check to make sure the room will fit in this spot
-				if _pos[0]-(_room_size[0]/2)<0 or _pos[0]+(_room_size[0]/2)>self.size[0]: print 'saved some time';continue
-				if _pos[1]-(_room_size[1]/2)<0 or _pos[1]+(_room_size[1]/2)>self.size[1]: print 'saved some time';continue
+				if _pos[0]-(_room_size[0]/2)<0 or _pos[0]+(_room_size[0]/2)>self.size[0]: continue
+				if _pos[1]-(_room_size[1]/2)<0 or _pos[1]+(_room_size[1]/2)>self.size[1]: continue
 				
 				#Start checking to see if the room "fits"
 				for x in range(-_room_size[0]/2,_room_size[0]/2):					
