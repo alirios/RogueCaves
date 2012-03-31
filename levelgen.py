@@ -17,7 +17,7 @@ class LevelGen:
 		
 		#Lights and maps...
 		self.lights = []
-		self.fmap = []
+		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
 		self.lmap = []
 		self.fov = []
 		
@@ -54,15 +54,15 @@ class LevelGen:
 		while i<dist:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
-			if not (int(ox),(int(oy))) in self.fmap:
-				self.fmap.append((int(ox),(int(oy))))#[int(ox)][int(oy)]=1
-			self.fov.append((int(ox),int(oy)))
+			#if not (int(ox),(int(oy))) in self.fmap:
+			self.fmap[int(ox)][int(oy)]=1#.append((int(ox),(int(oy))))
+			self.vmap[int(ox)][int(oy)]=1
 			if self.map[int(ox)][int(oy)] == 0: return
 			ox+=x;
 			oy+=y;
 		
 	def light(self,pos):
-		self.vmap = [[1] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[0] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0

@@ -37,8 +37,9 @@ class life:
 		if self.player:
 			if dir == 'up' and self.level.map[self.pos[0]][self.pos[1]-1]:
 				self.pos[1]-=1
-			elif dir == 'down' and self.level.map[self.pos[0]][self.pos[1]+1]:
-				self.pos[1]+=1
+			elif dir == 'down' and self.pos[1]+1<var.window_size[1]-6:
+				if self.level.map[self.pos[0]][self.pos[1]+1]:
+					self.pos[1]+=1
 			elif dir == 'left' and self.level.map[self.pos[0]-1][self.pos[1]]:
 				self.pos[0]-=1
 			elif dir == 'right' and self.level.map[self.pos[0]+1][self.pos[1]]:
