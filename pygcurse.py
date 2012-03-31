@@ -345,7 +345,7 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         return spaces % self._width, y + int(spaces / self._width)
 
 
-    def update(self):
+    def update(self,_xrange=None,_yrange=None):
         """
         Update the encapsulated pygame.Surface object to match the state of this PygcurseSurface object. This needs to be done before the pygame.Surface object is blitted to the screen if you want the most up-to-date state displayed.
 
@@ -359,10 +359,15 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         """
 
         # TODO - None of this code is optimized yet.
-
+        if not _xrange:
+            _xrange = (0,self._width)
+        
+        if not _yrange:
+            _yrange = (0,self._height)
+        
         # "Dirty" means that the cell's state has been altered on the backend and it needs to be redrawn on pygame.Surface object (which will make the cell "clean").
-        for x in range(self._width):
-            for y in range(self._height):
+        for x in range(_xrange[0],_xrange[1]):
+            for y in range(_yrange[0],_yrange[1]):
                 if self._screendirty[x][y]: # draw to surfaceobj all the dirty cells.
                     self._screendirty[x][y] = False
 

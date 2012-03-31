@@ -87,7 +87,9 @@ def draw_screen():
 	#	_tile = tile_map[str(_m.map[pos[0]][pos[1]])]
 	#	
 	#	var.view.putchar(_tile['icon'],x=pos[0],y=pos[1],fgcolor=_tile['color'],bgcolor='darkergray')
-		
+	
+	_xrange = [9000,-9000]
+	_yrange = [9000,-9000]
 	for x in range(0,_m.size[0]):
 		for y in range(0,_m.size[1]):
 			
@@ -100,6 +102,11 @@ def draw_screen():
 			if _m.vmap[x][y]:
 				if not _tile: _tile = tile_map[str(_m.map[x][y])]
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'],bgcolor='darkgray')
+				
+				if x < _xrange[0]: _xrange[0] = x
+				if x > _xrange[1]: _xrange[1] = x
+				if y < _yrange[0]: _yrange[0] = y
+				if y > _yrange[1]: _yrange[1] = y
 				
 				#for light in _m.lights:
 				#	for pos in _m.lmap[light[0]][light[1]]['children']:
@@ -122,8 +129,8 @@ def draw_screen():
 		var.log.putchars(entry,x=0,y=var.window_size[1]-5+(var.history.index(entry)),fgcolor='altgray',bgcolor='black')
 	
 	var.log.update()
-	var.view.update()
-	print time.time()-_starttime
+	var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+	#print time.time()-_starttime
 
 def get_input():
 	for event in pygame.event.get():

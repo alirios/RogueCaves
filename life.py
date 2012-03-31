@@ -31,7 +31,6 @@ class life:
 			
 			if _seen:
 				self.seen.append({'who':life,'dist':len(_l)})
-				print 'Sees you!'
 	
 	def walk(self,dir):
 		if self.player:

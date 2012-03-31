@@ -54,8 +54,7 @@ class LevelGen:
 		while i<dist:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
-			#if not (int(ox),(int(oy))) in self.fmap:
-			self.fmap[int(ox)][int(oy)]=1#.append((int(ox),(int(oy))))
+			self.fmap[int(ox)][int(oy)]=1
 			self.vmap[int(ox)][int(oy)]=1
 			if self.map[int(ox)][int(oy)] == 0: return
 			ox+=x;
