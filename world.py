@@ -28,7 +28,6 @@ class World:
 		
 		for level in self.levels:
 			_ltime = time.time()
-			level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False)
 			
 			#_entrances=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))]
 			
@@ -49,9 +48,11 @@ class World:
 			#	_exits=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))] 
 			
 			if level['type']=='cave':
+				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=False)
 				level['level'].generate_cave(entrances=_entrances,exits=_exits)
 				level['level'].decompose(self.depth-abs(level['z']),edgesonly=False)
 			else:
+				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(entrances=_entrances,exits=_exits)
 			print 'DEPTH: %s, generated in:' % (str(level['z'])),time.time()-_ltime
 		

@@ -2,7 +2,7 @@ import draw, copy, math
 import random, time
 
 class LevelGen:
-	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True,overlaprooms=False):
+	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True,overlaprooms=False,outside=False):
 		self.size = size
 		
 		self.map = []
@@ -11,6 +11,7 @@ class LevelGen:
 		self.room_size = room_size
 		self.diagtunnels = diagtunnels
 		self.overlaprooms = overlaprooms
+		self.outside = outside
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
@@ -54,6 +55,7 @@ class LevelGen:
 		while i<dist:
 			i+=1
 			if int(ox) >= self.size[0] or int(oy) >= self.size[1]: continue
+			if int(ox) < 0 or int(oy) < 0: continue
 			self.fmap[int(ox)][int(oy)]=1
 			self.vmap[int(ox)][int(oy)]=1
 			if self.map[int(ox)][int(oy)] == 0: return
@@ -61,7 +63,7 @@ class LevelGen:
 			oy+=y;
 		
 	def light(self,pos):
-		self.vmap = [[1] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[self.outside] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0
@@ -120,6 +122,32 @@ class LevelGen:
 								_count+=1
 						elif all:
 							_count+=1
+					
+					if _count>=count:
+						_map[x][y]=to
+		
+			self.map = _map
+	
+	def decompose_ext(self,times,find=-1,to=-1,count=3):
+		for i in range(times):
+			_map = copy.deepcopy(self.map)
+			
+			for x in range(self.size[0]):
+				for y in range(self.size[1]):
+					if (x,y) in self.landmarks: continue
+					
+					if self.map[x][y]==find: continue
+					
+					_count = 0
+					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						_x = x+pos[0]
+						_y = y+pos[1]
+						
+						if 0>_x or _x>self.size[0]-1: continue
+						if 0>_y or _y>self.size[1]-1: continue
+						
+						if self.map[_x][_y] == find:
+							_count+=1			
 					
 					if _count>=count:
 						_map[x][y]=to
@@ -358,6 +386,8 @@ class LevelGen:
 								self.walls.remove(__pos)
 					else:
 						#Else, change the map to a tunnel tile!
+						if pos[0]<0 or pos[0]>=self.size[0]: continue
+						if pos[1]<0 or pos[1]>=self.size[1]: continue
 						self.map[pos[0]][pos[1]] = 2
 						
 						#Add it to the walking_space array if it isn't there already...
@@ -396,16 +426,17 @@ class LevelGen:
 		_walkers = []
 		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
 		
-		for i in range(5):
+		for i in range(7):
 			_pos = random.choice(self.walking_space)
-			_walkers.append([_pos[0],_pos[1],_dirs[:]])
+			_tile = random.choice([6,7,8])
+			_walkers.append([_pos[0],_pos[1],_dirs[:],_tile])
 		
-		for i in range(40):
+		for i in range(random.randint(25,45)):
 			for walker in _walkers:
 				_pos=random.choice(walker[2])
 				walker[2].remove(_pos)
 				
-				for i2 in range(3):
+				for i2 in range(random.randint(3,4)):
 					
 					if not len(walker[2]):
 						walker[2] = _dirs[:]
@@ -425,33 +456,21 @@ class LevelGen:
 						if 0>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
 						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
 						
-						self.map[_x+pos[0]][_y+pos[1]] = 6
+						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
 						
-					self.map[_x][_y] = 6
+					self.map[_x][_y] = walker[3]
 		
-		for i in range(3):
-			_map = copy.deepcopy(self.map)
-			
-			for y in range(self.size[1]-1):
-				for x in range(self.size[0]-1):
-					if (x,y) in self.landmarks: continue
-					
-					if not self.map[x][y]==6: continue
-					
-					_count = 0
-					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-						_x = x+pos[0]
-						_y = y+pos[1]
-						
-						if 0>_x or _x>self.size[0]-1: continue
-						if 0>_y or _x>self.size[1]-1: continue
-						
-						if self.map[_x][_y]==6:
-							_count+=1
-						
-					
-					if _count>=7:
-						self.map[x][y] = 7
+		self.decompose_ext(3,find=8,to=8)
+		self.decompose_ext(3,find=8,to=7)
+		self.decompose_ext(1,find=7,to=7,count=1)
+		self.decompose_ext(3,find=6,to=6)
+		self.decompose_ext(3,find=7,to=7)
+		
+		for pos in entrances:
+			self.map[pos[0]][pos[1]] = 3
+		
+		for pos in exits:
+			self.map[pos[0]][pos[1]] = 4
 	
 	def out(self):
 		for y in range(self.size[1]):
