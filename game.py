@@ -17,6 +17,7 @@ var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.life = []
 var.history = []
+var.skill_mod = 6
 var.input = {'up':False,
 	'down':False}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
@@ -33,7 +34,7 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 _font = pygame.font.Font('ProggyClean.ttf', 16)
 
 #Surfaces...
-var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='QuickRogue')
+var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='RogueCave')
 var.view = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1]-6,font=_font,windowsurface=var.window._windowsurface)
 var.log = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1],font=_font,windowsurface=var.window._windowsurface)
 
@@ -57,12 +58,13 @@ var.player.z = 1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
-for i in range(4):
-	_temp = life.zombie()
-	_p = random.choice(var.player.level.walking_space)
-	_temp.pos = [_p[0],_p[1]]
-	_temp.z = 1
-	_temp.level = var.player.level
+for i in range(1,4):
+	for r in range(0,i):
+		_temp = life.zombie()
+		_temp.z = -i
+		_temp.level = var.world.get_level(_temp.z)
+		_p = random.choice(_temp.level.walking_space)
+		_temp.pos = [_p[0],_p[1]]
 
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 
@@ -128,11 +130,15 @@ def draw_screen(refresh=False):
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
-	_health = '(%s\%s)' % (var.player.hp,var.player.hp_max)
+	_health = 'HP: (%s\%s)' % (var.player.hp,var.player.hp_max)
+	_depth = 'Depth: %s' % (-var.player.z)
+	_skill = 'Level %s (%s\%s)' % (var.player.skill_level,var.player.xp,\
+		var.player.skill_level*var.skill_mod)
 	
 	var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
-	var.log.putchars('Depth: %s' % (abs(var.player.z)),x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
+	var.log.putchars(_depth,x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
+	var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 		
 	
 	_i=0

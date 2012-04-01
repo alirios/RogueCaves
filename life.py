@@ -12,6 +12,8 @@ class life:
 		self.hp_max = 10
 		self.pos = [0,0]
 		self.z = 0
+		self.xp = 0
+		self.skill_level = 1
 		self.seen = []
 		self.alignment = 'neutral'
 		
@@ -26,6 +28,7 @@ class life:
 			elif who.player: functions.log('The %s swings at you!' % (self.race))
 			#functions.log('You swing at %s!' % (who.name))
 		
+		self.xp += 1
 		who.hp -= 1
 		
 		if who.hp<=0:
@@ -36,7 +39,13 @@ class life:
 				if self.player: functions.log('You slay %s!' % (who.name))
 				elif who.player: functions.log('The %s slays you!' % (self.race))
 			
+			self.xp += who.xp
 			who.kill()
+		
+		if self.xp>=self.skill_level*var.skill_mod:
+			self.xp-=self.skill_level*var.skill_mod
+			self.skill_level+=1
+			self.hp = self.hp_max
 	
 	def think(self):
 		self.seen = []
@@ -54,6 +63,8 @@ class life:
 			
 			if _seen:
 				self.seen.append({'who':life,'dist':len(_l),'los':_l})
+		
+		if not self.seen: return self.pos
 		
 		self.focus = self.seen[0]
 		self.focus['los'].pop(0)
@@ -107,16 +118,17 @@ class human(life):
 		
 		self.race = 'human'
 		
-		self.hp = 15
-		self.hp_max = 15
+		self.hp = 20
+		self.hp_max = 20
 
 class zombie(life):
 	def __init__(self,player=False):
-		self.icon = {'icon':'Z','color':['white',None]}
+		self.icon = {'icon':'Z','color':['lightgreen',None]}
 		
 		life.__init__(self,player=player)
 		
 		self.race = 'zombie'
 		
-		self.hp = 5
-		self.hp_max = 5
+		self.hp = 3
+		self.hp_max = 3
+		self.xp = 0
