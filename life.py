@@ -74,17 +74,26 @@ class life:
 		_pos = self.pos[:]
 		
 		if self.player:
-			if dir == 'up' and self.level.map[self.pos[0]][self.pos[1]-1]:
+			if dir == 'up':
 				_pos[1]-=1
-			elif dir == 'down' and self.level.map[self.pos[0]][self.pos[1]+1]:
-				#if self.level.map[self.pos[0]][self.pos[1]+1]:
+			elif dir == 'down' and self.pos[1]+1<var.world.size[1]:
+				#if not self.level.map[self.pos[0]][self.pos[1]+1] in var.blocking:
 				_pos[1]+=1
-			elif dir == 'left' and self.level.map[self.pos[0]-1][self.pos[1]]:
+			elif dir == 'left':
 				_pos[0]-=1
-			elif dir == 'right' and self.level.map[self.pos[0]+1][self.pos[1]]:
+			elif dir == 'right' and self.pos[0]+1<var.world.size[0]:
+				#if not self.level.map[self.pos[0]+1][self.pos[1]] in var.blocking:
 				_pos[0]+=1
 		else:
 			_pos = self.think()
+		
+		_tile = self.level.map[_pos[0]][_pos[1]]
+			
+		if _tile in var.blocking or _tile in var.solid:
+			if _tile == 11:
+				self.level.map[_pos[0]][_pos[1]] = 1
+			
+			_pos = self.pos[:]
 		
 		_found = False
 		for life in var.life:

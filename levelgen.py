@@ -1,5 +1,5 @@
-import draw, copy, math
-import random, time
+import draw, var
+import copy, math, random, time
 
 class LevelGen:
 	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True,overlaprooms=False,outside=False):
@@ -58,7 +58,7 @@ class LevelGen:
 			if int(ox) < 0 or int(oy) < 0: continue
 			self.fmap[int(ox)][int(oy)]=1
 			self.vmap[int(ox)][int(oy)]=1
-			if self.map[int(ox)][int(oy)] == 0: return
+			if self.map[int(ox)][int(oy)] in var.solid: return
 			ox+=x;
 			oy+=y;
 		
@@ -128,7 +128,7 @@ class LevelGen:
 		
 			self.map = _map
 	
-	def decompose_ext(self,times,find=-1,to=-1,count=3):
+	def decompose_ext(self,times,all=False,find=-1,to=-1,count=3):
 		for i in range(times):
 			_map = copy.deepcopy(self.map)
 			
@@ -136,7 +136,7 @@ class LevelGen:
 				for y in range(self.size[1]):
 					if (x,y) in self.landmarks: continue
 					
-					if self.map[x][y]==find: continue
+					if self.map[x][y]==find and not all: continue
 					
 					_count = 0
 					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
@@ -153,6 +153,52 @@ class LevelGen:
 						_map[x][y]=to
 		
 			self.map = _map
+
+	def walk(self,walkers=7,intensity=(25,45),types=[],where=[]):
+		#Okay, this is a bit tricky...
+		#I did this kind of levelgen for a previous
+		#game and it looked okay...
+		#We'll see how it works here.
+		_walkers = []
+		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
+		
+		for i in range(walkers):
+			_pos = random.choice(where)
+			_tile = random.choice(types)
+			_walkers.append([_pos[0],_pos[1],_dirs[:],_tile])
+		
+		for i in range(random.randint(intensity[0],intensity[1])):
+			for walker in _walkers:
+				_pos=random.choice(walker[2])
+				walker[2].remove(_pos)
+				
+				for i2 in range(random.randint(3,4)):
+					
+					if not len(walker[2]):
+						walker[2] = _dirs[:]
+					
+					_x = walker[0]+_pos[0]
+					_y = walker[1]+_pos[1]
+					
+					if (_x,_y) in self.landmarks: continue
+					if 0>_x or _x>self.size[0]-1: continue
+					if 0>_y or _y>self.size[1]-1: continue
+					
+					walker[0] = _x
+					walker[1] = _y
+					
+					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						if (_x+pos[0],_y+pos[1]) in self.landmarks: continue
+						if 0>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
+						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
+						
+						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
+						
+						if walker[3] in var.blocking:
+							if (_x+pos[0],_y+pos[1]) in self.walking_space:
+								self.walking_space.remove((_x+pos[0],_y+pos[1]))
+						
+					self.map[_x][_y] = walker[3]
 	
 	def generate_cave(self, entrances=[(4,4)],exits=[]):
 		#We'll be generating the level in the following
@@ -270,8 +316,8 @@ class LevelGen:
 				_walls.pop(_walls.index(_pos))
 				
 				#Check to make sure the room will fit in this spot
-				if _pos[0]-(_room_size[0]/2)<0 or _pos[0]+(_room_size[0]/2)>self.size[0]: continue
-				if _pos[1]-(_room_size[1]/2)<0 or _pos[1]+(_room_size[1]/2)>self.size[1]: continue
+				if _pos[0]-(_room_size[0]/2)<=0 or _pos[0]+(_room_size[0]/2)>=self.size[0]: continue
+				if _pos[1]-(_room_size[1]/2)<=0 or _pos[1]+(_room_size[1]/2)>=self.size[1]: continue
 				
 				#Start checking to see if the room "fits"
 				for x in range(-_room_size[0]/2,_room_size[0]/2):					
@@ -416,49 +462,10 @@ class LevelGen:
 		for x in range(self.size[0]):
 			for y in range(self.size[1]):
 				if not self.map[x][y]:
-					self.map[x][y] = 5
+					self.map[x][y] = random.choice([5,9])
 					self.walking_space.append((x,y))
 		
-		#Okay, this is a bit tricky...
-		#I did this kind of levelgen for a previous
-		#game and it looked okay...
-		#We'll see how it works here.
-		_walkers = []
-		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
-		
-		for i in range(7):
-			_pos = random.choice(self.walking_space)
-			_tile = random.choice([6,7,8])
-			_walkers.append([_pos[0],_pos[1],_dirs[:],_tile])
-		
-		for i in range(random.randint(25,45)):
-			for walker in _walkers:
-				_pos=random.choice(walker[2])
-				walker[2].remove(_pos)
-				
-				for i2 in range(random.randint(3,4)):
-					
-					if not len(walker[2]):
-						walker[2] = _dirs[:]
-					
-					_x = walker[0]+_pos[0]
-					_y = walker[1]+_pos[1]
-					
-					if 0>_x or _x>self.size[0]-1: continue
-					if 0>_y or _y>self.size[1]-1: continue
-					
-					walker[0] = _x
-					walker[1] = _y
-					
-					#print _x,_y
-					
-					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-						if 0>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
-						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
-						
-						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
-						
-					self.map[_x][_y] = walker[3]
+		self.walk(where=self.walking_space,types=[6,7,8])
 		
 		self.decompose_ext(3,find=8,to=8)
 		self.decompose_ext(3,find=8,to=7)

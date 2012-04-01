@@ -11,6 +11,7 @@ pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
 pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
 pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
 pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
+pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
 
 #Setup stuff...
 var.clock = pygame.time.Clock()
@@ -18,6 +19,9 @@ var.window_size = (99,33)
 var.life = []
 var.history = []
 var.skill_mod = 6
+var.solid= [0,11]
+var.blocking = [10]
+var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
@@ -28,13 +32,16 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'5':{'icon':' ','color':['white','green']},
 	'6':{'icon':';','color':['altlightgreen','lightgreen']},
 	'7':{'icon':';','color':['lightgreen','altlightgreen']},
-	'8':{'icon':';','color':['lightsand','sand']}}
+	'8':{'icon':';','color':['lightsand','sand']},
+	'9':{'icon':',','color':['altlightgreen','green']},
+	'10':{'icon':'o','color':['blue','blue']},
+	'11':{'icon':';','color':['sand','brown']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
 
 #Surfaces...
-var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='RogueCave')
+var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='RogueCaves')
 var.view = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1]-6,font=_font,windowsurface=var.window._windowsurface)
 var.log = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1],font=_font,windowsurface=var.window._windowsurface)
 
@@ -54,7 +61,7 @@ var.world.generate()
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.z = 1
+var.player.z = 0
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
@@ -69,7 +76,7 @@ for i in range(1,4):
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 
 def draw_screen(refresh=False):	
-	region = (0,0,var.window_size[0],var.window_size[1])
+	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 	_starttime = time.time()
 	var.view.fill('black','black',region=region)
 	var.view.setbrightness(0, region=region)
@@ -101,9 +108,18 @@ def draw_screen(refresh=False):
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor='black',bgcolor=_bgcolor)
 					else:
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_bgcolor)
-					
+				
+				elif _tile['color'][1]=='blue':
+					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=pygame.Color(0, 0, random.randint(150,200)))
 				else:
 					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
+				
+				_dist = abs(var.player.pos[0]-var.mouse_pos[0])+abs(var.player.pos[1]-var.mouse_pos[1])
+				if (x,y)==var.mouse_pos:
+					if _dist<=5:
+						var.view.lighten(50,(x,y,1,1))
+					else:
+						var.view.darken(50,(x,y,1,1))
 				
 				if x < _xrange[0]: _xrange[0] = x
 				if x > _xrange[1]: _xrange[1] = x+1
@@ -139,7 +155,6 @@ def draw_screen(refresh=False):
 	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
 	var.log.putchars(_depth,x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
 	var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
-		
 	
 	_i=0
 	for entry in var.history:
@@ -156,36 +171,43 @@ def get_input():
 			pygame.quit()
 			sys.exit()
 		elif event.type == KEYDOWN:
-			if event.key == K_UP or event.key == K_KP8:
+			if event.key == K_UP or event.key == K_w:
 				var.input['up'] = True
-			elif event.key == K_DOWN or event.key == K_KP2:
+			elif event.key == K_DOWN or event.key == K_s:
 				var.input['down'] = True
-			elif event.key == K_LEFT or event.key == K_KP4:
+			elif event.key == K_LEFT or event.key == K_a:
 				var.input['left'] = True
-			elif event.key == K_RIGHT or event.key == K_KP6:
+			elif event.key == K_RIGHT or event.key == K_d:
 				var.input['right'] = True
 			elif event.key == K_RETURN:
 				var.player.enter()
 				draw_screen(refresh=True)
 		elif event.type == KEYUP:
-			if event.key == K_UP or event.key == K_KP8:
+			if event.key == K_UP or event.key == K_w:
 				var.input['up'] = False
-			elif event.key == K_DOWN or event.key == K_KP2:
+			elif event.key == K_DOWN or event.key == K_s:
 				var.input['down'] = False
-			elif event.key == K_LEFT or event.key == K_KP4:
+			elif event.key == K_LEFT or event.key == K_a:
 				var.input['left'] = False
-			elif event.key == K_RIGHT or event.key == K_KP6:
+			elif event.key == K_RIGHT or event.key == K_d:
 				var.input['right'] = False
+		elif event.type == MOUSEMOTION:
+			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
+		elif event.type == MOUSEBUTTONDOWN:
+			var.player.level.map[var.mouse_pos[0]][var.mouse_pos[1]] = 1
 		
 	for key in var.input:
 		if key in ['up','down','left','right']:
 			if var.input[key]:
-				for life in var.life:
-					life.walk(key)
-					#var.player.walk(key)
-				draw_screen()
-				#_m.add_light((var.player.pos[0],var.player.pos[1]),(0,128,0),1,10)
-	var.clock.tick(30)
+				var.player.walk(key)
+				#var.player.walk(key)
+	
+	for life in var.life:
+		if life.player: continue
+		life.walk(None)
+		
+	draw_screen()
+	var.clock.tick(10)
 
 draw_screen()
 while 1: get_input()
