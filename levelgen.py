@@ -374,8 +374,8 @@ class LevelGen:
 						for _pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),(-1,1),(0,1),(1,1)]:
 							__pos = (pos[0]+_pos[0],pos[1]+_pos[1])
 							
-							if __pos[0]<0 or __pos[0]>=self.size[0]: continue
-							if __pos[1]<0 or __pos[1]>=self.size[1]: continue
+							if __pos[0]<=0 or __pos[0]>=self.size[0]: continue
+							if __pos[1]<=0 or __pos[1]>=self.size[1]: continue
 							
 							self.map[__pos[0]][__pos[1]] = 2
 							
