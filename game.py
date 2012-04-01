@@ -1,24 +1,30 @@
-import levelgen, life
+import levelgen, world, life
 import pygcurse, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
-
-#Setup stuff...
-var.clock = pygame.time.Clock()
-var.window_size = (100,34)
-var.life = []
-var.history = []
-var.input = {'up':False,
-	'down':False}
-tile_map = {'0':{'icon':'#','color':'gray'},
-	'1':{'icon':' ','color':'black'},
-	'2':{'icon':'.','color':'silver'},
-	'3':{'icon':'>','color':'white'}}
 
 #Colors...
 pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
 pygcurse.colornames['darkergray'] = pygame.Color(46, 46, 46)
 pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
+pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
+pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
+
+#Setup stuff...
+var.clock = pygame.time.Clock()
+var.window_size = (99,33)
+var.life = []
+var.history = []
+var.input = {'up':False,
+	'down':False}
+tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
+	'1':{'icon':' ','color':['black','darkgray']},
+	'2':{'icon':'.','color':['silver','darkgray']},
+	'3':{'icon':'<','color':['white','darkgray']},
+	'4':{'icon':'>','color':['white','darkgray']},
+	'5':{'icon':' ','color':['white','green']},
+	'6':{'icon':' ','color':['white','lightgreen']},
+	'7':{'icon':' ','color':['white','altlightgreen']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -34,23 +40,21 @@ var.view.autoupdate = False
 var.log.autoupdate = False
 
 #Generate level
-_starttime = time.time()
-_m = levelgen.LevelGen(rooms=50,size=(var.window_size[0],var.window_size[1]-6),diagtunnels=False)
-_m.generate(entrance=(random.randint(4,_m.size[0]-4),random.randint(4,_m.size[1]-4)))
-_m.decompose(1,edgesonly=False)
-print 'Level gen tooK:',time.time()-_starttime
+var.world = world.World(size=(var.window_size[0],var.window_size[1]-6))
+var.world.generate()
 
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.pos = [_m.walking_space[0][0],_m.walking_space[0][1]]
-var.player.level = _m
+var.player.z = 1
+var.player.level = var.world.get_level(var.player.z)
+var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
 _temp = life.human()
 
-_p = random.choice(_m.walking_space)
+_p = random.choice(var.player.level.walking_space)
 _temp.pos = [_p[0],_p[1]]
-_temp.level = _m
+_temp.level = var.player.level
 
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 
@@ -65,33 +69,13 @@ def draw_screen():
 	var.view.fill('black','black',region=region)
 	var.view.setbrightness(0, region=region)
 
-	_m.light(var.player.pos)
+	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
-	
-	#_placed = []
-	#for pos in _m.fov:
-	#	_tile = None
-	#	
-	#	for life in var.life:
-	#		if life.pos == [pos[0],pos[1]]:
-	#			_tile = life.icon
-	#	
-	#	if _m.vmap[pos[0]][pos[1]]:
-	#		if not _tile: _tile = tile_map[str(_m.map[pos[0]][pos[1]])]
-	#		var.view.putchar(_tile['icon'],x=pos[0],y=pos[1],fgcolor=_tile['color'],bgcolor='darkgray')
-	#		_placed.append(pos)
-	#		#var.view.lighten(10,(pos[0],pos[1],1,1))
-	#
-	#for pos in _m.fmap:
-	#	if pos in _placed: continue
-	#	_tile = tile_map[str(_m.map[pos[0]][pos[1]])]
-	#	
-	#	var.view.putchar(_tile['icon'],x=pos[0],y=pos[1],fgcolor=_tile['color'],bgcolor='darkergray')
 	
 	_xrange = [9000,-9000]
 	_yrange = [9000,-9000]
-	for x in range(0,_m.size[0]):
-		for y in range(0,_m.size[1]):
+	for x in range(0,var.world.size[0]):
+		for y in range(0,var.world.size[1]):
 			
 			_tile = None
 			
@@ -99,14 +83,19 @@ def draw_screen():
 				if life.pos == [x,y]:
 					_tile = life.icon
 			
-			if _m.vmap[x][y]:
-				if not _tile: _tile = tile_map[str(_m.map[x][y])]
-				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'],bgcolor='darkgray')
+			if var.player.level.vmap[x][y]:
+				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
+				_bgcolor = tile_map[str(var.player.level.map[x][y])]['color'][1]
+				
+				if not _tile['color'][1]:
+					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_bgcolor)
+				else:
+					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
 				
 				if x < _xrange[0]: _xrange[0] = x
-				if x > _xrange[1]: _xrange[1] = x
+				if x > _xrange[1]: _xrange[1] = x+1
 				if y < _yrange[0]: _yrange[0] = y
-				if y > _yrange[1]: _yrange[1] = y
+				if y > _yrange[1]: _yrange[1] = y+1
 				
 				#for light in _m.lights:
 				#	for pos in _m.lmap[light[0]][light[1]]['children']:
@@ -114,10 +103,15 @@ def draw_screen():
 				#			#var.view.settint(_m.lmap[light[0]][light[1]]['color'][0],_m.lmap[light[0]][light[1]]['color'][1],\
 				#			#	_m.lmap[light[0]][light[1]]['color'][2],(_x,_y,1,1))
 				#			var.view.lighten(50,(_x,_y,1,1))
-			elif _m.fmap[x][y]:
-				if not _tile: _tile = tile_map[str(_m.map[x][y])]
-				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'],bgcolor='altgray')
+			elif var.player.level.fmap[x][y]:
+				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
+				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
+				
+				if x < _xrange[0]: _xrange[0] = x
+				if x > _xrange[1]: _xrange[1] = x+1
+				if y < _yrange[0]: _yrange[0] = y
+				if y > _yrange[1]: _yrange[1] = y+1
 			else:
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
@@ -146,6 +140,8 @@ def get_input():
 				var.input['left'] = True
 			elif event.key == K_RIGHT or event.key == K_KP6:
 				var.input['right'] = True
+			elif event.key == K_RETURN:
+				var.player.enter()
 		elif event.type == KEYUP:
 			if event.key == K_UP or event.key == K_KP8:
 				var.input['up'] = False

@@ -5,11 +5,12 @@ class life:
 		self.player = player
 		
 		if self.player:
-			self.icon = {'icon':'@','color':'white'}
+			self.icon = {'icon':'@','color':['white',None]}
 		
 		self.name = 'Default'
 		self.hp = 10
 		self.pos = [0,0]
+		self.z = 0
 		self.seen = []
 		self.alignment = 'neutral'
 		
@@ -45,10 +46,18 @@ class life:
 				self.pos[0]+=1
 		else:
 			self.think()
+	
+	def enter(self):
+		if self.level.map[self.pos[0]][self.pos[1]] == 3:
+			self.z += 1
+		elif self.level.map[self.pos[0]][self.pos[1]] == 4:
+			self.z -= 1
+		
+		self.level = var.world.get_level(self.z)
 
 class human(life):
 	def __init__(self,player=False):
-		self.icon = {'icon':'H','color':'white'}
+		self.icon = {'icon':'H','color':['white',None]}
 		
 		life.__init__(self,player=player)
 		

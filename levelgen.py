@@ -61,7 +61,7 @@ class LevelGen:
 			oy+=y;
 		
 	def light(self,pos):
-		self.vmap = [[0] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[1] * self.size[1] for i in range(self.size[0])]
 		
 		x = 0
 		y = 0
@@ -93,13 +93,16 @@ class LevelGen:
 					if not (_pos) in light['children']: 
 						light['children'].append(_pos)
 	
-	def decompose(self,times,edgesonly=True):
+	def decompose(self,times,edgesonly=True,count=4,tile=-1,to=1,all=False):
 		for i in range(times):
 			_map = copy.deepcopy(self.map)
 			
 			for y in range(self.size[1]-1):
 				for x in range(self.size[0]-1):
+					if (x,y) in self.landmarks: continue
+					
 					if self.map[x][y] and edgesonly: continue
+					
 					_count = 0
 					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 						_x = x+pos[0]
@@ -108,15 +111,22 @@ class LevelGen:
 						if 0>_x<self.size[0]-1: continue
 						if 0>_y<self.size[1]-1: continue
 						#print _x,_y
-						if self.map[_x][_y]:
+						
+						if tile==-1:
+							if self.map[_x][_y]:
+								_count+=1
+						elif tile>=0:
+							if self.map[_x][_y]==tile:
+								_count+=1
+						elif all:
 							_count+=1
 					
-					if _count>=4:
-						_map[x][y]=1
+					if _count>=count:
+						_map[x][y]=to
 		
 			self.map = _map
 	
-	def generate(self, entrance=(4,4)):
+	def generate_cave(self, entrances=[(4,4)],exits=[]):
 		#We'll be generating the level in the following
 		#way:
 		#  Place a small room around the entrance
@@ -132,63 +142,65 @@ class LevelGen:
 		#2 - tunnel
 		#3 - door
 		
-		#First, let's place our entrance.
-		#We'll make a 3x3 area around it
-		for x in range(-1,2):
-			#One thing I suggest is making lines
-			#as compact as possible.
-			#For example, we'll be writing "entrance[0]+x"
-			#and "entrance[1]+y" a lot in the next three lines
-			#this can give us the impression that the line
-			#is complicated when it's just simple addition...
-			#Also doing more complex math OVER AND OVER
-			#will slow things down a lot, so it's better
-			#to just do it once and assign it to a variable
-			#Addition is by no means complicated, but it
-			#makes things more readable.
-			
-			#As a rule of thumb, I always put an underscore
-			#before the variables I plan to throw away...
-			_x = entrance[0]+x
-			
-			for y in range(-1,2):
-				#We need to check to see if we're drawing
-				#inside the map first...
-				#By the way, a '\' in Python
-				#just lets us drop down a line in case
-				#a line gets too lengthy...
-				#Very handy!
+		#First, let's place our entrances+exits.
+		_places = entrances[:]
+		_places.extend(exits)
+		for pos in _places:
+			#We'll make a 3x3 area around it
+			for x in range(-1,2):
+				#One thing I suggest is making lines
+				#as compact as possible.
+				#For example, we'll be writing "entrance[0]+x"
+				#and "entrance[1]+y" a lot in the next three lines
+				#this can give us the impression that the line
+				#is complicated when it's just simple addition...
+				#Also doing more complex math OVER AND OVER
+				#will slow things down a lot, so it's better
+				#to just do it once and assign it to a variable
+				#Addition is by no means complicated, but it
+				#makes things more readable.
 				
-				#Another temp variable...
-				_y = entrance[1]+y
+				#As a rule of thumb, I always put an underscore
+				#before the variables I plan to throw away...
+				_x = pos[0]+x
 				
-				if 0<_x<self.size[0]\
-					and 0<_y<self.size[1]:
-						self.map[_x][_y] = 1
-						self.walking_space.append((_x,_y))
-						self.walls.remove((_x,_y))
-				
-				#What we just did was "carve" out the room
-				#Imagine these as rooms in a cave or something,
-				#like the dungeons in Oblivion...
-				#We also add the open space we create to a
-				#"walking_space" list.
-				#We'll use this later, but just know that
-				#it marks places you could potentially walk
-				#(it does more than just that, though!)
+				for y in range(-1,2):
+					#We need to check to see if we're drawing
+					#inside the map first...
+					#By the way, a '\' in Python
+					#just lets us drop down a line in case
+					#a line gets too lengthy...
+					#Very handy!
+					
+					#Another temp variable...
+					_y = pos[1]+y
+					
+					if 0<_x<self.size[0]\
+						and 0<_y<self.size[1]:
+							self.map[_x][_y] = 1
+							if not (_x,_y) in self.walking_space:
+								self.walking_space.append((_x,_y))
+							if (_x,_y) in self.walls:
+								self.walls.remove((_x,_y))
+					
+					#What we just did was "carve" out the room
+					#Imagine these as rooms in a cave or something,
+					#like the dungeons in Oblivion...
+					#We also add the open space we create to a
+					#"walking_space" list.
+					#We'll use this later, but just know that
+					#it marks places you could potentially walk
+					#(it does more than just that, though!)
 		
-		#Place our door
-		self.map[entrance[0]][entrance[1]] = 3
-		
-		#Now, here's where tunneling comes into play
-		#First, we keep track of all the major "landmarks"
-		#on our map.
-		#These are things like doors, exits, and the center
-		#of rooms.
-		#We'll use these as guidelines for our tunnels...
-		#Since we already have an entrance, add it to
-		#the list...
-		self.landmarks.append(entrance)
+			#Now, here's where tunneling comes into play
+			#First, we keep track of all the major "landmarks"
+			#on our map.
+			#These are things like doors, exits, and the center
+			#of rooms.
+			#We'll use these as guidelines for our tunnels...
+			#Since we already have an entrance, add it to
+			#the list...
+			self.landmarks.append(pos)
 		
 		#We'll want to place our rooms next
 		for i in range(self.max_rooms):
@@ -358,7 +370,89 @@ class LevelGen:
 			
 			#http://www.youtube.com/watch?feature=player_detailpage&v=7C7WCRoqFVs#t=103s
 			_done.append(l1)
+		
+		#Place our exits
+		for pos in entrances:
+			self.map[pos[0]][pos[1]] = 3
+		
+		for pos in exits:
+			self.map[pos[0]][pos[1]] = 4
+		
+	
+	def generate_forest(self, entrances=[(4,4)],exits=[]):
+		self.max_rooms = 0
+		#self.generate_cave(entrances=entrances,exits=exits)
+		
+		for x in range(self.size[0]):
+			for y in range(self.size[1]):
+				if not self.map[x][y]:
+					self.map[x][y] = 5
+					self.walking_space.append((x,y))
+		
+		#Okay, this is a bit tricky...
+		#I did this kind of levelgen for a previous
+		#game and it looked okay...
+		#We'll see how it works here.
+		_walkers = []
+		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
+		
+		for i in range(5):
+			_pos = random.choice(self.walking_space)
+			_walkers.append([_pos[0],_pos[1],_dirs[:]])
+		
+		for i in range(40):
+			for walker in _walkers:
+				_pos=random.choice(walker[2])
+				walker[2].remove(_pos)
 				
+				for i2 in range(3):
+					
+					if not len(walker[2]):
+						walker[2] = _dirs[:]
+					
+					_x = walker[0]+_pos[0]
+					_y = walker[1]+_pos[1]
+					
+					if 0>_x or _x>self.size[0]-1: continue
+					if 0>_y or _y>self.size[1]-1: continue
+					
+					walker[0] = _x
+					walker[1] = _y
+					
+					#print _x,_y
+					
+					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						if 0>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
+						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
+						
+						self.map[_x+pos[0]][_y+pos[1]] = 6
+						
+					self.map[_x][_y] = 6
+		
+		for i in range(3):
+			_map = copy.deepcopy(self.map)
+			
+			for y in range(self.size[1]-1):
+				for x in range(self.size[0]-1):
+					if (x,y) in self.landmarks: continue
+					
+					if not self.map[x][y]==6: continue
+					
+					_count = 0
+					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						_x = x+pos[0]
+						_y = y+pos[1]
+						
+						if 0>_x or _x>self.size[0]-1: continue
+						if 0>_y or _x>self.size[1]-1: continue
+						
+						if self.map[_x][_y]==6:
+							_count+=1
+						
+					
+					if _count>=7:
+						self.map[x][y] = 7
+	
 	def out(self):
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
