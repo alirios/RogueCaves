@@ -10,6 +10,8 @@ class life:
 		self.name = 'Default'
 		self.hp = 10
 		self.hp_max = 10
+		self.speed = 0
+		self.speed_max = 0
 		self.pos = [0,0]
 		self.z = 0
 		self.xp = 0
@@ -72,6 +74,12 @@ class life:
 	
 	def walk(self,dir):
 		_pos = self.pos[:]
+		
+		if self.speed>0:
+			self.speed -= 1
+			return
+		else:
+			self.speed = self.speed_max
 		
 		if self.player:
 			if dir == 'up':
@@ -140,4 +148,6 @@ class zombie(life):
 		
 		self.hp = 3
 		self.hp_max = 3
+		self.speed = 5
+		self.speed_max = 5
 		self.xp = 0
