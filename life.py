@@ -19,6 +19,10 @@ class life:
 		self.seen = []
 		self.alignment = 'neutral'
 		
+		self.thirst = 0
+		self.hunger = 0
+		self.hunger_timer = 50
+		
 		var.life.append(self)
 	
 	def attack(self,who):
@@ -30,6 +34,7 @@ class life:
 			elif who.player: functions.log('The %s swings at you!' % (self.race))
 			#functions.log('You swing at %s!' % (who.name))
 		
+		self.hunger_timer -= 5
 		self.xp += 1
 		who.hp -= 1
 		
@@ -72,7 +77,7 @@ class life:
 				_temp = self.has_seen(life)
 				if _temp:
 					#self.seen.append({'who':life,'los':_l})
-					_temp['los'] = _l
+					_temp['los'] = _l[:]
 				else:
 					self.seen.append({'who':life,'los':_l})
 					
@@ -88,13 +93,17 @@ class life:
 				_lowest['los'] = seen['los']
 		
 		self.focus = _lowest
-		self.focus['los'].pop(len(self.focus['los'])-1)
-		print self.focus['los']
+		
+		if self.focus['los']:
+			self.focus['los'].pop(0)
 		
 		if not self.focus['los']:
-			return [self.focus['los'][0][0],self.focus['los'][0][1]]
+			return self.pos
 		
-		return self.pos
+		#if len(self.focus['los'])>1:
+		#	self.focus['los'].pop(0)
+		
+		return [self.focus['los'][0][0],self.focus['los'][0][1]]
 	
 	def place(self,pos,tile):
 		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
@@ -147,6 +156,12 @@ class life:
 		
 		if not _found:
 			self.pos = _pos[:]
+		
+		self.hunger_timer -= 1
+		
+		if self.hunger_timer <= 0:
+			self.hunger_timer = 50
+			self.hunger+=1
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:

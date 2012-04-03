@@ -16,6 +16,7 @@ pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
 #Setup stuff...
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
+var.view_dist = 11
 var.life = []
 var.history = []
 var.skill_mod = 6
@@ -56,7 +57,7 @@ var.view.putchars('Generating world...',x=0,y=0)
 var.view.update()
 
 #Generate level
-var.world = world.World(size=(var.window_size[0],var.window_size[1]-6))
+var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=10)
 var.world.generate()
 
 #People
@@ -89,10 +90,17 @@ def draw_screen(refresh=False):
 		_xrange = [0,var.world.size[0]]
 		_yrange = [0,var.world.size[1]]
 	else:
-		_xrange = [9000,-9000]
-		_yrange = [9000,-9000]
-	for x in range(0,var.world.size[0]):
-		for y in range(0,var.world.size[1]):
+		_xrange = [var.player.pos[0]-var.view_dist,var.player.pos[0]+var.view_dist]
+		_yrange = [var.player.pos[1]-var.view_dist,var.player.pos[1]+var.view_dist]
+		
+		if _xrange[0]<0: _xrange[0]=0
+		if _xrange[1]>var.world.size[0]: _xrange[1]=var.world.size[0]
+		
+		if _yrange[0]<0: _yrange[0]=0
+		if _yrange[1]>var.world.size[1]: _yrange[1]=var.world.size[1]
+	
+	for x in range(_xrange[0],_xrange[1]):
+		for y in range(_yrange[0],_yrange[1]):
 			
 			_tile = None
 			
@@ -122,10 +130,16 @@ def draw_screen(refresh=False):
 					else:
 						var.view.darken(50,(x,y,1,1))
 				
-				if x < _xrange[0]: _xrange[0] = x
-				if x > _xrange[1]: _xrange[1] = x+1
-				if y < _yrange[0]: _yrange[0] = y
-				if y > _yrange[1]: _yrange[1] = y+1
+				#if x < _xrange[0]: _xrange[0] = x-4
+				#if x > _xrange[1]: _xrange[1] = x+4
+				#if y < _yrange[0]: _yrange[0] = y-4
+				#if y > _yrange[1]: _yrange[1] = y+4
+				
+				#if _xrange[0]<0: _xrange[0]=0
+				#elif _xrange[1]>var.world.size[0]: _xrange[1]=var.world.size[0]
+				#
+				#if _yrange[0]<0: _yrange[0]=0
+				#elif _yrange[1]>var.world.size[1]: _yrange[1]=var.world.size[1]
 				
 				#for light in _m.lights:
 				#	for pos in _m.lmap[light[0]][light[1]]['children']:
@@ -138,10 +152,10 @@ def draw_screen(refresh=False):
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
 				
-				if x < _xrange[0]: _xrange[0] = x
-				if x > _xrange[1]: _xrange[1] = x+1
-				if y < _yrange[0]: _yrange[0] = y
-				if y > _yrange[1]: _yrange[1] = y+1
+				#if x < _xrange[0]: _xrange[0] = x
+				#if x > _xrange[1]: _xrange[1] = x+1
+				#if y < _yrange[0]: _yrange[0] = y
+				#if y > _yrange[1]: _yrange[1] = y+1
 			else:
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
@@ -151,11 +165,15 @@ def draw_screen(refresh=False):
 	_depth = 'Depth: %s' % (-var.player.z)
 	_skill = 'Level %s (%s\%s)' % (var.player.skill_level,var.player.xp,\
 		var.player.skill_level*var.skill_mod)
+	_thirst = 'Thirst (%s\\100)' % (var.player.thirst)
+	_hunger = 'Hunger (%s\\100)' % (var.player.hunger)
 	
 	var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
 	var.log.putchars(_depth,x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
 	var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
+	var.log.putchars(_thirst,x=len(_char)+len(_health)+len(_depth)+len(_skill)+4,y=var.window_size[1]-6,fgcolor='blue',bgcolor='black')
+	var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
 	
 	_i=0
 	for entry in var.history:
