@@ -1,3 +1,4 @@
+import random
 import functions, draw, var
 
 class life:
@@ -22,6 +23,8 @@ class life:
 		self.thirst = 0
 		self.hunger = 0
 		self.hunger_timer = 50
+		self.gold = 0
+		self.coal = 0
 		
 		var.life.append(self)
 	
@@ -47,6 +50,15 @@ class life:
 				elif who.player: functions.log('The %s slays you!' % (self.race))
 			
 			self.xp += who.xp
+			
+			if who.gold:
+				self.gold += who.gold
+				functions.log('Found +%s gold!' % who.gold)
+			
+			if who.coal:
+				self.coal += who.coal
+				functions.log('Found +%s coal!' % who.coal)
+			
 			who.kill()
 		
 		if self.xp>=self.skill_level*var.skill_mod:
@@ -60,6 +72,16 @@ class life:
 				return seen
 		
 		return False
+	
+	def place(self,pos,tile):
+		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
+		if not self.level.map[_pos[0]][_pos[1]] in var.solid:
+			self.level.map[_pos[0]][_pos[1]] = tile
+			if _pos in self.level.walls:
+				self.level.walls.remove(_pos)
+			
+			if not _pos in self.level.walking_space:
+				self.level.walking_space.append(_pos)
 	
 	def think(self):
 		for life in var.life:
@@ -80,40 +102,6 @@ class life:
 					_temp['los'] = _l[:]
 				else:
 					self.seen.append({'who':life,'los':_l})
-					
-		
-		if not self.seen: return self.pos
-		
-		#Find closest
-		_lowest = {'who':None,'lowest':9000,'los':None}
-		for seen in self.seen:
-			if len(seen['los'])<=_lowest['lowest']:
-				_lowest['who'] = seen['who']
-				_lowest['lowest'] = len(seen['los'])
-				_lowest['los'] = seen['los']
-		
-		self.focus = _lowest
-		
-		if self.focus['los']:
-			self.focus['los'].pop(0)
-		
-		if not self.focus['los']:
-			return self.pos
-		
-		#if len(self.focus['los'])>1:
-		#	self.focus['los'].pop(0)
-		
-		return [self.focus['los'][0][0],self.focus['los'][0][1]]
-	
-	def place(self,pos,tile):
-		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
-		if not self.level.map[_pos[0]][_pos[1]] in var.solid:
-			self.level.map[_pos[0]][_pos[1]] = tile
-			if _pos in self.level.walls:
-				self.level.walls.remove(_pos)
-			
-			if not _pos in self.level.walking_space:
-				self.level.walking_space.append(_pos)
 	
 	def walk(self,dir):
 		_pos = self.pos[:]
@@ -142,13 +130,30 @@ class life:
 			
 		if _tile in var.blocking or _tile in var.solid:
 			if _tile == 11:
-				self.level.map[_pos[0]][_pos[1]] = 1
+				_chance = random.randint(0,100)
+				
+				if _chance <= 75:
+					self.level.map[_pos[0]][_pos[1]] = 1
+				elif 75<_chance<=95:
+					self.level.map[_pos[0]][_pos[1]] = 14
+				else:
+					self.level.map[_pos[0]][_pos[1]] = 13
 			
 			_pos = self.pos[:]
 		
+		if _tile in var.items:
+			if _tile == 13:
+				self.gold += 1
+				functions.log('You picked up +1 gold.')
+			elif _tile == 14:
+				self.coal += 1
+				functions.log('You picked up +1 coal.')
+			
+			self.level.map[_pos[0]][_pos[1]] = 1
+		
 		_found = False
 		for life in var.life:
-			if life == self or not self.z == life.z: continue
+			if life == self or not self.z == life.z or self.race == life.race: continue
 			
 			if life.pos == _pos:
 				self.attack(life)
@@ -186,6 +191,12 @@ class human(life):
 		
 		self.hp = 20
 		self.hp_max = 20
+	
+	def think(self):
+		life.think(self)
+		
+		#ACT HUMANLY!
+		return self.pos
 
 class zombie(life):
 	def __init__(self,player=False):
@@ -200,3 +211,29 @@ class zombie(life):
 		self.speed = 5
 		self.speed_max = 5
 		self.xp = 0
+	
+	def think(self):
+		life.think(self)
+		
+		if not self.seen: return self.pos
+		
+		#Find closest
+		_lowest = {'who':None,'lowest':9000,'los':None}
+		for seen in self.seen:
+			if len(seen['los'])<=_lowest['lowest']:
+				_lowest['who'] = seen['who']
+				_lowest['lowest'] = len(seen['los'])
+				_lowest['los'] = seen['los']
+		
+		self.focus = _lowest
+		
+		if self.focus['los']:
+			self.focus['los'].pop(0)
+		
+		if not self.focus['los']:
+			return self.pos
+		
+		#if len(self.focus['los'])>1:
+		#	self.focus['los'].pop(0)
+		
+		return [self.focus['los'][0][0],self.focus['los'][0][1]]

@@ -12,16 +12,19 @@ pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
 pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
 pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
 pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
+pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 
 #Setup stuff...
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
+var.fps = 0
 var.view_dist = 11
 var.life = []
 var.history = []
 var.skill_mod = 6
 var.solid= [0,11]
 var.blocking = [10]
+var.items = [13,14]
 var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}
@@ -37,7 +40,9 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'9':{'icon':',','color':['altlightgreen','green']},
 	'10':{'icon':'o','color':['blue','blue']},
 	'11':{'icon':';','color':['sand','brown']},
-	'12':{'icon':'#','color':['sand','brown']}}
+	'12':{'icon':'#','color':['sand','brown']},
+	'13':{'icon':'1','color':['sand','gold']},
+	'14':{'icon':'c','color':['darkgray','darkergray']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -57,7 +62,7 @@ var.view.putchars('Generating world...',x=0,y=0)
 var.view.update()
 
 #Generate level
-var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=10)
+var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=5)
 var.world.generate()
 
 #People
@@ -67,7 +72,13 @@ var.player.z = 0
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
-for i in range(1,4):
+test = life.human()
+test.name = 'derp'
+test.z = 0
+test.level = var.world.get_level(test.z)
+test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
+
+for i in range(1,var.world.depth):
 	for r in range(0,i):
 		_temp = life.zombie()
 		_temp.z = -i
@@ -76,6 +87,8 @@ for i in range(1,4):
 		_temp.pos = [_p[0],_p[1]]
 
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
+var.temp_fps = 0
+var.fpstime = time.time()
 
 def draw_screen(refresh=False):	
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
@@ -174,15 +187,26 @@ def draw_screen(refresh=False):
 	var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 	var.log.putchars(_thirst,x=len(_char)+len(_health)+len(_depth)+len(_skill)+4,y=var.window_size[1]-6,fgcolor='blue',bgcolor='black')
 	var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
+	var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
 	
 	_i=0
 	for entry in var.history:
-		var.log.putchars(entry,x=0,y=var.window_size[1]-5+(_i),fgcolor='altgray',bgcolor='black')
+		_fgcolor = 'altgray'
+		
+		if entry.count('gold'):
+			_fgcolor = 'gold'
+		
+		var.log.putchars(entry,x=0,y=var.window_size[1]-5+(_i),fgcolor=_fgcolor,bgcolor='black')
 		_i+=1
 	
 	var.log.update()
 	var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
-	#print time.time()-_starttime
+	if time.time()-var.fpstime>=1:
+		var.fpstime=time.time()
+		var.fps = var.temp_fps
+		var.temp_fps = 0
+	else:
+		var.temp_fps += 1
 
 def get_input():
 	for event in pygame.event.get():

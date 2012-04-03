@@ -50,8 +50,17 @@ class World:
 				print '\tDecompose setting %s took' % (self.depth-abs(level['z'])),time.time()-_ctime
 				
 				_wtime = time.time()
-				level['level'].walk(where=level['level'].walls,walkers=-level['z'],types=[10,11],intensity=(10,12))
+				_w = level['level'].walk(where=level['level'].walls,walkers=-level['z'],types=[10,11],intensity=(10,12))
 				print '\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime)
+				
+				#for pos in random.sample(_w,len(_w)/15):
+				#	if level['level'].map[pos[0]][pos[1]] == 11:
+				#		level['level'].map[pos[0]][pos[1]] = 13
+				#
+				#for pos in random.sample(_w,len(_w)/13):
+				#	if level['level'].map[pos[0]][pos[1]] == 11:
+				#		level['level'].map[pos[0]][pos[1]] = 14
+				
 			else:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(entrances=_entrances,exits=_exits)

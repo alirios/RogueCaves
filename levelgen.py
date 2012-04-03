@@ -161,6 +161,7 @@ class LevelGen:
 		#We'll see how it works here.
 		_walkers = []
 		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
+		_ret = []
 		
 		for i in range(walkers):
 			_pos = random.choice(where)
@@ -193,12 +194,16 @@ class LevelGen:
 						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
 						
 						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
+						_ret.append((_x+pos[0],_y+pos[1]))
 						
 						if walker[3] in var.blocking:
 							if (_x+pos[0],_y+pos[1]) in self.walking_space:
 								self.walking_space.remove((_x+pos[0],_y+pos[1]))
 						
 					self.map[_x][_y] = walker[3]
+					_ret.append((_x,_y))
+			
+		return _ret
 	
 	def generate_cave(self, entrances=[(4,4)],exits=[]):
 		#We'll be generating the level in the following
@@ -453,7 +458,6 @@ class LevelGen:
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
-		
 	
 	def generate_forest(self, entrances=[(4,4)],exits=[]):
 		self.max_rooms = 0
