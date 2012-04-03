@@ -188,14 +188,19 @@ class human(life):
 		life.__init__(self,player=player)
 		
 		self.race = 'human'
+		self.gender = 'male'
 		
 		self.hp = 20
 		self.hp_max = 20
+		
+		self.married = None
+		self.worth = None
 	
 	def think(self):
 		life.think(self)
 		
 		#ACT HUMANLY!
+		
 		return self.pos
 
 class zombie(life):
