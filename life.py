@@ -49,11 +49,16 @@ class life:
 			self.skill_level+=1
 			self.hp = self.hp_max
 	
-	def think(self):
-		self.seen = []
+	def has_seen(self,who):
+		for seen in self.seen:
+			if seen['who'] == who:
+				return seen
 		
+		return False
+	
+	def think(self):
 		for life in var.life:
-			if life == self or not self.z == life.z: continue
+			if life == self or not self.z == life.z or self.race == life.race: continue
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
@@ -64,13 +69,42 @@ class life:
 					break
 			
 			if _seen:
-				self.seen.append({'who':life,'dist':len(_l),'los':_l})
+				_temp = self.has_seen(life)
+				if _temp:
+					#self.seen.append({'who':life,'los':_l})
+					_temp['los'] = _l
+				else:
+					self.seen.append({'who':life,'los':_l})
+					
 		
 		if not self.seen: return self.pos
 		
-		self.focus = self.seen[0]
-		self.focus['los'].pop(0)
-		return [self.focus['los'][0][0],self.focus['los'][0][1]]
+		#Find closest
+		_lowest = {'who':None,'lowest':9000,'los':None}
+		for seen in self.seen:
+			if len(seen['los'])<=_lowest['lowest']:
+				_lowest['who'] = seen['who']
+				_lowest['lowest'] = len(seen['los'])
+				_lowest['los'] = seen['los']
+		
+		self.focus = _lowest
+		self.focus['los'].pop(len(self.focus['los'])-1)
+		print self.focus['los']
+		
+		if not self.focus['los']:
+			return [self.focus['los'][0][0],self.focus['los'][0][1]]
+		
+		return self.pos
+	
+	def place(self,pos,tile):
+		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
+		if not self.level.map[_pos[0]][_pos[1]] in var.solid:
+			self.level.map[_pos[0]][_pos[1]] = tile
+			if _pos in self.level.walls:
+				self.level.walls.remove(_pos)
+			
+			if not _pos in self.level.walking_space:
+				self.level.walking_space.append(_pos)
 	
 	def walk(self,dir):
 		_pos = self.pos[:]

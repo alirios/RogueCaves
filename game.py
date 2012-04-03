@@ -35,7 +35,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'8':{'icon':';','color':['lightsand','sand']},
 	'9':{'icon':',','color':['altlightgreen','green']},
 	'10':{'icon':'o','color':['blue','blue']},
-	'11':{'icon':';','color':['sand','brown']}}
+	'11':{'icon':';','color':['sand','brown']},
+	'12':{'icon':'#','color':['sand','brown']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -171,25 +172,33 @@ def get_input():
 			pygame.quit()
 			sys.exit()
 		elif event.type == KEYDOWN:
-			if event.key == K_UP or event.key == K_w:
+			if event.key == K_UP:
 				var.input['up'] = True
-			elif event.key == K_DOWN or event.key == K_s:
+			elif event.key == K_DOWN:
 				var.input['down'] = True
-			elif event.key == K_LEFT or event.key == K_a:
+			elif event.key == K_LEFT:
 				var.input['left'] = True
-			elif event.key == K_RIGHT or event.key == K_d:
+			elif event.key == K_RIGHT:
 				var.input['right'] = True
 			elif event.key == K_RETURN:
 				var.player.enter()
 				draw_screen(refresh=True)
+			elif event.key == K_w:
+				var.player.place((0,-1),12)
+			elif event.key == K_a:
+				var.player.place((-1,0),12)
+			elif event.key == K_d:
+				var.player.place((1,0),12)
+			elif event.key == K_s:
+				var.player.place((0,1),12)
 		elif event.type == KEYUP:
-			if event.key == K_UP or event.key == K_w:
+			if event.key == K_UP:
 				var.input['up'] = False
-			elif event.key == K_DOWN or event.key == K_s:
+			elif event.key == K_DOWN:
 				var.input['down'] = False
-			elif event.key == K_LEFT or event.key == K_a:
+			elif event.key == K_LEFT:
 				var.input['left'] = False
-			elif event.key == K_RIGHT or event.key == K_d:
+			elif event.key == K_RIGHT:
 				var.input['right'] = False
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
@@ -205,7 +214,9 @@ def get_input():
 	for life in var.life:
 		if life.player: continue
 		life.walk(None)
-		
+	
+	if var.mouse_pos == (None,None):
+		var.mouse_pos = (0,0)
 	draw_screen()
 	var.clock.tick(10)
 
