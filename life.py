@@ -90,8 +90,12 @@ class life:
 		for life in var.life:
 			if life == self: continue
 			
-			if not self.z == life.z:
-				
+			_temp = self.has_seen(life)
+			
+			if not self.z == life.z and _temp:
+				if _temp and _temp['in_los']:
+					print _temp['who'].name,'lost'
+					_temp['in_los'] = False
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
@@ -103,10 +107,8 @@ class life:
 			
 			if _seen and not life.z == self.z: _seen = False
 			
-			_temp = self.has_seen(life)
 			if _seen:
 				if _temp:
-					#self.seen.append({'who':life,'los':_l})
 					_temp['los'] = _l[:]
 					_temp['in_los'] = True
 				else:
@@ -157,10 +159,12 @@ class life:
 		if _tile in var.items:
 			if _tile == 13:
 				self.gold += 1
-				functions.log('You picked up +1 gold.')
+				if self.player:
+					functions.log('You picked up +1 gold.')
 			elif _tile == 14:
 				self.coal += 1
-				functions.log('You picked up +1 coal.')
+				if self.player:
+					functions.log('You picked up +1 coal.')
 			
 			self.level.map[_pos[0]][_pos[1]] = 1
 		
@@ -252,20 +256,22 @@ class zombie(life):
 		#Find closest
 		_lowest = {'who':None,'lowest':9000,'los':None}
 		for seen in self.seen:
+			if seen['who'].race == self.race: continue
+			
 			if len(seen['los'])<=_lowest['lowest']:
 				_lowest['who'] = seen['who']
 				_lowest['lowest'] = len(seen['los'])
 				_lowest['los'] = seen['los']
 		
-		self.focus = _lowest
+		if _lowest['who']:
+			self.focus = _lowest
+		else:
+			return self.pos
 		
 		if self.focus['los']:
 			self.focus['los'].pop(0)
 		
 		if not self.focus['los']:
 			return self.pos
-		
-		#if len(self.focus['los'])>1:
-		#	self.focus['los'].pop(0)
 		
 		return [self.focus['los'][0][0],self.focus['los'][0][1]]

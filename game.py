@@ -126,7 +126,7 @@ def draw_screen(refresh=False):
 				_bgcolor = tile_map[str(var.player.level.map[x][y])]['color'][1]
 				
 				if not _tile['color'][1]:
-					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand']:
+					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor='black',bgcolor=_bgcolor)
 					else:
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_bgcolor)
@@ -142,17 +142,6 @@ def draw_screen(refresh=False):
 						var.view.lighten(50,(x,y,1,1))
 					else:
 						var.view.darken(50,(x,y,1,1))
-				
-				#if x < _xrange[0]: _xrange[0] = x-4
-				#if x > _xrange[1]: _xrange[1] = x+4
-				#if y < _yrange[0]: _yrange[0] = y-4
-				#if y > _yrange[1]: _yrange[1] = y+4
-				
-				#if _xrange[0]<0: _xrange[0]=0
-				#elif _xrange[1]>var.world.size[0]: _xrange[1]=var.world.size[0]
-				#
-				#if _yrange[0]<0: _yrange[0]=0
-				#elif _yrange[1]>var.world.size[1]: _yrange[1]=var.world.size[1]
 				
 				#for light in _m.lights:
 				#	for pos in _m.lmap[light[0]][light[1]]['children']:
