@@ -18,18 +18,25 @@ class life:
 		self.xp = 0
 		self.skill_level = 1
 		self.seen = []
+		self.path = None
+		self.path_dest = ()
 		self.alignment = 'neutral'
 		
 		self.atk = 1
 		self.defe = 1
 		
 		self.thirst = 0
+		self.thirst_timer = 75
 		self.hunger = 0
-		self.hunger_timer = 50
+		self.hunger_timer = 100
 		self.gold = 0
 		self.coal = 0
 		
 		var.life.append(self)
+	
+	def say(self,what):
+		if self.z == var.player.z and self.can_see(var.player.pos):
+			functions.log('%s: %s' % (self.name,what))
 	
 	def attack(self,who):
 		if who.race in ['zombie']:
@@ -76,9 +83,9 @@ class life:
 		
 		return False
 	
-	def can_see(self,who):
+	def can_see(self,pos):
 		_seen = True
-		for pos in draw.draw_diag_line(self.pos,who.pos):
+		for pos in draw.draw_diag_line(self.pos,pos):
 			if self.level.map[pos[0]][pos[1]] in var.solid:
 				_seen = False
 				break
@@ -95,7 +102,19 @@ class life:
 			if not _pos in self.level.walking_space:
 				self.level.walking_space.append(_pos)
 	
-	def think(self):
+	def tick(self):
+		self.hunger_timer -= 1
+		self.thirst_timer -= 1
+		
+		if self.hunger_timer <= 0:
+			self.hunger_timer = 100
+			self.hunger+=1
+		
+		if self.thirst_timer <= 0:
+			self.thirst_timer = 75
+			self.thirst+=1
+	
+	def think(self):		
 		for life in var.life:
 			if life == self: continue
 			
@@ -108,7 +127,7 @@ class life:
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
-			_seen = self.can_see(life)#True
+			_seen = self.can_see(life.pos)#True
 			
 			if _seen and not life.z == self.z: _seen = False
 			
@@ -156,23 +175,25 @@ class life:
 				if _chance <= 75:
 					self.level.map[_pos[0]][_pos[1]] = 1
 				elif 75<_chance<=95:
-					self.level.map[_pos[0]][_pos[1]] = 14
+					self.level.add_item(14,_pos)
 				else:
-					self.level.map[_pos[0]][_pos[1]] = 13
+					self.level.add_item(13,_pos)
 			
 			_pos = self.pos[:]
 		
-		if _tile in var.items:
-			if _tile == 13:
-				self.gold += 1
-				if self.player:
-					functions.log('You picked up +1 gold.')
-			elif _tile == 14:
-				self.coal += 1
-				if self.player:
-					functions.log('You picked up +1 coal.')
-			
-			self.level.map[_pos[0]][_pos[1]] = 1
+		_items = self.level.items[_pos[0]][_pos[1]]
+		if _items:
+			for _tile in _items:
+				if _tile == 13:
+					self.gold += 1
+					if self.player:
+						functions.log('You picked up +1 gold.')
+				elif _tile == 14:
+					self.coal += 1
+					if self.player:
+						functions.log('You picked up +1 coal.')
+				
+				self.level.items[_pos[0]][_pos[1]].remove(_tile)
 		
 		_found = False
 		for life in var.life:
@@ -183,20 +204,28 @@ class life:
 				_found = True
 		
 		if not _found:
+			if not self.pos == _pos:
+				self.hunger_timer -= 1
+			
 			self.pos = _pos[:]
-		
-		self.hunger_timer -= 1
-		
-		if self.hunger_timer <= 0:
-			self.hunger_timer = 50
-			self.hunger+=1
+
+	def find_path(self,pos):
+		if self.can_see(pos):
+			if not (pos[0],pos[1]) == self.path_dest:
+				self.path = draw.draw_diag_line(self.pos,pos)
+				
+				self.path_dest = (pos[0],pos[1])
+		else:
+			if not (pos[0],pos[1]) == self.path_dest:
+				self.path = pathfinding.astar(start=self.pos,end=pos,\
+					omap=self.level.map,size=self.level.size).path
+				
+				self.path_dest = (pos[0],pos[1])
+			else:
+				print 'Saved some time'
 	
 	def follow(self,who):
-		if self.can_see(who):
-			self.path = draw.draw_diag_line(self.pos,who.pos)
-		else:
-			self.path = pathfinding.astar(start=self.pos,end=who.pos,\
-				omap=self.level.map,size=self.level.size).path
+		self.find_path(who.pos)
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -246,6 +275,25 @@ class human(life):
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
+		
+		self.events = []
+	
+	def add_event(self,what,score):
+		for event in self.events:
+			if event['what'] == what:
+				event['score'] = score
+				return
+		
+		self.events.append({'what':what,'score':score})
+	
+	def get_event(self):
+		_highest = {'what':None,'score':-1}
+		for event in self.events:
+			if event['score']>=_highest['score']:
+				_highest['what'] = event['what']
+				_highest['score'] = event['score']
+		
+		return _highest['what']
 	
 	def judge(self,who):
 		#This is so much easier...
@@ -259,7 +307,6 @@ class human(life):
 		return _score
 	
 	def think(self):
-		self.path = None
 		life.think(self)
 		
 		#ACT HUMANLY!
@@ -289,21 +336,38 @@ class human(life):
 			if self.lowest['who']:
 				if self.judge(self)>=abs(self.lowest['score']):
 					self.path = draw.draw_diag_line(self.pos,self.lowest['who'].pos)
+					#if len(self.path)>1: self.path.pop(0)
 					self.task = 'attacking'
 				else:
 					self.task = 'flee'
-			elif self.highest['who']:
+			elif self.highest['who'] and self.married == self.highest['who']:
+				#This one will happen too much...
 				self.follow(self.highest['who'])
 				self.task = 'following'
+			else:
+				_event = self.get_event()
+				
+				if _event and not self.task==_event:
+					self.say('I need to get %s' % (_event))
+					self.task = _event
+				
+				if self.task == 'food':
+					self.follow(var.player)
+				
 		else:
 			if self.mode['task'] == 'follow':
 				self.follow(self.mode['who'])
 				self.task = 'following'
 		
+		#Take care of daily schedules here
+		if self.hunger >= 1:
+			self.add_event('food',self.hunger)
+		
+		if self.thirst >= 50:
+			self.add_event('water',self.thirst)
+		
 		if self.path:
-			if len(self.path)>1:
-				self.path.pop(0)
-			
+			if len(self.path)>1: self.path.pop(0)
 			return [self.path[0][0],self.path[0][1]]
 		
 		return self.pos

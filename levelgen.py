@@ -15,6 +15,7 @@ class LevelGen:
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
+		self.items = []
 		
 		#Lights and maps...
 		self.lights = []
@@ -26,14 +27,17 @@ class LevelGen:
 		for x in range(self.size[0]):
 			_y = []
 			_l = []
+			_i = []
 			
 			for y in range(self.size[1]):
 				_y.append(0)
 				_l.append({'source':False,'color':(0,0,0),'brightness':0})
+				_i.append([])
 				self.walls.append((x,y))
 			
 			self.map.append(_y)
 			self.lmap.append(_l)
+			self.items.append(_i)
 		
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
@@ -43,6 +47,17 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['life'] = life
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
 		self.lmap[pos[0]][pos[1]]['children'] =[]
+	
+	def add_item(self,item,pos):
+		self.items[pos[0]][pos[1]].append(item)
+	
+	def get_item(self,pos):
+		#for x in range(self.size[0]):
+		#	for y in range(self.size[1]-1):
+		return self.items[pos[0]][pos[1]]#.append({'item':item})
+		#for item in self.items[x][y]:
+				#if item['pos'] == pos:
+				#	return False
 	
 	def dofov(self,pos,x,y,dist,efov=False):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode

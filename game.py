@@ -78,7 +78,7 @@ test.z = -1
 test.speed = 1
 test.speed_max = 1
 test.level = var.world.get_level(test.z)
-test.mode = {'task':'follow','who':var.player}
+#test.mode = {'task':'follow','who':var.player}
 test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
 
 for i in range(1,var.world.depth):
@@ -119,6 +119,9 @@ def draw_screen(refresh=False):
 		for y in range(_yrange[0],_yrange[1]):
 			
 			_tile = None
+			
+			if var.player.level.items[x][y]:
+				_tile = tile_map[str(var.player.level.items[x][y][0])]
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
@@ -241,6 +244,7 @@ def get_input():
 				#var.player.walk(key)
 	
 	for life in var.life:
+		life.tick()
 		if life.player: continue
 		life.walk(None)
 	
