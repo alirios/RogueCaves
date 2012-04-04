@@ -75,6 +75,8 @@ var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_
 test = life.human()
 test.name = 'derp'
 test.z = -1
+test.speed = 1
+test.speed_max = 1
 test.level = var.world.get_level(test.z)
 test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
 

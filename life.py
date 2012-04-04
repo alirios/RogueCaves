@@ -76,6 +76,15 @@ class life:
 		
 		return False
 	
+	def can_see(self,who):
+		_seen = True
+		for pos in draw.draw_diag_line(self.pos,who.pos):
+			if self.level.map[pos[0]][pos[1]] in var.solid:
+				_seen = False
+				break
+		
+		return _seen
+	
 	def place(self,pos,tile):
 		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
 		if not self.level.map[_pos[0]][_pos[1]] in var.solid:
@@ -99,11 +108,11 @@ class life:
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
-			_seen = True
-			for pos in _l:
-				if not self.level.map[pos[0]][pos[1]]:
-					_seen = False
-					break
+			_seen = self.can_see(life)#True
+			#for pos in _l:
+			#	if self.level.map[pos[0]][pos[1]] in var.solid:
+			#		_seen = False
+			#		break
 			
 			if _seen and not life.z == self.z: _seen = False
 			
@@ -202,6 +211,15 @@ class life:
 			if _temp:
 				life.seen.remove(_temp)
 				print 'Removed dead entity'
+				
+				if life.race == 'human':
+					if life.lowest['who'] == self:
+						life.lowest['who'] = None
+						life.lowest['score'] = 0
+					
+					if life.highest['who'] == self:
+						life.highest['who'] = None
+						life.highest['score'] = 0
 		
 		var.life.remove(self)
 
@@ -219,12 +237,16 @@ class human(life):
 		
 		self.married = None
 		self.worth = None
+		self.task = None
+		
+		self.lowest = {'who':None,'score':0}
+		self.highest = {'who':None,'score':0}
 	
 	def judge(self,who):
 		#This is so much easier...
 		_score = 0
 		
-		_score = (who.atk+who.defe)
+		_score = (who.hp+who.atk+who.defe)
 		
 		if not self.race == who.race:
 			_score *= -1
@@ -232,26 +254,42 @@ class human(life):
 		return _score
 	
 	def think(self):
+		self.path = None
 		life.think(self)
 		
 		#ACT HUMANLY!
-		_lowest = {'who':None,'score':0}
-		_highest = {'who':None,'score':0}
 		
 		for seen in self.seen:
 			if seen['in_los']:
 				_score = self.judge(seen['who'])
 				
-				if _score < 0 and _score <= _lowest['score']:
-					_lowest['score'] = _score
-					_lowest['who'] = seen['who']
+				if _score < 0 and _score <= self.lowest['score']:
+					self.lowest['score'] = _score
+					self.lowest['who'] = seen['who']
 				
-				if _score >= 0 and _score >= _highest['score']:
-					_highest['score'] = _score
-					_highest['who'] = seen['who']
-					
+				if _score >= 0 and _score >= self.highest['score']:
+					self.highest['score'] = _score
+					self.highest['who'] = seen['who']
 		
-		print _lowest,_highest
+		print self.lowest,self.highest
+		
+		if not self.task:
+			if self.lowest['who']:
+				if self.judge(self)>=abs(self.lowest['score']):
+					self.path = draw.draw_diag_line(self.pos,self.lowest['who'].pos)
+				else:
+					self.task = 'flee'
+			elif self.highest['who']:
+				if self.can_see(self.highest['who']):
+					self.path = draw.draw_diag_line(self.pos,self.highest['who'].pos)
+				else:
+					print 'Can\'t see!'
+		
+		if self.path:
+			if len(self.path)>1:
+				self.path.pop(0)
+			
+			return [self.path[0][0],self.path[0][1]]
 		
 		return self.pos
 
