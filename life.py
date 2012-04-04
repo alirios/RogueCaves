@@ -20,6 +20,9 @@ class life:
 		self.seen = []
 		self.alignment = 'neutral'
 		
+		self.atk = 1
+		self.defe = 1
+		
 		self.thirst = 0
 		self.hunger = 0
 		self.hunger_timer = 50
@@ -85,7 +88,10 @@ class life:
 	
 	def think(self):
 		for life in var.life:
-			if life == self or not self.z == life.z or self.race == life.race: continue
+			if life == self: continue
+			
+			if not self.z == life.z:
+				
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
@@ -95,13 +101,20 @@ class life:
 					_seen = False
 					break
 			
+			if _seen and not life.z == self.z: _seen = False
+			
+			_temp = self.has_seen(life)
 			if _seen:
-				_temp = self.has_seen(life)
 				if _temp:
 					#self.seen.append({'who':life,'los':_l})
 					_temp['los'] = _l[:]
+					_temp['in_los'] = True
 				else:
-					self.seen.append({'who':life,'los':_l})
+					self.seen.append({'who':life,'los':_l,'in_los':True})
+			else:
+				if _temp and _temp['in_los']:
+					print _temp['who'].name,'lost'
+					_temp['in_los'] = False
 	
 	def walk(self,dir):
 		_pos = self.pos[:]
@@ -196,10 +209,24 @@ class human(life):
 		self.married = None
 		self.worth = None
 	
+	def judge(self,who):
+		#This is so much easier...
+		_score = 0
+		
+		_score = (who.atk+who.defe)
+		
+		if not self.race == who.race:
+			_score *= -1
+		
+		print who.name,_score
+	
 	def think(self):
 		life.think(self)
 		
 		#ACT HUMANLY!
+		for seen in self.seen:
+			if seen['in_los']:
+				self.judge(seen['who'])
 		
 		return self.pos
 
