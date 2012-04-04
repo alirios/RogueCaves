@@ -1,5 +1,5 @@
+import pathfinding, functions, draw, var
 import random
-import functions, draw, var
 
 class life:
 	def __init__(self,player=False):
@@ -109,10 +109,6 @@ class life:
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
 			_seen = self.can_see(life)#True
-			#for pos in _l:
-			#	if self.level.map[pos[0]][pos[1]] in var.solid:
-			#		_seen = False
-			#		break
 			
 			if _seen and not life.z == self.z: _seen = False
 			
@@ -120,8 +116,9 @@ class life:
 				if _temp:
 					_temp['los'] = _l[:]
 					_temp['in_los'] = True
+					_temp['last_seen'] = life.pos[:]
 				else:
-					self.seen.append({'who':life,'los':_l,'in_los':True})
+					self.seen.append({'who':life,'los':_l,'in_los':True,'last_seen':life.pos[:]})
 			else:
 				if _temp and _temp['in_los']:
 					print _temp['who'].name,'lost'
@@ -193,6 +190,13 @@ class life:
 		if self.hunger_timer <= 0:
 			self.hunger_timer = 50
 			self.hunger+=1
+	
+	def follow(self,who):
+		if self.can_see(who):
+			self.path = draw.draw_diag_line(self.pos,who.pos)
+		else:
+			self.path = pathfinding.astar(start=self.pos,end=who.pos,\
+				omap=self.level.map,size=self.level.size).path
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -237,6 +241,7 @@ class human(life):
 		
 		self.married = None
 		self.worth = None
+		self.mode = {'task':None,'who':None}
 		self.task = None
 		
 		self.lowest = {'who':None,'score':0}
@@ -266,24 +271,34 @@ class human(life):
 				if _score < 0 and _score <= self.lowest['score']:
 					self.lowest['score'] = _score
 					self.lowest['who'] = seen['who']
+					self.lowest['last_seen'] = seen['last_seen'][:]
 				
 				if _score >= 0 and _score >= self.highest['score']:
 					self.highest['score'] = _score
 					self.highest['who'] = seen['who']
+					self.highest['last_seen'] = seen['last_seen'][:]
+			
+			else:
+				if self.lowest['who'] == seen['who']:
+					self.lowest['last_seen'] = seen['last_seen'][:]
+				
+				if self.highest['who'] == seen['who']:
+					self.highest['last_seen'] = seen['last_seen'][:]
 		
-		print self.lowest,self.highest
-		
-		if not self.task:
+		if not self.mode['task']:
 			if self.lowest['who']:
 				if self.judge(self)>=abs(self.lowest['score']):
 					self.path = draw.draw_diag_line(self.pos,self.lowest['who'].pos)
+					self.task = 'attacking'
 				else:
 					self.task = 'flee'
 			elif self.highest['who']:
-				if self.can_see(self.highest['who']):
-					self.path = draw.draw_diag_line(self.pos,self.highest['who'].pos)
-				else:
-					print 'Can\'t see!'
+				self.follow(self.highest['who'])
+				self.task = 'following'
+		else:
+			if self.mode['task'] == 'follow':
+				self.follow(self.mode['who'])
+				self.task = 'following'
 		
 		if self.path:
 			if len(self.path)>1:

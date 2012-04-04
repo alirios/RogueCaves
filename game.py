@@ -78,6 +78,7 @@ test.z = -1
 test.speed = 1
 test.speed_max = 1
 test.level = var.world.get_level(test.z)
+test.mode = {'task':'follow','who':var.player}
 test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
 
 for i in range(1,var.world.depth):
