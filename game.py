@@ -68,13 +68,13 @@ var.world.generate()
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.z = 0
+var.player.z = -1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
 test = life.human()
 test.name = 'derp'
-test.z = 0
+test.z = -1
 test.level = var.world.get_level(test.z)
 test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
 
@@ -153,11 +153,6 @@ def draw_screen(refresh=False):
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
-				
-				#if x < _xrange[0]: _xrange[0] = x
-				#if x > _xrange[1]: _xrange[1] = x+1
-				#if y < _yrange[0]: _yrange[0] = y
-				#if y > _yrange[1]: _yrange[1] = y+1
 			else:
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	

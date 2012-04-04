@@ -196,6 +196,13 @@ class life:
 		self.level = var.world.get_level(self.z)
 	
 	def kill(self):
+		for life in var.life:
+			_temp = life.has_seen(self)
+			
+			if _temp:
+				life.seen.remove(_temp)
+				print 'Removed dead entity'
+		
 		var.life.remove(self)
 
 class human(life):
@@ -222,15 +229,29 @@ class human(life):
 		if not self.race == who.race:
 			_score *= -1
 		
-		print who.name,_score
+		return _score
 	
 	def think(self):
 		life.think(self)
 		
 		#ACT HUMANLY!
+		_lowest = {'who':None,'score':0}
+		_highest = {'who':None,'score':0}
+		
 		for seen in self.seen:
 			if seen['in_los']:
-				self.judge(seen['who'])
+				_score = self.judge(seen['who'])
+				
+				if _score < 0 and _score <= _lowest['score']:
+					_lowest['score'] = _score
+					_lowest['who'] = seen['who']
+				
+				if _score >= 0 and _score >= _highest['score']:
+					_highest['score'] = _score
+					_highest['who'] = seen['who']
+					
+		
+		print _lowest,_highest
 		
 		return self.pos
 
