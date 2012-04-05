@@ -15,13 +15,13 @@ class LevelGen:
 		self.landmarks = []
 		self.walking_space = []
 		self.walls = []
-		self.items = []
 		
 		#Lights and maps...
 		self.lights = []
 		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
 		self.lmap = []
 		self.fov = []
+		self.items = []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in range(self.size[0]):
@@ -235,6 +235,9 @@ class LevelGen:
 		#1 - floor
 		#2 - tunnel
 		#3 - door
+		
+		self.entrances = entrances
+		self.exits = exits
 		
 		#First, let's place our entrances+exits.
 		_places = entrances[:]
@@ -475,6 +478,9 @@ class LevelGen:
 			self.map[pos[0]][pos[1]] = 4
 	
 	def generate_forest(self, entrances=[(4,4)],exits=[]):
+		self.entrances = entrances
+		self.exits = exits
+		
 		self.max_rooms = 0
 		#self.generate_cave(entrances=entrances,exits=exits)
 		

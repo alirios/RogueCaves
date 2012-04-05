@@ -68,7 +68,7 @@ var.world.generate()
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.z = -1
+var.player.z = 1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
 
@@ -82,7 +82,7 @@ test.level = var.world.get_level(test.z)
 test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
 
 for i in range(1,var.world.depth):
-	for r in range(0,i):
+	for r in range(0,i*2):
 		_temp = life.zombie()
 		_temp.z = -i
 		_temp.speed = var.world.depth-i
@@ -255,7 +255,10 @@ def get_input():
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)
-	draw_screen()
+	if var.player.level.outside:
+		draw_screen(refresh=True)
+	else:
+		draw_screen()
 	var.clock.tick(10)
 
 draw_screen()

@@ -122,7 +122,7 @@ class life:
 			
 			if not self.z == life.z and _temp:
 				if _temp and _temp['in_los']:
-					print _temp['who'].name,'lost'
+					#print _temp['who'].name,'lost'
 					_temp['in_los'] = False
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
@@ -140,7 +140,7 @@ class life:
 					self.seen.append({'who':life,'los':_l,'in_los':True,'last_seen':life.pos[:]})
 			else:
 				if _temp and _temp['in_los']:
-					print _temp['who'].name,'lost'
+					#print _temp['who'].name,'lost'
 					_temp['in_los'] = False
 	
 	def walk(self,dir):
@@ -165,6 +165,15 @@ class life:
 				_pos[0]+=1
 		else:
 			_pos = self.think()
+			
+			if (self.pos[0],self.pos[1]) in self.level.exits\
+				and self.path_dest in self.level.exits:
+				self.enter()
+				self.path_dest = None
+			elif (self.pos[0],self.pos[1]) in self.level.entrances\
+				and self.path_dest in self.level.entrances:
+				self.enter()
+				self.path_dest = None
 		
 		_tile = self.level.map[_pos[0]][_pos[1]]
 			
@@ -216,20 +225,30 @@ class life:
 			self.pos = _pos[:]
 
 	def find_path(self,pos):
+		if (pos[0],pos[1]) == self.path_dest: return
+		
 		if self.can_see(pos):
-			if not (pos[0],pos[1]) == self.path_dest:
-				self.path = draw.draw_diag_line(self.pos,pos)
-				
-				self.path_dest = (pos[0],pos[1])
+			#if not (pos[0],pos[1]) == self.path_dest:
+			self.path = draw.draw_diag_line(self.pos,pos)
+			self.path_dest = (pos[0],pos[1])
 		else:
-			if not (pos[0],pos[1]) == self.path_dest:
-				self.path = pathfinding.astar(start=self.pos,end=pos,\
-					omap=self.level.map,size=self.level.size).path
-				
-				self.path_dest = (pos[0],pos[1])
+			#if not (pos[0],pos[1]) == self.path_dest:
+			self.path = pathfinding.astar(start=self.pos,end=pos,\
+				omap=self.level.map,size=self.level.size).path
+			self.path_dest = (pos[0],pos[1])
 	
 	def follow(self,who):
-		if self.pos == who.pos or functions.distance(self.pos,who.pos)<=3:
+		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):
+			return
+		
+		if not self.z == who.z:
+			#TODO: Pathing for traversing levels
+			if self.z<who.z:
+				self.find_path(self.level.entrances[0])
+				print 'Going up!'
+			else:
+				self.find_path(self.level.exits[0])
+				print 'Going down!',self.pos,self.level.exits[0]
 			return
 		
 		self.find_path(who.pos)
@@ -360,6 +379,7 @@ class human(life):
 				
 				if self.task == 'food':
 					self.follow(var.player)
+					print 'Trying to follow player',var.player.pos
 				
 		else:
 			if self.mode['task'] == 'follow':
