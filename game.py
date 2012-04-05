@@ -62,7 +62,7 @@ var.view.putchars('Generating world...',x=0,y=0)
 var.view.update()
 
 #Generate level
-var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=5)
+var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=6)
 var.world.generate()
 
 #People
@@ -85,6 +85,10 @@ for i in range(1,var.world.depth):
 	for r in range(0,i):
 		_temp = life.zombie()
 		_temp.z = -i
+		_temp.speed = var.world.depth-i
+		_temp.speed_max = var.world.depth-i
+		_temp.hp = i+3
+		_temp.hp_max = i+3
 		_temp.level = var.world.get_level(_temp.z)
 		_p = random.choice(_temp.level.walking_space)
 		_temp.pos = [_p[0],_p[1]]
@@ -243,6 +247,7 @@ def get_input():
 				var.player.walk(key)
 				#var.player.walk(key)
 	
+	_atime = time.time()
 	for life in var.life:
 		life.tick()
 		if life.player: continue

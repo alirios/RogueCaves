@@ -10,10 +10,10 @@ class astar:
 		self.goals = goals
 		self.inverted = inverted
 		
-		if not blocking:
-			self.blocking = var.blocking
-			self.blocking.extend(var.solid)
-		else: self.blocking = blocking
+		#if not blocking:
+		self.blocking = var.blocking
+		self.blocking.extend(var.solid)
+		#else: self.blocking = blocking
 
 		if not self.dij:
 			self.start = tuple(start)

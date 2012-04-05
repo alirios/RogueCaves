@@ -116,7 +116,7 @@ class life:
 	
 	def think(self):		
 		for life in var.life:
-			if life == self: continue
+			if life == self or not self.z == life.z: continue
 			
 			_temp = self.has_seen(life)
 			
@@ -179,7 +179,8 @@ class life:
 				else:
 					self.level.add_item(13,_pos)
 			
-			_pos = self.pos[:]
+			self.pos = self.pos[:]
+			return
 		
 		_items = self.level.items[_pos[0]][_pos[1]]
 		if _items:
@@ -197,9 +198,14 @@ class life:
 		
 		_found = False
 		for life in var.life:
-			if life == self or not self.z == life.z or self.race == life.race: continue
+			if life == self or not self.z == life.z: continue
 			
-			if life.pos == _pos:
+			if self.race == life.race:
+				if life.pos == _pos:
+					if self.player:
+						functions.log('%s is in the way.' % life.name)
+					_found = True
+			elif life.pos == _pos:
 				self.attack(life)
 				_found = True
 		
@@ -221,10 +227,11 @@ class life:
 					omap=self.level.map,size=self.level.size).path
 				
 				self.path_dest = (pos[0],pos[1])
-			else:
-				print 'Saved some time'
 	
 	def follow(self,who):
+		if self.pos == who.pos or functions.distance(self.pos,who.pos)<=3:
+			return
+		
 		self.find_path(who.pos)
 		
 	def enter(self):
