@@ -26,13 +26,31 @@ class life:
 		self.defe = 1
 		
 		self.thirst = 0
-		self.thirst_timer = 75
+		self.thirst_timer = var.thirst_timer_max
 		self.hunger = 0
-		self.hunger_timer = 100
+		self.hunger_timer = var.hunger_timer_max
+		self.items = []
 		self.gold = 0
 		self.coal = 0
 		
 		var.life.append(self)
+	
+	def add_item(self,item):
+		self.items.append({'name':var.items[str(item)],'tile':item})
+	
+	def get_item_name(self,name):
+		for item in self.items:
+			if item['name'] == name:
+				return item
+		
+		return False
+	
+	def get_item_id(self,id):
+		for item in self.items:
+			if item['tile'] == id:
+				return item
+		
+		return False
 	
 	def say(self,what):
 		if self.z == var.player.z and self.can_see(var.player.pos):
@@ -153,15 +171,13 @@ class life:
 			self.speed = self.speed_max
 		
 		if self.player:
-			if dir == 'up':
+			if dir == 'up' and self.pos[1]-1>=0:
 				_pos[1]-=1
 			elif dir == 'down' and self.pos[1]+1<var.world.size[1]:
-				#if not self.level.map[self.pos[0]][self.pos[1]+1] in var.blocking:
 				_pos[1]+=1
-			elif dir == 'left':
+			elif dir == 'left' and self.pos[0]-1>=0:
 				_pos[0]-=1
 			elif dir == 'right' and self.pos[0]+1<var.world.size[0]:
-				#if not self.level.map[self.pos[0]+1][self.pos[1]] in var.blocking:
 				_pos[0]+=1
 		else:
 			_pos = self.think()
@@ -195,14 +211,19 @@ class life:
 			for _tile in _items:
 				if _tile == 13:
 					self.gold += 1
+					self.level.items[_pos[0]][_pos[1]].remove(_tile)
 					if self.player:
 						functions.log('You picked up +1 gold.')
 				elif _tile == 14:
 					self.coal += 1
+					self.level.items[_pos[0]][_pos[1]].remove(_tile)
 					if self.player:
 						functions.log('You picked up +1 coal.')
-				
-				self.level.items[_pos[0]][_pos[1]].remove(_tile)
+				elif _tile == 17:
+					self.add_item(17)
+					self.level.items[_pos[0]][_pos[1]].remove(_tile)
+					if self.player:
+						functions.log('You picked up some food.')
 		
 		_found = False
 		for life in var.life:
@@ -257,13 +278,10 @@ class life:
 			return
 		
 		if not self.z == depth:
-			#TODO: Pathing for traversing levels
 			if self.z<depth:
 				self.find_path(self.level.entrances[0])
-				print 'Going up!'
 			else:
 				self.find_path(self.level.exits[0])
-				print 'Going down!',self.pos,self.level.exits[0]
 			return
 		
 		self.find_path(pos)
@@ -271,10 +289,8 @@ class life:
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
 			self.z += 1
-			functions.log('You go up.')
 		elif self.level.map[self.pos[0]][self.pos[1]] == 4:
 			self.z -= 1
-			functions.log('You go down.')
 		
 		self.level = var.world.get_level(self.z)
 	
@@ -336,6 +352,16 @@ class human(life):
 		
 		return _highest['what']
 	
+	def remove_event(self,what):
+		for event in self.events:
+			if event['what'] == what:
+				print 'Removed!'
+				self.events.remove(event)
+				return True
+		
+		print 'Warning: Event %s not found!' % what
+		return False
+	
 	def judge(self,who):
 		#This is so much easier...
 		_score = 0
@@ -350,8 +376,7 @@ class human(life):
 	def think(self):
 		life.think(self)
 		
-		#ACT HUMANLY!
-		
+		#ACT HUMANLY!		
 		for seen in self.seen:
 			if seen['in_los']:
 				_score = self.judge(seen['who'])
@@ -377,12 +402,11 @@ class human(life):
 			if self.lowest['who']:
 				if self.judge(self)>=abs(self.lowest['score']):
 					self.path = draw.draw_diag_line(self.pos,self.lowest['who'].pos)
-					#if len(self.path)>1: self.path.pop(0)
 					self.task = 'attacking'
 				else:
 					self.task = 'flee'
 			elif self.highest['who'] and self.married == self.highest['who']:
-				#This one will happen too much...
+				#TODO: This one will happen too much...
 				self.follow(self.highest['who'])
 				self.task = 'following'
 			else:
@@ -393,7 +417,25 @@ class human(life):
 					self.task = _event
 				
 				if self.task == 'food':
-					self.go_to(random.choice(var.world.get_level(1).get_room('home')['walking_space']),1)
+					_item = self.get_item_id(17)
+					
+					if _item:
+						self.hunger = 0
+						self.hunger_timer = var.hunger_timer_max
+						self.items.remove(_item)
+						self.remove_event(self.task)
+						self.task = None
+						self.say('That was good!')
+					else:
+						_pos = None
+						_room = var.world.get_level(1).get_room('home')
+						for pos in _room['walking_space']:
+							if 17 in var.world.get_level(1).items[pos[0]][pos[1]]:
+								_pos = pos
+								break
+						
+						if _pos:
+							self.go_to(_pos,1)
 				
 		else:
 			if self.mode['task'] == 'follow':

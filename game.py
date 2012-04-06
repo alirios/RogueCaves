@@ -19,15 +19,18 @@ var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.fps = 0
 var.view_dist = 11
+var.thirst_timer_max = 75
+var.hunger_timer_max = 100
 var.life = []
 var.history = []
 var.skill_mod = 6
-var.solid= [0,11,15]
+var.solid= [0,11,15,17]
 var.blocking = [10]
 var.items = [13,14]
 var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}
+var.items = {'17':'Meat'}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -44,7 +47,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'13':{'icon':'1','color':['sand','gold']},
 	'14':{'icon':'c','color':['darkgray','darkergray']},
 	'15':{'icon':'#','color':['white','brown']},
-	'16':{'icon':'.','color':['brown','sand']}}
+	'16':{'icon':'.','color':['brown','sand']},
+	'17':{'icon':'#','color':['brown','lightsand']},}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -72,7 +76,7 @@ var.player = life.human(player=True)
 var.player.name = 'Player'
 var.player.z = 1
 var.player.level = var.world.get_level(var.player.z)
-var.player.pos = [var.player.level.walking_space[0][0],var.player.level.walking_space[0][1]]
+var.player.pos = list(var.player.level.get_room('home')['door'])
 
 test = life.human()
 test.name = 'derp'
@@ -81,7 +85,7 @@ test.speed = 1
 test.speed_max = 1
 test.level = var.world.get_level(test.z)
 #test.mode = {'task':'follow','who':var.player}
-test.pos = [test.level.walking_space[0][0],test.level.walking_space[0][1]]
+test.pos = list(test.level.walking_space[0])
 
 for i in range(1,var.world.depth):
 	for r in range(0,i*2):

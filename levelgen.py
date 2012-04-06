@@ -52,12 +52,7 @@ class LevelGen:
 		self.items[pos[0]][pos[1]].append(item)
 	
 	def get_item(self,pos):
-		#for x in range(self.size[0]):
-		#	for y in range(self.size[1]-1):
-		return self.items[pos[0]][pos[1]]#.append({'item':item})
-		#for item in self.items[x][y]:
-				#if item['pos'] == pos:
-				#	return False
+		return self.items[pos[0]][pos[1]]
 	
 	def get_room(self,name):
 		for room in self.rooms:
@@ -585,8 +580,8 @@ class LevelGen:
 			_needs = ['bed','storage']
 		
 		#We like putting things in corners...
+		_possible = []
 		for pos in room['walking_space']:
-			_possible = []
 			_count = 0
 			for _pos in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]:
 				x = pos[0]+_pos[0]
@@ -594,14 +589,12 @@ class LevelGen:
 				
 				if self.map[x][y] in var.solid:
 					_count+=1
-			
-			if _count:
-				print _count
+
 			if _count==5:
 				_possible.append(pos)
 		
 		for pos in _possible:
-			self.map[pos[0]][pos[1]] = 10
+			self.add_item(17,pos)
 	
 	def out(self):
 		for y in range(self.size[1]):
