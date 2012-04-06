@@ -251,6 +251,22 @@ class life:
 			return
 		
 		self.find_path(who.pos)
+	
+	def go_to(self,pos,depth):
+		if self.pos == pos:
+			return
+		
+		if not self.z == depth:
+			#TODO: Pathing for traversing levels
+			if self.z<depth:
+				self.find_path(self.level.entrances[0])
+				print 'Going up!'
+			else:
+				self.find_path(self.level.exits[0])
+				print 'Going down!',self.pos,self.level.exits[0]
+			return
+		
+		self.find_path(pos)
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -377,8 +393,8 @@ class human(life):
 					self.task = _event
 				
 				if self.task == 'food':
-					self.follow(var.player)
-					print 'Trying to follow player',var.player.pos
+					self.go_to(var.world.get_level(1).rooms[0]['door'],1)
+					print 'Trying to go home'
 				
 		else:
 			if self.mode['task'] == 'follow':

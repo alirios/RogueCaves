@@ -558,7 +558,7 @@ class LevelGen:
 					if _found: break
 					
 				self.map[__pos[0]][__pos[1]] = 16
-				self.rooms.append({'name':'Home','walls':_room_walls,'walking_space':_room_floor})
+				self.rooms.append({'name':'Home','walls':_room_walls,'walking_space':_room_floor,'door':__pos})
 				
 				self.landmarks.append(random.choice(_room))
 		
