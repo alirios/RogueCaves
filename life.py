@@ -63,11 +63,11 @@ class life:
 			
 			if who.gold:
 				self.gold += who.gold
-				functions.log('Found +%s gold!' % who.gold)
+				if self.player: functions.log('Found +%s gold!' % who.gold)
 			
 			if who.coal:
 				self.coal += who.coal
-				functions.log('Found +%s coal!' % who.coal)
+				if self.player: functions.log('Found +%s coal!' % who.coal)
 			
 			who.kill()
 		
@@ -176,7 +176,6 @@ class life:
 				self.path_dest = None
 		
 		_tile = self.level.map[_pos[0]][_pos[1]]
-			
 		if _tile in var.blocking or _tile in var.solid:
 			if _tile == 11:
 				_chance = random.randint(0,100)

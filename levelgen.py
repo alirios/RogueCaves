@@ -339,8 +339,8 @@ class LevelGen:
 				_walls.pop(_walls.index(_pos))
 				
 				#Check to make sure the room will fit in this spot
-				if _pos[0]-(_room_size[0]/2)<=0 or _pos[0]+(_room_size[0]/2)>=self.size[0]: continue
-				if _pos[1]-(_room_size[1]/2)<=0 or _pos[1]+(_room_size[1]/2)>=self.size[1]: continue
+				if _pos[0]-(_room_size[0]/2)<=0 or _pos[0]+(_room_size[0]/2)>=self.size[0]: _found=False;continue
+				if _pos[1]-(_room_size[1]/2)<=0 or _pos[1]+(_room_size[1]/2)>=self.size[1]: _found=False;continue
 				
 				#Start checking to see if the room "fits"
 				for x in range(-_room_size[0]/2,_room_size[0]/2):					
@@ -488,7 +488,7 @@ class LevelGen:
 			for y in range(self.size[1]):
 				if not self.map[x][y]:
 					self.map[x][y] = random.choice([5,9])
-					self.walking_space.append((x,y))
+				self.walking_space.append((x,y))
 		
 		self.walk(where=self.walking_space,types=[6,7,8])
 		
@@ -497,6 +497,70 @@ class LevelGen:
 		self.decompose_ext(1,find=7,to=7,count=1)
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
+		
+		#Now we have to build our first building
+		#I took this from CaveGen, because why do it twice?
+		_found = False
+		_room_size = (random.randint(self.room_size[0]+3,self.room_size[1]+3),\
+			random.randint(self.room_size[0]+2,self.room_size[1]+2))
+
+		_walking = self.walking_space[:]
+		
+		while not _found:
+			_found = True
+			_room = []
+			_pos = random.choice(_walking)
+
+			_walking.pop(_walking.index(_pos))
+
+			if _pos[0]+(_room_size[0])>=self.size[0]: _found=False;continue
+			if _pos[1]+(_room_size[1])>=self.size[1]: _found=False;continue
+			
+			for x in range(0,_room_size[0]):
+				_x = _pos[0]+x
+				
+				for y in range(0,_room_size[1]):
+					_y = _pos[1]+y
+
+					if self.map[_x][_y] in [15]:
+						_found = False
+						break
+					else:
+						_room.append((_x,_y))
+				
+				if not _found: break
+			
+			if _found:
+				_room_walls = []
+				_room_floor = []
+				for pos in _room:
+					if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
+						or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
+						self.map[pos[0]][pos[1]] = 15
+						_room_walls.append(pos)
+					else:
+						self.map[pos[0]][pos[1]] = 16
+						_room_floor.append(pos)
+					
+					if pos in self.walls:
+						self.walls.remove(pos)
+				
+				__walls = _room_walls[:]
+				while 1:
+					__pos = __walls.pop(random.randint(0,len(__walls)-1))
+					
+					_found = False
+					for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
+						if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16:
+							_found = True
+							break
+					
+					if _found: break
+					
+				self.map[__pos[0]][__pos[1]] = 16
+				self.rooms.append({'name':'Home','walls':_room_walls,'walking_space':_room_floor})
+				
+				self.landmarks.append(random.choice(_room))
 		
 		for pos in entrances:
 			self.map[pos[0]][pos[1]] = 3

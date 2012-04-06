@@ -22,7 +22,7 @@ var.view_dist = 11
 var.life = []
 var.history = []
 var.skill_mod = 6
-var.solid= [0,11]
+var.solid= [0,11,15]
 var.blocking = [10]
 var.items = [13,14]
 var.mouse_pos = (0,0)
@@ -42,7 +42,9 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'11':{'icon':';','color':['sand','brown']},
 	'12':{'icon':'#','color':['sand','brown']},
 	'13':{'icon':'1','color':['sand','gold']},
-	'14':{'icon':'c','color':['darkgray','darkergray']}}
+	'14':{'icon':'c','color':['darkgray','darkergray']},
+	'15':{'icon':'#','color':['white','brown']},
+	'16':{'icon':'.','color':['brown','sand']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -167,13 +169,19 @@ def draw_screen(refresh=False):
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
-	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
+	#_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
+	_char = '%s' % (var.player.name)
 	_health = 'HP: (%s\%s)' % (var.player.hp,var.player.hp_max)
 	_depth = 'Depth: %s' % (-var.player.z)
 	_skill = 'Level %s (%s\%s)' % (var.player.skill_level,var.player.xp,\
 		var.player.skill_level*var.skill_mod)
 	_thirst = 'Thirst (%s\\100)' % (var.player.thirst)
 	_hunger = 'Hunger (%s\\100)' % (var.player.hunger)
+	
+	if var.player.level.outside:
+		for room in var.player.level.rooms:
+			if tuple(var.player.pos) in room['walking_space']:
+				_depth += ' (%s)' % (room['name'])
 	
 	var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
