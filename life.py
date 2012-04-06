@@ -393,8 +393,7 @@ class human(life):
 					self.task = _event
 				
 				if self.task == 'food':
-					self.go_to(var.world.get_level(1).rooms[0]['door'],1)
-					print 'Trying to go home'
+					self.go_to(random.choice(var.world.get_level(1).get_room('home')['walking_space']),1)
 				
 		else:
 			if self.mode['task'] == 'follow':

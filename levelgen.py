@@ -59,6 +59,13 @@ class LevelGen:
 				#if item['pos'] == pos:
 				#	return False
 	
+	def get_room(self,name):
+		for room in self.rooms:
+			if room['name'].lower() == name.lower():
+				return room
+		
+		return False
+	
 	def dofov(self,pos,x,y,dist,efov=False):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
 		#I translated it to Python. You are welcome to use this code instead of writing your own :)
@@ -556,9 +563,14 @@ class LevelGen:
 							break
 					
 					if _found: break
+				
+				_room_walls.remove(__pos)
 					
 				self.map[__pos[0]][__pos[1]] = 16
-				self.rooms.append({'name':'Home','walls':_room_walls,'walking_space':_room_floor,'door':__pos})
+				__room = {'name':'Home','walls':_room_walls,'walking_space':_room_floor,\
+					'door':__pos,'type':'home'}
+				self.rooms.append(__room)
+				self.generate_room(__room)
 				
 				self.landmarks.append(random.choice(_room))
 		
@@ -567,6 +579,29 @@ class LevelGen:
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
+	
+	def generate_room(self,room):
+		if room['type'] == 'home':
+			_needs = ['bed','storage']
+		
+		#We like putting things in corners...
+		for pos in room['walking_space']:
+			_possible = []
+			_count = 0
+			for _pos in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]:
+				x = pos[0]+_pos[0]
+				y = pos[1]+_pos[1]
+				
+				if self.map[x][y] in var.solid:
+					_count+=1
+			
+			if _count:
+				print _count
+			if _count==5:
+				_possible.append(pos)
+		
+		for pos in _possible:
+			self.map[pos[0]][pos[1]] = 10
 	
 	def out(self):
 		for y in range(self.size[1]):

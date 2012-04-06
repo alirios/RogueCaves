@@ -253,7 +253,6 @@ def get_input():
 		if key in ['up','down','left','right']:
 			if var.input[key]:
 				var.player.walk(key)
-				#var.player.walk(key)
 	
 	_atime = time.time()
 	for life in var.life:
