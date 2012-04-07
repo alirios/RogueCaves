@@ -49,10 +49,18 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['children'] =[]
 	
 	def add_item(self,item,pos):
-		self.items[pos[0]][pos[1]].append(item)
+		_item = var.items[str(item)].copy()
+		self.items[pos[0]][pos[1]].append(_item)
 	
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
+	
+	def has_item_type_at(self,type,pos):
+		for item in self.items[pos[0]][pos[1]]:
+			if item['type'] == type:
+				return True
+		
+		return False
 	
 	def get_room(self,name):
 		for room in self.rooms:
@@ -75,7 +83,8 @@ class LevelGen:
 			if int(ox) < 0 or int(oy) < 0: continue
 			self.fmap[int(ox)][int(oy)]=1
 			self.vmap[int(ox)][int(oy)]=1
-			if self.map[int(ox)][int(oy)] in var.solid: return
+			if self.map[int(ox)][int(oy)] in var.solid or\
+				self.has_item_type_at('solid',(int(ox),int(oy))): return
 			ox+=x;
 			oy+=y;
 		

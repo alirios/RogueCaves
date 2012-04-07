@@ -208,22 +208,40 @@ class life:
 		
 		_items = self.level.items[_pos[0]][_pos[1]]
 		if _items:
+			_i = 0
 			for _tile in _items:
-				if _tile == 13:
+				if _tile['tile'] == 11:
+					if _tile['life']<=0:
+						_chance = random.randint(0,100)
+						if _chance <= 75:
+							self.level.map[_pos[0]][_pos[1]] = 1
+						elif 75<_chance<=95:
+							self.level.add_item(14,_pos)
+						else:
+							self.level.add_item(13,_pos)
+						
+						self.level.items[_pos[0]][_pos[1]].pop(_i)
+					else:
+						_tile['life']-=1
+					self.pos = self.pos[:]
+					return
+				elif _tile['tile'] == 13:
 					self.gold += 1
-					self.level.items[_pos[0]][_pos[1]].remove(_tile)
+					self.level.items[_pos[0]][_pos[1]].pop(_i)
 					if self.player:
 						functions.log('You picked up +1 gold.')
-				elif _tile == 14:
+				elif _tile['tile'] == 14:
 					self.coal += 1
-					self.level.items[_pos[0]][_pos[1]].remove(_tile)
+					self.level.items[_pos[0]][_pos[1]].pop(_i)
 					if self.player:
 						functions.log('You picked up +1 coal.')
-				elif _tile == 17:
+				elif _tile['tile'] == 17:
 					self.add_item(17)
-					self.level.items[_pos[0]][_pos[1]].remove(_tile)
+					self.level.items[_pos[0]][_pos[1]].pop(_i)
 					if self.player:
 						functions.log('You picked up some food.')
+				
+				_i+=1
 		
 		_found = False
 		for life in var.life:
@@ -430,9 +448,10 @@ class human(life):
 						_pos = None
 						_room = var.world.get_level(1).get_room('home')
 						for pos in _room['walking_space']:
-							if 17 in var.world.get_level(1).items[pos[0]][pos[1]]:
-								_pos = pos
-								break
+							for item in var.world.get_level(1).items[pos[0]][pos[1]]:
+								if item['type']:
+									_pos = pos
+									break
 						
 						if _pos:
 							self.go_to(_pos,1)

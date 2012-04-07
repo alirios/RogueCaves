@@ -30,7 +30,10 @@ var.items = [13,14]
 var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}
-var.items = {'17':'Meat'}
+var.items = {'11':{'name':'dirt','type':'solid','life':2,'tile':11},
+			'13':{'name':'gold','type':'ore','tile':13},
+			'14':{'name':'coal','type':'ore','tile':14},
+			'17':{'name':'meat','type':'food','tile':17}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -48,7 +51,7 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'14':{'icon':'c','color':['darkgray','darkergray']},
 	'15':{'icon':'#','color':['white','brown']},
 	'16':{'icon':'.','color':['brown','sand']},
-	'17':{'icon':'#','color':['brown','lightsand']},}
+	'17':{'icon':'#','color':['brown','lightsand']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -131,7 +134,7 @@ def draw_screen(refresh=False):
 			_tile = None
 			
 			if var.player.level.items[x][y]:
-				_tile = tile_map[str(var.player.level.items[x][y][0])]
+				_tile = tile_map[str(var.player.level.items[x][y][0]['tile'])]
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
