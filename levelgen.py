@@ -49,7 +49,7 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['children'] =[]
 	
 	def add_item(self,item,pos):
-		_item = var.items[str(item)].copy()
+		_item = var.items[str(item)]
 		self.items[pos[0]][pos[1]].append(_item)
 	
 	def get_item(self,pos):
@@ -524,8 +524,9 @@ class LevelGen:
 
 			_walking.pop(_walking.index(_pos))
 
-			if _pos[0]+(_room_size[0])>=self.size[0]: _found=False;continue
-			if _pos[1]+(_room_size[1])>=self.size[1]: _found=False;continue
+			if _pos[0]==0 or _pos[1]==0: _found=False;continue
+			if _pos[0]+(_room_size[0])>=self.size[0]-1: _found=False;continue
+			if _pos[1]+(_room_size[1])>=self.size[1]-1: _found=False;continue
 			
 			for x in range(0,_room_size[0]):
 				_x = _pos[0]+x
