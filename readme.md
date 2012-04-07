@@ -9,6 +9,10 @@ Todo
 * ALife only understands following and eating. Other tasks needed
 * Extended cave generation (old bridges, rooms, etc)
 
+Bugs
+----
+* ALife occasionally teleports due to pathing errors.
+
 Current Version: 4.7.2012A
 --------------------------
 Added
@@ -17,10 +21,6 @@ Added
 * ALife can mine.
 * Alife counts attacking as an event, doing away with the need for interrupts.
 * A* tries to understand solid items.
-
-Bugs
-----
-* ALife occasionally teleports due to pathing errors.
 
 Previous Version: 4.6.2012A
 ---------------------------
