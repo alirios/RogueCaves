@@ -56,15 +56,25 @@ class LevelGen:
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
 	
-	def get_all_items(self,type):
+	def get_all_items(self,tile):
 		_ret = []
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
-					if item['tile'] == type:
+					if item['tile'] == tile:
 						_ret.append(item)
 		
-		return _ret					
+		return _ret		
+	
+	def get_all_items_of_type(self,type):
+		_ret = []
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					if item['type'] == type:
+						_ret.append(item)
+		
+		return _ret			
 	
 	def has_item_type_at(self,type,pos):
 		for item in self.items[pos[0]][pos[1]]:

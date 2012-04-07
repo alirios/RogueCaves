@@ -302,13 +302,16 @@ class life:
 		if (pos[0],pos[1]) == self.path_dest: return
 		
 		if self.can_see(pos) and self.can_traverse(pos):
-			#if self.can_traverse(pos):
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 		else:
-			#if not (pos[0],pos[1]) == self.path_dest:
+			_blocking = []
+			
+			for item in self.level.get_all_items_of_type('solid'):
+				_blocking.append((item['pos'][0],item['pos'][1]))
+			
 			self.path = pathfinding.astar(start=self.pos,end=pos,\
-				omap=self.level.map,size=self.level.size).path
+				omap=self.level.map,size=self.level.size,blocking=_blocking).path
 			self.path_dest = (pos[0],pos[1])
 	
 	def follow(self,who):
@@ -327,12 +330,15 @@ class life:
 		
 		self.find_path(who.pos)
 	
-	def go_to(self,pos,depth):
+	def go_to(self,pos,z=None):
+		if z == None:
+			z = self.z
+		
 		if self.pos == pos:
 			return
 		
-		if not self.z == depth:
-			if self.z<depth:
+		if not self.z == z:
+			if self.z<z:
 				self.find_path(self.level.entrances[0])
 			else:
 				self.find_path(self.level.exits[0])
@@ -347,6 +353,11 @@ class life:
 			self.z -= 1
 		
 		self.level = var.world.get_level(self.z)
+	
+	def teleport(self,z):
+		self.z = z
+		self.level = var.world.get_level(self.z)
+		self.pos = list(self.level.walking_space[0])
 	
 	def kill(self):
 		for life in var.life:
@@ -391,13 +402,13 @@ class human(life):
 		
 		self.events = []
 	
-	def add_event(self,what,score):
+	def add_event(self,what,score,who=None):
 		for event in self.events:
 			if event['what'] == what:
 				event['score'] = score
 				return
 		
-		self.events.append({'what':what,'score':score})
+		self.events.append({'what':what,'score':score,'who':who})
 	
 	def get_event(self):
 		_highest = {'what':None,'score':-1}
@@ -405,8 +416,9 @@ class human(life):
 			if event['score']>=_highest['score']:
 				_highest['what'] = event['what']
 				_highest['score'] = event['score']
+				_highest['who'] = event['who']
 		
-		return _highest['what']
+		return _highest
 	
 	def remove_event(self,what):
 		for event in self.events:
@@ -443,8 +455,7 @@ class human(life):
 				_lowest['pos'] = item['pos']
 		
 		if _lowest['pos']:
-			self.go_to(_lowest['pos'],self.z)
-			print 'GOING.......',_lowest['pos']
+			self.go_to(_lowest['pos'])
 			self.mine_dest = _lowest['pos']
 		else:
 			self.follow(var.player)
@@ -474,54 +485,73 @@ class human(life):
 				if self.highest['who'] == seen['who']:
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
-		if not self.mode['task']:
-			if self.lowest['who']:
-				if self.judge(self)>=abs(self.lowest['score']):
-					self.path = draw.draw_diag_line(self.pos,self.lowest['who'].pos)
-					self.task = 'attacking'
-				else:
-					self.task = 'flee'
-			elif self.highest['who'] and self.married == self.highest['who']:
-				#TODO: This one will happen too much...
-				self.follow(self.highest['who'])
-				self.task = 'following'
+		if self.lowest['who']:
+			if self.judge(self)>=abs(self.lowest['score']):
+				#self.go_to(self.lowest['who'].pos)
+				#self.task = 'attacking'
+				self.add_event('attack',100,who=self.lowest['who'])
 			else:
-				_event = self.get_event()
-				
-				if _event and not self.task==_event:
-					self.say('I need to get %s' % (_event))
-					self.task = _event
-				
-				if self.task == 'food':
-					_item = self.get_item_id(17)
-					
-					if _item:
-						self.hunger = 0
-						self.hunger_timer = var.hunger_timer_max
-						self.items.remove(_item)
-						self.remove_event(self.task)
-						self.task = None
-						self.say('That was good!')
-					else:
-						_pos = None
-						_room = var.world.get_level(1).get_room('home')
-						for pos in _room['walking_space']:
-							for item in var.world.get_level(1).items[pos[0]][pos[1]]:
-								if item['type']:
-									_pos = pos
-									break
-						
-						if _pos:
-							self.go_to(_pos,1)
-				elif self.task == 'mine':
-					self.mine()
-				
+				self.task = 'flee'
 		else:
-			if self.mode['task'] == 'follow':
-				self.follow(self.mode['who'])
-				self.task = 'following'
-			elif self.mode['task'] == 'mine':
+			if self.task == 'attacking':
+				print 'Task reset'
+				self.task = None
+		
+		if not self.mode['task']:# and not self.task in ['attacking','flee']:
+			#elif self.highest['who'] and self.married == self.highest['who']:
+			#	#TODO: This one will happen too much...
+			#	self.follow(self.highest['who'])
+			#	self.task = 'following'
+			#else:
+			_event = self.get_event()
+			
+			if _event and not self.task==_event:
+				self.say('%s' % (_event['what']))
+				self.task = _event
+			
+			if self.task['what'] == 'food':
+				_item = self.get_item_id(17)
+				
+				if _item:
+					self.hunger = 0
+					self.hunger_timer = var.hunger_timer_max
+					self.items.remove(_item)
+					self.remove_event(self.task['what'])
+					self.task = None
+					self.say('That was good!')
+				else:
+					_pos = None
+					_room = var.world.get_level(1).get_room('home')
+					for pos in _room['walking_space']:
+						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
+							if item['type']:
+								_pos = pos
+								break
+					
+					if _pos:
+						self.go_to(_pos,z=1)
+			elif self.task['what'] == 'mine':
 				self.mine()
+			elif self.task['what'] == 'deliver':
+				_pos = var.world.get_level(1).get_room('home')['door']
+				self.go_to(_pos,z=1)
+			elif self.task['what'] == 'attack':
+				print self.task
+				if self.task['who'].hp>0:
+					self.go_to(self.task['who'].pos)
+					#self.add_event('attack',100)
+				else:
+					self.remove_event(self.task['what'])
+					self.task = None
+					self.say('Got em.')
+				
+		#else:
+		#	if not self.task in ['attacking','flee']:
+		#		if self.mode['task'] == 'follow':
+		#			self.follow(self.mode['who'])
+		#			self.task = 'following'
+		#		elif self.mode['task'] == 'mine':
+		#			self.mine()
 		
 		#Take care of daily schedules here
 		if self.hunger >= self.hungry_at:
@@ -529,6 +559,8 @@ class human(life):
 		
 		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
+		
+		self.add_event('deliver',(self.coal+self.gold)*10)
 		
 		if self.path:
 			if len(self.path)>1: self.path.pop(0)

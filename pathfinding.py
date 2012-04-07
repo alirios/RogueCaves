@@ -44,7 +44,8 @@ class astar:
 		for x in range(self.size[0]):
 			_ycol = []
 			for y in range(self.size[1]):
-				if not self.omap[x][y] in self.blocking:
+				if not self.omap[x][y] in self.blocking and\
+					not (x,y) in blocking:
 					_ycol.append(1)
 				else:
 					_ycol.append(0)

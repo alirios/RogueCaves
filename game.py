@@ -81,14 +81,16 @@ var.player.z = -3
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
 
-test = life.human()
-test.name = 'derp'
-test.z = -3
-test.speed = 1
-test.speed_max = 1
-test.level = var.world.get_level(test.z)
-test.mode = {'task':'mine','who':None}
-test.pos = list(test.level.walking_space[0])
+for i in range(2):
+	test = life.human()
+	test.name = 'derp%s' % i
+	test.z = -3
+	test.speed = 1
+	test.speed_max = 1
+	test.level = var.world.get_level(test.z)
+	#test.mode = {'task':'mine','who':None}
+	test.add_event('mine',50)
+	test.pos = list(test.level.walking_space[i])
 
 for i in range(1,var.world.depth):
 	for r in range(0,i*2):
@@ -242,6 +244,16 @@ def get_input():
 				var.player.place((1,0),12)
 			elif event.key == K_s:
 				var.player.place((0,1),12)
+			elif event.key == K_1:
+				var.player.teleport(1)
+			elif event.key == K_2:
+				var.player.teleport(0)
+			elif event.key == K_3:
+				var.player.teleport(-1)
+			elif event.key == K_4:
+				var.player.teleport(-2)
+			elif event.key == K_5:
+				var.player.teleport(-3)
 		elif event.type == KEYUP:
 			if event.key == K_UP:
 				var.input['up'] = False
