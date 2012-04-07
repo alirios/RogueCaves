@@ -77,17 +77,17 @@ var.world.generate()
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.z = 1
+var.player.z = -3
 var.player.level = var.world.get_level(var.player.z)
-var.player.pos = list(var.player.level.get_room('home')['door'])
+var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
 
 test = life.human()
 test.name = 'derp'
-test.z = -1
+test.z = -3
 test.speed = 1
 test.speed_max = 1
 test.level = var.world.get_level(test.z)
-#test.mode = {'task':'follow','who':var.player}
+test.mode = {'task':'mine','who':None}
 test.pos = list(test.level.walking_space[0])
 
 for i in range(1,var.world.depth):

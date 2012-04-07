@@ -19,7 +19,8 @@ class life:
 		self.skill_level = 1
 		self.seen = []
 		self.path = None
-		self.path_dest = ()
+		self.path_dest = None
+		self.mine_dest = None
 		self.alignment = 'neutral'
 		
 		self.atk = 1
@@ -103,8 +104,39 @@ class life:
 	
 	def can_see(self,pos):
 		_seen = True
-		for pos in draw.draw_diag_line(self.pos,pos):
+		_l = draw.draw_diag_line(self.pos,pos)
+		
+		for pos in _l:
 			if self.level.map[pos[0]][pos[1]] in var.solid:
+				_seen = False
+				break
+			
+			if not _l.index(pos)==len(_l)-1 and self.level.has_item_type_at('solid',pos):
+				_seen = False
+				break
+		
+		return _seen
+	
+	def can_see_ext(self,pos):
+		_seen = True
+		_path = self.path = pathfinding.astar(start=self.pos,end=pos,\
+			omap=self.level.map,size=self.level.size).path
+		
+		if _path:
+			return True
+		else:
+			return False
+	
+	def can_traverse(self,pos):
+		_seen = True
+		_l = draw.draw_diag_line(self.pos,pos)
+		
+		for pos in _l:
+			if self.level.map[pos[0]][pos[1]] in var.blocking:
+				_seen = False
+				break
+			
+			if not _l.index(pos)==len(_l)-1 and self.level.has_item_type_at('solid',pos):
 				_seen = False
 				break
 		
@@ -261,12 +293,16 @@ class life:
 				self.hunger_timer -= 1
 			
 			self.pos = _pos[:]
+		
+		if self.mine_dest:
+			if (self.pos[0],self.pos[1]) == (self.mine_dest[0],self.mine_dest[1]):
+				self.mine_dest = None
 
 	def find_path(self,pos):
 		if (pos[0],pos[1]) == self.path_dest: return
 		
-		if self.can_see(pos):
-			#if not (pos[0],pos[1]) == self.path_dest:
+		if self.can_see(pos) and self.can_traverse(pos):
+			#if self.can_traverse(pos):
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 		else:
@@ -343,6 +379,8 @@ class human(life):
 		self.hp = 20
 		self.hp_max = 20
 		
+		self.hungry_at = 50
+		self.thirsty_at = 50
 		self.married = None
 		self.worth = None
 		self.mode = {'task':None,'who':None}
@@ -390,6 +428,26 @@ class human(life):
 			_score *= -1
 		
 		return _score
+	
+	def mine(self):
+		if self.mine_dest: return
+		#Okay, find the nearest dirt...
+		_lowest = {'score':1000,'pos':None}
+		for item in self.level.get_all_items(11):
+			if not self.can_see(item['pos']): continue
+			
+			_dist = functions.distance(self.pos,item['pos'])
+			
+			if _dist<_lowest['score']:
+				_lowest['score'] = _dist
+				_lowest['pos'] = item['pos']
+		
+		if _lowest['pos']:
+			self.go_to(_lowest['pos'],self.z)
+			print 'GOING.......',_lowest['pos']
+			self.mine_dest = _lowest['pos']
+		else:
+			self.follow(var.player)
 	
 	def think(self):
 		life.think(self)
@@ -455,17 +513,21 @@ class human(life):
 						
 						if _pos:
 							self.go_to(_pos,1)
+				elif self.task == 'mine':
+					self.mine()
 				
 		else:
 			if self.mode['task'] == 'follow':
 				self.follow(self.mode['who'])
 				self.task = 'following'
+			elif self.mode['task'] == 'mine':
+				self.mine()
 		
 		#Take care of daily schedules here
-		if self.hunger >= 1:
+		if self.hunger >= self.hungry_at:
 			self.add_event('food',self.hunger)
 		
-		if self.thirst >= 50:
+		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
 		
 		if self.path:

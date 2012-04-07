@@ -50,10 +50,21 @@ class LevelGen:
 	
 	def add_item(self,item,pos):
 		_item = var.items[str(item)]
-		self.items[pos[0]][pos[1]].append(_item)
+		_item['pos'] = pos
+		self.items[pos[0]][pos[1]].append(_item.copy())
 	
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
+	
+	def get_all_items(self,type):
+		_ret = []
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					if item['tile'] == type:
+						_ret.append(item)
+		
+		return _ret					
 	
 	def has_item_type_at(self,type,pos):
 		for item in self.items[pos[0]][pos[1]]:
