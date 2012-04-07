@@ -14,8 +14,13 @@ Current Version: 4.7.2012A
 Added
 -----
 * ALife understands difference between solid and blocking objects when pathing.
-* ALife can mine
+* ALife can mine.
+* Alife counts attacking as an event, doing away with the need for interrupts.
+* A* tries to understand solid items.
 
+Bugs
+----
+* ALife occasionally teleports due to pathing errors.
 
 Previous Version: 4.6.2012A
 ---------------------------
