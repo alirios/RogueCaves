@@ -64,4 +64,4 @@ class World:
 			print '\tTotal:',time.time()-_ltime
 		
 		print 'Worldgen took:',time.time()-_stime
-			
+		

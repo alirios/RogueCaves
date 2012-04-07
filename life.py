@@ -19,6 +19,7 @@ class life:
 		self.skill_level = 1
 		self.seen = []
 		self.path = None
+		self.start_pos = None
 		self.path_dest = None
 		self.mine_dest = None
 		self.alignment = 'neutral'
@@ -111,7 +112,7 @@ class life:
 				_seen = False
 				break
 			
-			if not _l.index(pos)==len(_l)-1 and self.level.has_item_type_at('solid',pos):
+			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
 				_seen = False
 				break
 		
@@ -136,7 +137,7 @@ class life:
 				_seen = False
 				break
 			
-			if not _l.index(pos)==len(_l)-1 and self.level.has_item_type_at('solid',pos):
+			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
 				_seen = False
 				break
 		
@@ -299,19 +300,21 @@ class life:
 				self.mine_dest = None
 
 	def find_path(self,pos):
-		if (pos[0],pos[1]) == self.path_dest: return
-		
 		if self.can_see(pos) and self.can_traverse(pos):
+			if (pos[0],pos[1]) == self.path_dest: return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 		else:
+			if (pos[0],pos[1]) == self.path_dest: return
+			if tuple(self.pos) == self.start_pos: print 'dont have to recalculate';return
 			_blocking = []
 			
-			for item in self.level.get_all_items_of_type('solid'):
+			for item in self.level.get_all_solid_items():
 				_blocking.append((item['pos'][0],item['pos'][1]))
 			
 			self.path = pathfinding.astar(start=self.pos,end=pos,\
 				omap=self.level.map,size=self.level.size,blocking=_blocking).path
+			self.start_pos = (pos[0],pos[1])
 			self.path_dest = (pos[0],pos[1])
 	
 	def follow(self,who):
@@ -353,6 +356,7 @@ class life:
 			self.z -= 1
 		
 		self.level = var.world.get_level(self.z)
+		self.start_pos = None
 	
 	def teleport(self,z):
 		self.z = z
@@ -524,7 +528,7 @@ class human(life):
 					_room = var.world.get_level(1).get_room('home')
 					for pos in _room['walking_space']:
 						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
-							if item['type']:
+							if item['type']=='food':
 								_pos = pos
 								break
 					
@@ -533,13 +537,30 @@ class human(life):
 			elif self.task['what'] == 'mine':
 				self.mine()
 			elif self.task['what'] == 'deliver':
-				_pos = var.world.get_level(1).get_room('home')['door']
-				self.go_to(_pos,z=1)
+				if self.coal+self.gold:
+					_pos = None
+					_room = var.world.get_level(1).get_room('storage')
+					for pos in _room['walking_space']:
+						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
+							if item['type']=='storage':
+								for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+									if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
+										_pos = (pos[0]+space[0],pos[1]+space[1])
+										break
+								break
+					
+					if tuple(self.pos) == _pos:
+						self.coal = 0
+						self.gold = 0
+						self.remove_event(self.task['what'])
+						self.task = None
+						self.say('Delivered!')
+						print 'Made it!'
+					elif _pos:
+						self.go_to(_pos,z=1)
 			elif self.task['what'] == 'attack':
-				print self.task
 				if self.task['who'].hp>0:
 					self.go_to(self.task['who'].pos)
-					#self.add_event('attack',100)
 				else:
 					self.remove_event(self.task['what'])
 					self.task = None
@@ -560,7 +581,7 @@ class human(life):
 		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
 		
-		self.add_event('deliver',(self.coal+self.gold)*10)
+		self.add_event('deliver',(self.coal+self.gold)*50)
 		
 		if self.path:
 			if len(self.path)>1: self.path.pop(0)

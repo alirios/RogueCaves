@@ -24,16 +24,17 @@ var.hunger_timer_max = 100
 var.life = []
 var.history = []
 var.skill_mod = 6
-var.solid= [0,11,15,17]
+var.solid= [0,11,15]
 var.blocking = [10]
 var.items = [13,14]
 var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}
-var.items = {'11':{'name':'dirt','type':'solid','life':2,'tile':11},
-			'13':{'name':'gold','type':'ore','tile':13},
-			'14':{'name':'coal','type':'ore','tile':14},
-			'17':{'name':'meat','type':'food','tile':17}}
+var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
+			'13':{'name':'gold','solid':False,'type':'ore','tile':13},
+			'14':{'name':'coal','solid':False,'type':'ore','tile':14},
+			'17':{'name':'meat','solid':False,'type':'food','tile':17},
+			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -51,7 +52,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'14':{'icon':'c','color':['darkgray','darkergray']},
 	'15':{'icon':'#','color':['white','brown']},
 	'16':{'icon':'.','color':['brown','sand']},
-	'17':{'icon':'#','color':['brown','lightsand']}}
+	'17':{'icon':'F','color':['red','lightsand']},
+	'18':{'icon':'#','color':['brown','lightsand']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)

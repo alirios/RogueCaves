@@ -74,7 +74,17 @@ class LevelGen:
 					if item['type'] == type:
 						_ret.append(item)
 		
-		return _ret			
+		return _ret
+	
+	def get_all_solid_items(self):
+		_ret = []
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					if item['solid']:
+						_ret.append(item)
+		
+		return _ret		
 	
 	def has_item_type_at(self,type,pos):
 		for item in self.items[pos[0]][pos[1]]:
@@ -83,9 +93,16 @@ class LevelGen:
 		
 		return False
 	
-	def get_room(self,name):
+	def has_solid_item_at(self,pos):
+		for item in self.items[pos[0]][pos[1]]:
+			if item['solid']:
+				return True
+		
+		return False
+	
+	def get_room(self,type):
 		for room in self.rooms:
-			if room['name'].lower() == name.lower():
+			if room['type'].lower() == type.lower():
 				return room
 		
 		return False
@@ -530,75 +547,76 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		#Now we have to build our first building
-		#I took this from CaveGen, because why do it twice?
-		_found = False
-		_room_size = (random.randint(self.room_size[0]+3,self.room_size[1]+3),\
-			random.randint(self.room_size[0]+2,self.room_size[1]+2))
+		for _room_type in ['home','storage']:
+			#Now we have to build our first building
+			#I took this from CaveGen, because why do it twice?
+			_found = False
+			_room_size = (random.randint(self.room_size[0]+3,self.room_size[1]+3),\
+				random.randint(self.room_size[0]+2,self.room_size[1]+2))
 
-		_walking = self.walking_space[:]
-		
-		while not _found:
-			_found = True
-			_room = []
-			_pos = random.choice(_walking)
+			_walking = self.walking_space[:]
 
-			_walking.pop(_walking.index(_pos))
+			while not _found:
+				_found = True
+				_room = []
+				_pos = random.choice(_walking)
 
-			if _pos[0]==0 or _pos[1]==0: _found=False;continue
-			if _pos[0]+(_room_size[0])>=self.size[0]-1: _found=False;continue
-			if _pos[1]+(_room_size[1])>=self.size[1]-1: _found=False;continue
-			
-			for x in range(0,_room_size[0]):
-				_x = _pos[0]+x
+				_walking.pop(_walking.index(_pos))
+
+				if _pos[0]==0 or _pos[1]==0: _found=False;continue
+				if _pos[0]+(_room_size[0])>=self.size[0]-1: _found=False;continue
+				if _pos[1]+(_room_size[1])>=self.size[1]-1: _found=False;continue
 				
-				for y in range(0,_room_size[1]):
-					_y = _pos[1]+y
-
-					if self.map[_x][_y] in [15]:
-						_found = False
-						break
-					else:
-						_room.append((_x,_y))
-				
-				if not _found: break
-			
-			if _found:
-				_room_walls = []
-				_room_floor = []
-				for pos in _room:
-					if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
-						or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
-						self.map[pos[0]][pos[1]] = 15
-						_room_walls.append(pos)
-					else:
-						self.map[pos[0]][pos[1]] = 16
-						_room_floor.append(pos)
+				for x in range(0,_room_size[0]):
+					_x = _pos[0]+x
 					
-					if pos in self.walls:
-						self.walls.remove(pos)
-				
-				__walls = _room_walls[:]
-				while 1:
-					__pos = __walls.pop(random.randint(0,len(__walls)-1))
-					
-					_found = False
-					for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-						if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16:
-							_found = True
+					for y in range(0,_room_size[1]):
+						_y = _pos[1]+y
+
+						if self.map[_x][_y] in [15]:
+							_found = False
 							break
+						else:
+							_room.append((_x,_y))
 					
-					if _found: break
+					if not _found: break
 				
-				_room_walls.remove(__pos)
+				if _found:
+					_room_walls = []
+					_room_floor = []
+					for pos in _room:
+						if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
+							or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
+							self.map[pos[0]][pos[1]] = 15
+							_room_walls.append(pos)
+						else:
+							self.map[pos[0]][pos[1]] = 16
+							_room_floor.append(pos)
+						
+						if pos in self.walls:
+							self.walls.remove(pos)
 					
-				self.map[__pos[0]][__pos[1]] = 16
-				__room = {'name':'Home','walls':_room_walls,'walking_space':_room_floor,\
-					'door':__pos,'type':'home'}
-				self.rooms.append(__room)
-				self.generate_room(__room)
-				
-				self.landmarks.append(random.choice(_room))
+					__walls = _room_walls[:]
+					while 1:
+						__pos = __walls.pop(random.randint(0,len(__walls)-1))
+						
+						_found = False
+						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
+							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16:
+								_found = True
+								break
+						
+						if _found: break
+					
+					_room_walls.remove(__pos)
+						
+					self.map[__pos[0]][__pos[1]] = 16
+					__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
+						'door':__pos,'type':_room_type}
+					self.rooms.append(__room)
+					self.generate_room(__room)
+					
+					self.landmarks.append(random.choice(_room))
 		
 		for pos in entrances:
 			self.map[pos[0]][pos[1]] = 3
@@ -608,7 +626,9 @@ class LevelGen:
 	
 	def generate_room(self,room):
 		if room['type'] == 'home':
-			_needs = ['bed','storage']
+			_needs = [17]
+		elif room['type'] == 'storage':
+			_needs = [18]
 		
 		#We like putting things in corners...
 		_possible = []
@@ -624,8 +644,11 @@ class LevelGen:
 			if _count==5:
 				_possible.append(pos)
 		
-		for pos in _possible:
-			self.add_item(17,pos)
+		for need in _needs:
+			#for pos in _possible:
+			if _possible:
+				_pos = _possible.pop()
+				self.add_item(need,_pos)
 	
 	def out(self):
 		for y in range(self.size[1]):

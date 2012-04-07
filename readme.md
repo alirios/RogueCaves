@@ -19,7 +19,7 @@ Added
 -----
 * ALife understands difference between solid and blocking objects when pathing.
 * ALife can mine.
-* Alife counts attacking as an event, doing away with the need for interrupts.
+* ALife counts attacking as an event, doing away with the need for interrupts.
 * A* tries to understand solid items.
 
 Previous Version: 4.6.2012A
