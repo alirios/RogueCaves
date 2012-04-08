@@ -319,19 +319,17 @@ class life:
 
 	def find_path(self,pos):
 		if self.can_see(pos) and self.can_traverse(pos):
-			print 'Line'
 			if (pos[0],pos[1]) == self.path_dest: return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 			self.path_type = 'Line'
 		else:
-			print 'A*!'
 			if (pos[0],pos[1]) == self.path_dest: return
 			_blocking = []
 			
 			for item in self.level.get_all_solid_items():
-				#if not item['name'] == 'dirt':
-				_blocking.append((item['pos'][0],item['pos'][1]))
+				if not item['name'] == 'dirt':
+					_blocking.append((item['pos'][0],item['pos'][1]))
 			
 			#We have to TRUST that the ALife knows what it's doing here...
 			#basically we're assuming that even though the destination

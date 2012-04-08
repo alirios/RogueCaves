@@ -13,7 +13,13 @@ Bugs
 ----
 * ALife occasionally teleports due to pathing errors.
 
-Current Version: 4.7.2012A
+Current Version: 4.8.2012A
+--------------------------
+Added
+-----
+* ALife can path a bit better
+
+Previous Version: 4.7.2012A
 --------------------------
 Added
 -----
