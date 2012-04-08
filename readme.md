@@ -5,8 +5,6 @@ Current milestone: Athletic Alpaca
 ----------------------------------
 Todo
 ----
-* A* pathing ignores solid items and the positions of other ALifes
-* ALife only understands following and eating. Other tasks needed
 * Extended cave generation (old bridges, rooms, etc)
 
 Bugs
@@ -17,7 +15,8 @@ Current Version: 4.8.2012A
 --------------------------
 Added
 -----
-* ALife can path a bit better
+* ALife can path a bit better. No longer teleports.
+* Optimized A*
 
 Previous Version: 4.7.2012A
 --------------------------
