@@ -268,7 +268,15 @@ def get_input():
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
 		elif event.type == MOUSEBUTTONDOWN:
-			var.player.level.map[var.mouse_pos[0]][var.mouse_pos[1]] = 1
+			#var.player.level.map[var.mouse_pos[0]][var.mouse_pos[1]] = 1
+			for life in var.life:
+				if life.z == var.player.z:
+					if life.pos == list(var.mouse_pos):
+						print 'Task: %s' % life.task
+						print 'Path: %s' % life.path
+						print 'Path dest: %s' % str(life.path_dest)
+						print 'Path type: %s' % life.path_type
+						print 'Position: %s' % str(life.pos)
 		
 	for key in var.input:
 		if key in ['up','down','left','right']:

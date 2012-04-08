@@ -19,7 +19,7 @@ class life:
 		self.skill_level = 1
 		self.seen = []
 		self.path = None
-		self.start_pos = None
+		self.path_type = None
 		self.path_dest = None
 		self.mine_dest = None
 		self.alignment = 'neutral'
@@ -107,12 +107,21 @@ class life:
 		_seen = True
 		_l = draw.draw_diag_line(self.pos,pos)
 		
+		_blocking = []
+		#for life in var.life:
+		#	if not life.z == self.z or self == life: continue
+		#	_blocking.append((life.pos[0],life.pos[1]))
+		
 		for pos in _l:
 			if self.level.map[pos[0]][pos[1]] in var.solid:
 				_seen = False
 				break
 			
 			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
+				_seen = False
+				break
+			
+			if pos in _blocking:
 				_seen = False
 				break
 		
@@ -132,12 +141,21 @@ class life:
 		_seen = True
 		_l = draw.draw_diag_line(self.pos,pos)
 		
+		_blocking = []
+		for life in var.life:
+			if not life.z == self.z or self == life: continue
+			_blocking.append((life.pos[0],life.pos[1]))
+		
 		for pos in _l:
 			if self.level.map[pos[0]][pos[1]] in var.blocking:
 				_seen = False
 				break
 			
 			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
+				_seen = False
+				break
+			
+			if pos in _blocking:
 				_seen = False
 				break
 		
@@ -301,21 +319,44 @@ class life:
 
 	def find_path(self,pos):
 		if self.can_see(pos) and self.can_traverse(pos):
+			print 'Line'
 			if (pos[0],pos[1]) == self.path_dest: return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
+			self.path_type = 'Line'
 		else:
+			print 'A*!'
 			if (pos[0],pos[1]) == self.path_dest: return
-			if tuple(self.pos) == self.start_pos: print 'dont have to recalculate';return
 			_blocking = []
 			
 			for item in self.level.get_all_solid_items():
+				#if not item['name'] == 'dirt':
 				_blocking.append((item['pos'][0],item['pos'][1]))
+			
+			#We have to TRUST that the ALife knows what it's doing here...
+			#basically we're assuming that even though the destination
+			#is in the _blocking array, we can still move there and mine it
+			
+			if tuple(pos) in _blocking:
+				_blocking.remove(tuple(pos))
+			
+			for life in var.life:
+				if not life.z == self.z or self == life: continue
+				
+				_blocking.append((life.pos[0],life.pos[1]))
+			
+			if tuple(pos) in _blocking:
+				_blocking.remove(tuple(pos))
 			
 			self.path = pathfinding.astar(start=self.pos,end=pos,\
 				omap=self.level.map,size=self.level.size,blocking=_blocking).path
-			self.start_pos = (pos[0],pos[1])
-			self.path_dest = (pos[0],pos[1])
+			
+			if not self.path:
+				self.path_dest = None
+			else:
+				self.path_dest = (pos[0],pos[1])
+			
+			self.path_type = 'A*'
 	
 	def follow(self,who):
 		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):
@@ -369,7 +410,6 @@ class life:
 			
 			if _temp:
 				life.seen.remove(_temp)
-				print 'Removed dead entity'
 				
 				if life.race == 'human':
 					if life.lowest['who'] == self:
@@ -584,8 +624,15 @@ class human(life):
 		self.add_event('deliver',(self.coal+self.gold)*50)
 		
 		if self.path:
+			#_temp_path = self.path[:]
+			
 			if len(self.path)>1: self.path.pop(0)
-			return [self.path[0][0],self.path[0][1]]
+			_new_pos = [self.path[0][0],self.path[0][1]]
+			
+			#if tuple(_new_pos) == tuple(self.pos):#functions.distance(self.pos,_new_pos)==0:
+			#	_new_pos = list(self.path.pop(0))
+			
+			return _new_pos
 		
 		return self.pos
 

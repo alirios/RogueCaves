@@ -44,11 +44,10 @@ class astar:
 		for x in range(self.size[0]):
 			_ycol = []
 			for y in range(self.size[1]):
-				if not self.omap[x][y] in self.blocking and\
-					not (x,y) in blocking:
-					_ycol.append(1)
-				else:
+				if self.omap[x][y] in self.blocking or (x,y) in blocking:
 					_ycol.append(0)
+				else:
+					_ycol.append(1)
 			
 			self.map.append(_ycol)
 		
@@ -116,6 +115,10 @@ class astar:
 					_fmap[x][y] = _fmap[x][y]*-1
 			
 		if not self.dij: self.find_path(self.start)
+		
+		if len(self.path)==1:
+			if abs(self.start[0]-self.path[0][0])+abs(self.start[1]-self.path[0][1])>1:
+				self.path = None
 		#if self.dij: print 'Dijkstra map took:',
 		#else: print 'A* took:',
 		#print time.time()-_stime
