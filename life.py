@@ -344,8 +344,6 @@ class life:
 				self.mine_dest = None
 
 	def find_path(self,pos):
-		#print self.can_see(pos)
-		#print self.can_traverse(pos)
 		if self.can_see(pos) and self.can_traverse(pos):
 			if (pos[0],pos[1]) == self.path_dest:
 				self.path_dest = None

@@ -119,21 +119,24 @@ class astar:
 		if len(self.path)==1:
 			if abs(self.start[0]-self.path[0][0])+abs(self.start[1]-self.path[0][1])>1:
 				self.path = None
-		#if self.dij: print 'Dijkstra map took:',
-		#else: print 'A* took:',
-		#print time.time()-_stime
 	
 	def find_path(self,start):
 		if not self.dij:
 			node = self.pmap[self.end[0]][self.end[1]]
 			self.path = [self.end]
 			
+			_broken = False
 			while not node == start:
-				if not node: break
+				if not node: _broken = True;break
 				else: self.path.insert(0,node)
 				self.tmap[node[0]][node[1]] = 1
 				node = self.pmap[node[0]][node[1]]
-				#self.path.append(node)
+			
+			#There's a few ways to fix this...
+			#The issue is that pmap[self.end[0]][self.end[1]]
+			#fails, leading to only self.end being the path.
+			#The only way to REALLY fix this is 
+			if _broken: print 'Broken A*!'
 				
 		else:
 			#Roll downhill

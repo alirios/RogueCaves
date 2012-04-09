@@ -5,12 +5,23 @@ Current milestone: Athletic Alpaca
 ----------------------------------
 Todo
 ----
-* Extended cave generation (old bridges, rooms, etc)
+* Extended cave generation (old bridges, rooms, etc).
+* A* caching.
+* Accept unfinished A* paths.
+* Audio.
 
 Bugs
 ----
 * ALife still occasionally teleports due to pathing errors.
+* ALife continues to calculate paths that broke in the past.
+* ALife "waits" if someone inhabits a tunnel.
 * Crash on line 179 of pathfinding.py.
+
+Current Version: 04.09.2012A
+----------------------------
+Added
+-----
+* Fixed crash relating to old item system.
 
 Current Version: 04.08.2012A
 --------------------------
