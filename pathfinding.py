@@ -135,7 +135,10 @@ class astar:
 			#There's a few ways to fix this...
 			#The issue is that pmap[self.end[0]][self.end[1]]
 			#fails, leading to only self.end being the path.
-			#The only way to REALLY fix this is 
+			#The only way to REALLY fix this is to track where A*
+			#fails, which we can fix in getadj()
+			#If (_x,_y) is in an array (list of ALife positions), then
+			#we could walk backwards from there...
 			if _broken: print 'Broken A*!'
 				
 		else:
