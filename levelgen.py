@@ -56,7 +56,7 @@ class LevelGen:
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
 	
-	def get_all_items(self,tile):
+	def get_all_items_of_tile(self,tile):
 		_ret = []
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
@@ -602,7 +602,8 @@ class LevelGen:
 						
 						_found = False
 						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16:
+							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16 or\
+								(__pos[0]+___pos[0],__pos[1]+___pos[1]) in self.exits:
 								_found = True
 								break
 						

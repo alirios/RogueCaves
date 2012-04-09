@@ -1,5 +1,5 @@
 import levelgen
-import random, time
+import logging, random, time
 
 class World:
 	def __init__(self,height=1,depth=5,size=(50,50)):
@@ -37,21 +37,21 @@ class World:
 				_entrances=_exits[:]
 				_exits=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))] 
 			
-			print 'DEPTH: %s...' % str(level['z'])
+			logging.debug('DEPTH: %s' % str(level['z']))
 			if level['type']=='cave':
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*5),size=self.size,diagtunnels=random.randint(0,1),outside=False)
 
 				_ctime = time.time()
 				level['level'].generate_cave(entrances=_entrances,exits=_exits)
-				print '\tCaveGen took',time.time()-_ctime
+				logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))
 				
 				_dtime = time.time()
 				level['level'].decompose(self.depth-abs(level['z']),edgesonly=False)
-				print '\tDecompose setting %s took' % (self.depth-abs(level['z'])),time.time()-_ctime
+				logging.debug('\tDecompose setting %s took %s' % (self.depth-abs(level['z']),time.time()-_ctime))
 				
 				_wtime = time.time()
 				_w = level['level'].walk(where=level['level'].walls,walkers=-level['z'],types=[10,11],intensity=(10,12))
-				print '\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime)
+				logging.debug('\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime))
 				
 				for pos in _w:
 					if level['level'].map[pos[0]][pos[1]] == 11:
@@ -61,7 +61,7 @@ class World:
 			else:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(entrances=_entrances,exits=_exits)
-			print '\tTotal:',time.time()-_ltime
+			logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
-		print 'Worldgen took:',time.time()-_stime
+		logging.debug('Worldgen took: %s' % (time.time()-_stime))
 		

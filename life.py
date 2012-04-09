@@ -32,13 +32,27 @@ class life:
 		self.hunger = 0
 		self.hunger_timer = var.hunger_timer_max
 		self.items = []
-		self.gold = 0
-		self.coal = 0
 		
 		var.life.append(self)
 	
 	def add_item(self,item):
-		self.items.append({'name':var.items[str(item)],'tile':item})
+		self.items.append(item)
+	
+	def add_item_raw(self,item):
+		self.items.append(var.items[str(item)])
+		#self.items.append({'name':var.items[str(item)],'tile':item})
+	
+	def put_all_items_of_type(self,type,pos):
+		for _item in self.level.get_all_items_of_type('storage'):
+			_found = False
+			if tuple(_item['pos']) == tuple(pos):
+				_found = True
+				for item in self.items:
+					if item['type'] == type:
+						self.items.remove(item)
+						_item['items'].append(item)
+				
+				break
 	
 	def get_item_name(self,name):
 		for item in self.items:
@@ -46,6 +60,15 @@ class life:
 				return item
 		
 		return False
+	
+	def get_all_items_of_type(self,type):
+		_ret = []
+		
+		for item in self.items:
+			if item['type'] == type:
+				_ret.append(item)
+		
+		return _ret
 	
 	def get_item_id(self,id):
 		for item in self.items:
@@ -81,13 +104,9 @@ class life:
 			
 			self.xp += who.xp
 			
-			if who.gold:
-				self.gold += who.gold
-				if self.player: functions.log('Found +%s gold!' % who.gold)
-			
-			if who.coal:
-				self.coal += who.coal
-				if self.player: functions.log('Found +%s coal!' % who.coal)
+			for item in who.items:
+				if self.player: functions.log('Found %s!' % item['name'])
+				self.add_item(item)
 			
 			who.kill()
 		
@@ -112,16 +131,19 @@ class life:
 		#	if not life.z == self.z or self == life: continue
 		#	_blocking.append((life.pos[0],life.pos[1]))
 		
-		for pos in _l:
-			if self.level.map[pos[0]][pos[1]] in var.solid:
+		if tuple(pos) in _blocking:
+			_blocking.remove(tuple(pos))
+
+		for _pos in _l:
+			if self.level.map[_pos[0]][_pos[1]] in var.solid:
 				_seen = False
 				break
 			
-			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
+			if not _l.index(_pos)==len(_l)-1 and self.level.has_solid_item_at(_pos):
 				_seen = False
 				break
 			
-			if pos in _blocking:
+			if _pos in _blocking:
 				_seen = False
 				break
 		
@@ -146,16 +168,19 @@ class life:
 			if not life.z == self.z or self == life: continue
 			_blocking.append((life.pos[0],life.pos[1]))
 		
-		for pos in _l:
-			if self.level.map[pos[0]][pos[1]] in var.blocking:
+		if tuple(pos) in _blocking:
+			_blocking.remove(tuple(pos))
+		
+		for _pos in _l:
+			if self.level.map[_pos[0]][_pos[1]] in var.blocking:
 				_seen = False
 				break
 			
-			if not _l.index(pos)==len(_l)-1 and self.level.has_solid_item_at(pos):
+			if not _l.index(_pos)==len(_l)-1 and self.level.has_solid_item_at(_pos):
 				_seen = False
 				break
 			
-			if pos in _blocking:
+			if _pos in _blocking:
 				_seen = False
 				break
 		
@@ -277,18 +302,21 @@ class life:
 					self.pos = self.pos[:]
 					return
 				elif _tile['tile'] == 13:
-					self.gold += 1
-					self.level.items[_pos[0]][_pos[1]].pop(_i)
+					#self.gold += 1
+					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 gold.')
 				elif _tile['tile'] == 14:
 					self.coal += 1
-					self.level.items[_pos[0]][_pos[1]].pop(_i)
+					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 coal.')
 				elif _tile['tile'] == 17:
-					self.add_item(17)
-					self.level.items[_pos[0]][_pos[1]].pop(_i)
+					#self.add_item(17)
+					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up some food.')
 				
@@ -318,23 +346,28 @@ class life:
 				self.mine_dest = None
 
 	def find_path(self,pos):
+		#print self.can_see(pos)
+		#print self.can_traverse(pos)
 		if self.can_see(pos) and self.can_traverse(pos):
-			if (pos[0],pos[1]) == self.path_dest: return
+			if (pos[0],pos[1]) == self.path_dest:
+				self.path_dest = None
+				return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 			self.path_type = 'Line'
 		else:
-			if (pos[0],pos[1]) == self.path_dest: return
+			if (pos[0],pos[1]) == self.path_dest:
+				self.path_dest = None
+				return
 			_blocking = []
 			
 			for item in self.level.get_all_solid_items():
-				if not item['name'] == 'dirt':
-					_blocking.append((item['pos'][0],item['pos'][1]))
+				#if not item['name'] == 'dirt':
+				_blocking.append((item['pos'][0],item['pos'][1]))
 			
 			#We have to TRUST that the ALife knows what it's doing here...
 			#basically we're assuming that even though the destination
-			#is in the _blocking array, we can still move there and mine it
-			
+			#is in the _blocking array, we can still move there and mine it			
 			if tuple(pos) in _blocking:
 				_blocking.remove(tuple(pos))
 			
@@ -465,7 +498,7 @@ class human(life):
 	def remove_event(self,what):
 		for event in self.events:
 			if event['what'] == what:
-				print 'Removed!'
+				print 'Removed! %s' % what
 				self.events.remove(event)
 				return True
 		
@@ -485,9 +518,9 @@ class human(life):
 	
 	def mine(self):
 		if self.mine_dest: return
-		#Okay, find the nearest dirt...
+		
 		_lowest = {'score':1000,'pos':None}
-		for item in self.level.get_all_items(11):
+		for item in self.level.get_all_items_of_tile(11):
 			if not self.can_see(item['pos']): continue
 			
 			_dist = functions.distance(self.pos,item['pos'])
@@ -500,7 +533,9 @@ class human(life):
 			self.go_to(_lowest['pos'])
 			self.mine_dest = _lowest['pos']
 		else:
-			self.follow(var.player)
+			_pos = var.world.get_level(self.z-1).entrances[0]
+			
+			self.go_to(_pos,z=self.z-1)
 	
 	def think(self):
 		life.think(self)
@@ -529,8 +564,6 @@ class human(life):
 		
 		if self.lowest['who']:
 			if self.judge(self)>=abs(self.lowest['score']):
-				#self.go_to(self.lowest['who'].pos)
-				#self.task = 'attacking'
 				self.add_event('attack',100,who=self.lowest['who'])
 			else:
 				self.task = 'flee'
@@ -575,25 +608,25 @@ class human(life):
 			elif self.task['what'] == 'mine':
 				self.mine()
 			elif self.task['what'] == 'deliver':
-				if self.coal+self.gold:
+				if len(self.get_all_items_of_type('ore')):
 					_pos = None
 					_room = var.world.get_level(1).get_room('storage')
+					_chest = None
 					for pos in _room['walking_space']:
 						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
 							if item['type']=='storage':
 								for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 									if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
 										_pos = (pos[0]+space[0],pos[1]+space[1])
+										_chest = item
 										break
 								break
 					
 					if tuple(self.pos) == _pos:
-						self.coal = 0
-						self.gold = 0
+						self.put_all_items_of_type('ore',_chest['pos'])
 						self.remove_event(self.task['what'])
 						self.task = None
-						self.say('Delivered!')
-						print 'Made it!'
+						self.mine_dest = None
 					elif _pos:
 						self.go_to(_pos,z=1)
 			elif self.task['what'] == 'attack':
@@ -603,32 +636,20 @@ class human(life):
 					self.remove_event(self.task['what'])
 					self.task = None
 					self.say('Got em.')
-				
-		#else:
-		#	if not self.task in ['attacking','flee']:
-		#		if self.mode['task'] == 'follow':
-		#			self.follow(self.mode['who'])
-		#			self.task = 'following'
-		#		elif self.mode['task'] == 'mine':
-		#			self.mine()
 		
 		#Take care of daily schedules here
-		if self.hunger >= self.hungry_at:
-			self.add_event('food',self.hunger)
+		#if self.hunger >= self.hungry_at:
+		self.add_event('food',self.hunger)
 		
 		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
 		
-		self.add_event('deliver',(self.coal+self.gold)*50)
+		self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
 		
 		if self.path:
-			#_temp_path = self.path[:]
-			
 			if len(self.path)>1: self.path.pop(0)
-			_new_pos = [self.path[0][0],self.path[0][1]]
 			
-			#if tuple(_new_pos) == tuple(self.pos):#functions.distance(self.pos,_new_pos)==0:
-			#	_new_pos = list(self.path.pop(0))
+			_new_pos = [self.path[0][0],self.path[0][1]]
 			
 			return _new_pos
 		

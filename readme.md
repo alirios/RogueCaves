@@ -9,16 +9,21 @@ Todo
 
 Bugs
 ----
-* ALife occasionally teleports due to pathing errors.
+* ALife still occasionally teleports due to pathing errors.
+* Crash on line 179 of pathfinding.py.
 
-Current Version: 4.8.2012A
+Current Version: 04.08.2012A
 --------------------------
 Added
 -----
-* ALife can path a bit better. No longer teleports.
-* Optimized A*
+* ALife can path a bit better. No longer teleports (as much.)
+* Optimized A*.
+* Composed some music.
+* Items are now dropped properly.
+* Items can be stored.
+* Gold and coal are now items.
 
-Previous Version: 4.7.2012A
+Previous Version: 04.07.2012A
 --------------------------
 Added
 -----
@@ -27,7 +32,7 @@ Added
 * ALife counts attacking as an event, doing away with the need for interrupts.
 * A* tries to understand solid items.
 
-Previous Version: 4.6.2012A
+Previous Version: 04.06.2012A
 ---------------------------
 Added
 -----

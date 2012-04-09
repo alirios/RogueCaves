@@ -1,7 +1,25 @@
 import levelgen, world, life
-import pygcurse, pygame, random, time, var, sys
+import pygcurse, logging, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
+
+__version__ = time.strftime('%m.%d.%YA')
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_formatter = logging.Formatter('%(message)s')
+
+#fh = logging.FileHandler('log.txt')
+#fh.setLevel(logging.DEBUG)
+#fh.setFormatter(file_formatter)
+#logger.addHandler(fh)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(console_formatter)
+logger.addHandler(ch)
+logging.debug('Rogue Caves - %s' % __version__)
 
 #Colors...
 pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
@@ -17,6 +35,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 #Setup stuff...
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
+var.max_fps = 10
 var.fps = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -79,19 +98,32 @@ var.world.generate()
 #People
 var.player = life.human(player=True)
 var.player.name = 'Player'
-var.player.z = -3
+var.player.z = 1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
 
 for i in range(2):
 	test = life.human()
 	test.name = 'derp%s' % i
-	test.z = -3
+	test.z = 1
 	test.speed = 1
 	test.speed_max = 1
 	test.level = var.world.get_level(test.z)
+	test.icon['color'][0] = 'brown'
 	#test.mode = {'task':'mine','who':None}
 	test.add_event('mine',50)
+	test.pos = list(test.level.walking_space[i])
+
+for i in range(2):
+	test = life.human()
+	test.name = 'dude%s' % i
+	test.z = 1
+	test.speed = 2
+	test.speed_max = 2
+	test.level = var.world.get_level(test.z)
+	#test.icon['color'][0] = 'white'
+	#test.mode = {'task':'mine','who':None}
+	test.add_event('follow',50)
 	test.pos = list(test.level.walking_space[i])
 
 for i in range(1,var.world.depth):
@@ -265,6 +297,10 @@ def get_input():
 				var.input['left'] = False
 			elif event.key == K_RIGHT:
 				var.input['right'] = False
+			elif event.key == K_z:
+				var.max_fps = 10
+			elif event.key == K_x:
+				var.max_fps = 30
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
 		elif event.type == MOUSEBUTTONDOWN:
@@ -277,6 +313,12 @@ def get_input():
 						print 'Path dest: %s' % str(life.path_dest)
 						print 'Path type: %s' % life.path_type
 						print 'Position: %s' % str(life.pos)
+						print 'Inventory: '
+						print life.items
+			
+			for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
+				if item['pos'] == var.mouse_pos:
+					print item
 		
 	for key in var.input:
 		if key in ['up','down','left','right']:
@@ -295,7 +337,7 @@ def get_input():
 		draw_screen(refresh=True)
 	else:
 		draw_screen()
-	var.clock.tick(10)
+	var.clock.tick(var.max_fps)
 
 draw_screen()
 while 1: get_input()
