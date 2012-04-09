@@ -1,4 +1,4 @@
-import levelgen, world, life
+import levelgen, world, cache, life
 import pygcurse, logging, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
@@ -46,6 +46,7 @@ var.skill_mod = 6
 var.solid= [0,11,15]
 var.blocking = [10]
 var.items = [13,14]
+var.cache = cache.cache()
 var.mouse_pos = (0,0)
 var.input = {'up':False,
 	'down':False}

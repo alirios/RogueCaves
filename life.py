@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import random
+import logging, random
 
 class life:
 	def __init__(self,player=False):
@@ -40,7 +40,6 @@ class life:
 	
 	def add_item_raw(self,item):
 		self.items.append(var.items[str(item)])
-		#self.items.append({'name':var.items[str(item)],'tile':item})
 	
 	def put_all_items_of_type(self,type,pos):
 		for _item in self.level.get_all_items_of_type('storage'):
@@ -355,10 +354,17 @@ class life:
 			if (pos[0],pos[1]) == self.path_dest:
 				self.path_dest = None
 				return
+			
+			self.path_type = 'A*'
+			
+			_cache_path = var.cache.get_path_from_cache(self.pos,pos)
+			if _cache_path:
+				self.path = _cache_path
+				self.path_dest = (pos[0],pos[1])
+			
 			_blocking = []
 			
 			for item in self.level.get_all_solid_items():
-				#if not item['name'] == 'dirt':
 				_blocking.append((item['pos'][0],item['pos'][1]))
 			
 			#We have to TRUST that the ALife knows what it's doing here...
@@ -381,9 +387,8 @@ class life:
 			if not self.path:
 				self.path_dest = None
 			else:
+				var.cache.add_path_to_cache(self.pos,pos,self.path)
 				self.path_dest = (pos[0],pos[1])
-			
-			self.path_type = 'A*'
 	
 	def follow(self,who):
 		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):
