@@ -6,7 +6,6 @@ Current milestone: Athletic Alpaca
 Todo
 ----
 * Extended cave generation (old bridges, rooms, etc).
-* A* caching.
 * Accept unfinished A* paths.
 * Audio.
 
@@ -22,6 +21,7 @@ Current Version: 04.09.2012A
 Added
 -----
 * Fixed crash relating to old item system.
+* A* cache.
 
 Current Version: 04.08.2012A
 --------------------------
