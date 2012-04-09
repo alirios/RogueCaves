@@ -361,6 +361,7 @@ class life:
 			if _cache_path:
 				self.path = _cache_path
 				self.path_dest = (pos[0],pos[1])
+				return
 			
 			_blocking = []
 			
