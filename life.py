@@ -302,13 +302,11 @@ class life:
 					self.pos = self.pos[:]
 					return
 				elif _tile['tile'] == 13:
-					#self.gold += 1
 					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 gold.')
 				elif _tile['tile'] == 14:
-					self.coal += 1
 					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
 					self.add_item(_item)
 					if self.player:
