@@ -341,17 +341,21 @@ class life:
 		if self.mine_dest:
 			if (self.pos[0],self.pos[1]) == (self.mine_dest[0],self.mine_dest[1]):
 				self.mine_dest = None
+		
+		if self.path_dest:
+			if (self.pos[0],self.pos[1]) == (self.path_dest[0],self.path_dest[1]):
+				self.path_dest = None
 
 	def find_path(self,pos):
 		if self.can_see(pos) and self.can_traverse(pos):
-			if (pos[0],pos[1]) == self.path_dest:
+			if (pos[0],pos[1]) == tuple(self.path_dest):
 				self.path_dest = None
 				return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 			self.path_type = 'Line'
 		else:
-			if (pos[0],pos[1]) == self.path_dest:
+			if (pos[0],pos[1]) == tuple(self.path_dest):
 				self.path_dest = None
 				return
 			
