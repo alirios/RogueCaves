@@ -210,8 +210,8 @@ def draw_screen(refresh=False):
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
-			#else:
-			#	var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
+			elif refresh:
+				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)

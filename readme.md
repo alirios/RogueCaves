@@ -15,14 +15,15 @@ Bugs
 ----
 * ALife still occasionally teleports due to pathing errors.
 * ALife continues to calculate paths that broke in the past.
-* ALife "waits" if someone inhabits a tunnel.
 * Crash on line 179 of pathfinding.py.
+* Only let ALife clip if the two have active paths.
 
 Current Version: 04.11.2012A
 ----------------------------
 Added
 -----
 * Optimized draw_screen() for caves.
+* ALife clips through fellow workers.
 
 Previous Version: 04.09.2012A
 ----------------------------
