@@ -10,7 +10,6 @@ class cache:
 				logging.debug('Path already exists in cache.')
 				return
 		
-		logging.debug('Added path to cache')
 		_path = {'start':tuple(start),'end':tuple(end),'path':path[:]}
 		self.path_cache.append(_path)
 	

@@ -376,7 +376,7 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
 
                     # fill in the entire background of the cell
                     cellrect = pygame.Rect(self._cellwidth * x, self._cellheight * y, self._cellwidth, self._cellheight)
-
+                    
                     if self._screenchar[x][y] is None:
                         self._surfaceobj.fill(ERASECOLOR, cellrect)
                         continue

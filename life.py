@@ -324,10 +324,12 @@ class life:
 			if life == self or not self.z == life.z: continue
 			
 			if self.race == life.race:
-				if life.pos == _pos:
-					if self.player:
-						functions.log('%s is in the way.' % life.name)
-					_found = True
+				pass
+				#TODO: Should I do this?
+				#if life.pos == _pos:
+				#	if self.player:
+				#		functions.log('%s is in the way.' % life.name)
+				#	_found = True
 			elif life.pos == _pos:
 				self.attack(life)
 				_found = True
@@ -348,14 +350,14 @@ class life:
 
 	def find_path(self,pos):
 		if self.can_see(pos) and self.can_traverse(pos):
-			if (pos[0],pos[1]) == tuple(self.path_dest):
+			if self.path_dest and (pos[0],pos[1]) == tuple(self.path_dest):
 				self.path_dest = None
 				return
 			self.path = draw.draw_diag_line(self.pos,pos)
 			self.path_dest = (pos[0],pos[1])
 			self.path_type = 'Line'
 		else:
-			if (pos[0],pos[1]) == tuple(self.path_dest):
+			if self.path_dest and (pos[0],pos[1]) == tuple(self.path_dest):
 				self.path_dest = None
 				return
 			
@@ -381,7 +383,7 @@ class life:
 			for life in var.life:
 				if not life.z == self.z or self == life: continue
 				
-				_blocking.append((life.pos[0],life.pos[1]))
+				#_blocking.append((life.pos[0],life.pos[1]))
 			
 			if tuple(pos) in _blocking:
 				_blocking.remove(tuple(pos))

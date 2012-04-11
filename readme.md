@@ -8,6 +8,8 @@ Todo
 * Extended cave generation (old bridges, rooms, etc).
 * Accept unfinished A* paths.
 * Audio.
+* Optimize the update() function in Pygcurse.
+* Let game run headless.
 
 Bugs
 ----
@@ -16,7 +18,13 @@ Bugs
 * ALife "waits" if someone inhabits a tunnel.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.09.2012A
+Current Version: 04.11.2012A
+----------------------------
+Added
+-----
+* Optimized draw_screen() for caves.
+
+Previous Version: 04.09.2012A
 ----------------------------
 Added
 -----

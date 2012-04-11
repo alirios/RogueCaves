@@ -35,6 +35,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 #Setup stuff...
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
+var.world_size = (99,33)
 var.max_fps = 10
 var.fps = 0
 var.view_dist = 11
@@ -93,7 +94,7 @@ var.view.putchars('Generating world...',x=0,y=0)
 var.view.update()
 
 #Generate level
-var.world = world.World(size=(var.window_size[0],var.window_size[1]-6),depth=6)
+var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
 
 #People
@@ -146,7 +147,7 @@ var.fpstime = time.time()
 def draw_screen(refresh=False):	
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 	_starttime = time.time()
-	var.view.fill('black','black',region=region)
+	#var.view.fill('black','black',region=region)
 	var.view.setbrightness(0, region=region)
 
 	var.player.level.light(var.player.pos)
@@ -209,11 +210,11 @@ def draw_screen(refresh=False):
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
-			else:
-				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
+			#else:
+			#	var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
-	#_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
+	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
 	_char = '%s' % (var.player.name)
 	_health = 'HP: (%s\%s)' % (var.player.hp,var.player.hp_max)
 	_depth = 'Depth: %s' % (-var.player.z)
@@ -245,6 +246,7 @@ def draw_screen(refresh=False):
 		var.log.putchars(entry,x=0,y=var.window_size[1]-5+(_i),fgcolor=_fgcolor,bgcolor='black')
 		_i+=1
 	
+	#print time.time()-_starttime
 	var.log.update()
 	var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	if time.time()-var.fpstime>=1:
