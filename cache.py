@@ -10,7 +10,10 @@ class cache:
 				logging.debug('Path already exists in cache.')
 				return
 		
-		_path = {'start':tuple(start),'end':tuple(end),'path':path[:]}
+		if path:
+			_path = {'start':tuple(start),'end':tuple(end),'path':path[:]}
+		else:
+			_path = {'start':tuple(start),'end':tuple(end),'path':path}
 		self.path_cache.append(_path)
 	
 	def get_path_from_cache(self,start,end):

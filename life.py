@@ -394,8 +394,9 @@ class life:
 			if not self.path:
 				self.path_dest = None
 			else:
-				var.cache.add_path_to_cache(self.pos,pos,self.path)
 				self.path_dest = (pos[0],pos[1])
+			
+			var.cache.add_path_to_cache(self.pos,pos,self.path)
 	
 	def follow(self,who):
 		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):

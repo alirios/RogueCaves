@@ -424,6 +424,7 @@ class LevelGen:
 						#change the spot on the map to a floor tile
 						#and add this position to the "walking_space"
 						#array.
+						
 						self.map[pos[0]][pos[1]] = 1
 						self.walking_space.append(pos)
 						
