@@ -11,6 +11,7 @@ Todo
 * Optimize the update() function in Pygcurse.
 * Let game run headless.
 * Only let ALife clip if the two have active paths.
+* Combine generate_room() and generate_cave_rooms()
 
 Bugs
 ----
@@ -19,7 +20,14 @@ Bugs
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.11.2012A
+Current Version: 04.12.2012A
+----------------------------
+Added
+-----
+* Fixed possible bug relating to A* cache returning paths for wrong z-level.
+* Started room generation for caves.
+
+Previous Version: 04.11.2012A
 ----------------------------
 Added
 -----

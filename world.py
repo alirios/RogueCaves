@@ -53,6 +53,10 @@ class World:
 				_w = level['level'].walk(where=level['level'].walls,walkers=-level['z'],types=[10,11],intensity=(10,12))
 				logging.debug('\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime))
 				
+				_rtime = time.time()
+				level['level'].generate_cave_rooms()
+				logging.debug('\tRooms: %s, took %s' % (len(level['level'].rooms),time.time()-_rtime))
+				
 				for pos in _w:
 					if level['level'].map[pos[0]][pos[1]] == 11:
 						level['level'].map[pos[0]][pos[1]] = 1

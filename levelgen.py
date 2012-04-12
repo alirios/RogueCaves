@@ -419,6 +419,11 @@ class LevelGen:
 				#We made it.
 				#Make sure the room is of proper size and begin placing.
 				if _found and len(_room)>=9:
+					__room = {'name':'cave_room','walls':None,'open_walls':[],'walking_space':_room,\
+						'door':None,'type':None}
+					
+					#Find some open walls
+					
 					#For every floor tile in the room...
 					for pos in _room:
 						#change the spot on the map to a floor tile
@@ -432,6 +437,22 @@ class LevelGen:
 						#array-- NOT the copy we made earlier
 						if pos in self.walls:
 							self.walls.remove(pos)
+						
+						#Find some open walls
+						_open = True
+						for _pos in [(0,-1),(1,0),(-1,0),(0,1)]:
+							_x = pos[0]+_pos[0]
+							_y = pos[1]+_pos[1]
+							
+							if not self.map[_x][_y] == 1:
+								_open = False
+								break
+							
+						if _open:
+							__room['open_walls'].append(pos)
+							
+						#Add it to our rooms array
+						self.rooms.append(__room)
 					
 					#Instead of finding the center, just find a random
 					#spot in the array. This makes the tunnels look a
@@ -526,6 +547,26 @@ class LevelGen:
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
+	
+	def generate_cave_rooms(self):
+		for room in self.rooms:
+			for pos in room['walking_space']:
+				_x = room['walking_space'][0][0]-pos[0]
+				_y = room['walking_space'][0][1]-pos[1]
+				_x1 = room['walking_space'][len(room['walking_space'])-1][0]-pos[0]
+				_y1 = room['walking_space'][len(room['walking_space'])-1][1]-pos[1]
+				
+				if not _x or not _y or not _x1 or not _y1:
+					self.map[pos[0]][pos[1]] = 15
+				else:
+					self.map[pos[0]][pos[1]] = 16
+			
+			if room['open_walls']:
+				_pos = random.choice(room['open_walls'])
+				self.map[_pos[0]][_pos[1]] = 16
+				
+				if _pos in self.walking_space:
+					self.walking_space.remove(_pos)
 	
 	def generate_forest(self, entrances=[(4,4)],exits=[]):
 		self.entrances = entrances

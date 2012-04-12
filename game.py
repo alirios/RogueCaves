@@ -307,7 +307,6 @@ def get_input():
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
 		elif event.type == MOUSEBUTTONDOWN:
-			#var.player.level.map[var.mouse_pos[0]][var.mouse_pos[1]] = 1
 			for life in var.life:
 				if life.z == var.player.z:
 					if life.pos == list(var.mouse_pos):
