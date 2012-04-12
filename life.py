@@ -366,7 +366,7 @@ class life:
 			
 			self.path_type = 'A*'
 			
-			_cache_path = var.cache.get_path_from_cache(self.pos,pos)
+			_cache_path = var.cache.get_path_from_cache(self.pos,pos,self.z)
 			if _cache_path:
 				self.path = _cache_path
 				self.path_dest = (pos[0],pos[1])
@@ -398,7 +398,7 @@ class life:
 				self.path_dest = None
 			else:
 				self.path_dest = (pos[0],pos[1])
-				var.cache.add_path_to_cache(self.pos,pos,self.path)
+				var.cache.add_path_to_cache(self.pos,pos,self.path,self.z)
 	
 	def follow(self,who):
 		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):
