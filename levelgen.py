@@ -419,7 +419,7 @@ class LevelGen:
 				#We made it.
 				#Make sure the room is of proper size and begin placing.
 				if _found and len(_room)>=9:
-					__room = {'name':'cave_room','walls':None,'open_walls':[],'walking_space':_room,\
+					__room = {'name':'cave_room','walls':[],'open_walls':[],'walking_space':_room,\
 						'door':None,'type':None}
 					
 					#Find some open walls
@@ -437,19 +437,6 @@ class LevelGen:
 						#array-- NOT the copy we made earlier
 						if pos in self.walls:
 							self.walls.remove(pos)
-						
-						#Find some open walls
-						_open = True
-						for _pos in [(0,-1),(1,0),(-1,0),(0,1)]:
-							_x = pos[0]+_pos[0]
-							_y = pos[1]+_pos[1]
-							
-							if not self.map[_x][_y] == 1:
-								_open = False
-								break
-							
-						if _open:
-							__room['open_walls'].append(pos)
 							
 						#Add it to our rooms array
 						self.rooms.append(__room)
@@ -558,15 +545,34 @@ class LevelGen:
 				
 				if not _x or not _y or not _x1 or not _y1:
 					self.map[pos[0]][pos[1]] = 15
+					room['walls'].append(pos)
 				else:
 					self.map[pos[0]][pos[1]] = 16
 			
-			if room['open_walls']:
-				_pos = random.choice(room['open_walls'])
-				self.map[_pos[0]][_pos[1]] = 16
+			for wall in room['walls']:
+				_open = False
+				_floor = False
+				for _pos in [(0,-1),(1,0),(-1,0),(0,1)]:
+					_x = wall[0]+_pos[0]
+					_y = wall[1]+_pos[1]
+					
+					if self.map[_x][_y] == 1:
+						_open = True
+					
+					if self.map[_x][_y] == 16:
+						_floor = True
 				
-				if _pos in self.walking_space:
-					self.walking_space.remove(_pos)
+				if _open and _floor:
+					room['open_walls'].append(wall)
+			
+			if room['open_walls']:
+				#_pos = random.choice(room['open_walls'])
+				for _pos in room['open_walls']:
+					self.map[_pos[0]][_pos[1]] = 16
+				
+				#if _pos in self.walking_space:
+				#	self.walking_space.remove(_pos)
+			
 	
 	def generate_forest(self, entrances=[(4,4)],exits=[]):
 		self.entrances = entrances
