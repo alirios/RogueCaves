@@ -10,13 +10,14 @@ Todo
 * Audio.
 * Optimize the update() function in Pygcurse.
 * Let game run headless.
+* Only let ALife clip if the two have active paths.
 
 Bugs
 ----
 * ALife still occasionally teleports due to pathing errors.
 * ALife continues to calculate paths that broke in the past.
+* ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
-* Only let ALife clip if the two have active paths.
 
 Current Version: 04.11.2012A
 ----------------------------
@@ -24,6 +25,8 @@ Added
 -----
 * Optimized draw_screen() for caves.
 * ALife clips through fellow workers.
+* Fixed additional pathing issues.
+* Teleporting due to pathing conflicts fixed.
 
 Previous Version: 04.09.2012A
 ----------------------------

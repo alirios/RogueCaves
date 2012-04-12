@@ -222,6 +222,9 @@ class life:
 			
 			_seen = self.can_see(life.pos)#True
 			
+			if _seen:
+				_seen = self.can_traverse(life.pos)
+			
 			if _seen and not life.z == self.z: _seen = False
 			
 			if _seen:
@@ -395,8 +398,7 @@ class life:
 				self.path_dest = None
 			else:
 				self.path_dest = (pos[0],pos[1])
-			
-			var.cache.add_path_to_cache(self.pos,pos,self.path)
+				var.cache.add_path_to_cache(self.pos,pos,self.path)
 	
 	def follow(self,who):
 		if self.pos == who.pos or (self.z == who.z and functions.distance(self.pos,who.pos)<=3):
@@ -526,7 +528,7 @@ class human(life):
 		return _score
 	
 	def mine(self):
-		if self.mine_dest: return
+		if self.mine_dest and self.path_dest == self.mine_dest: return
 		
 		_lowest = {'score':1000,'pos':None}
 		for item in self.level.get_all_items_of_tile(11):
@@ -656,11 +658,13 @@ class human(life):
 		self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
 		
 		if self.path:
-			if len(self.path)>1: self.path.pop(0)
+			if tuple(self.pos) == tuple(self.path[0]):
+				self.path.pop(0)
+			#if len(self.path)>1: self.path.pop(0)
 			
-			_new_pos = [self.path[0][0],self.path[0][1]]
-			
-			return _new_pos
+			if self.path:
+				_new_pos = [self.path[0][0],self.path[0][1]]
+				return _new_pos
 		
 		return self.pos
 
