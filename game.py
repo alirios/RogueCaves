@@ -104,29 +104,29 @@ var.player.z = 1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
 
-for i in range(2):
-	test = life.human()
-	test.name = 'derp%s' % i
-	test.z = 1
-	test.speed = 1
-	test.speed_max = 1
-	test.level = var.world.get_level(test.z)
-	test.icon['color'][0] = 'brown'
-	#test.mode = {'task':'mine','who':None}
-	test.add_event('mine',50)
-	test.pos = list(test.level.walking_space[i])
-
-for i in range(2):
-	test = life.human()
-	test.name = 'dude%s' % i
-	test.z = 1
-	test.speed = 2
-	test.speed_max = 2
-	test.level = var.world.get_level(test.z)
-	#test.icon['color'][0] = 'white'
-	#test.mode = {'task':'mine','who':None}
-	test.add_event('follow',50)
-	test.pos = list(test.level.walking_space[i])
+#for i in range(2):
+#	test = life.human()
+#	test.name = 'derp%s' % i
+#	test.z = 1
+#	test.speed = 1
+#	test.speed_max = 1
+#	test.level = var.world.get_level(test.z)
+#	test.icon['color'][0] = 'brown'
+#	#test.mode = {'task':'mine','who':None}
+#	test.add_event('mine',50)
+#	test.pos = list(test.level.walking_space[i])
+#
+#for i in range(2):
+#	test = life.human()
+#	test.name = 'dude%s' % i
+#	test.z = 1
+#	test.speed = 2
+#	test.speed_max = 2
+#	test.level = var.world.get_level(test.z)
+#	#test.icon['color'][0] = 'white'
+#	#test.mode = {'task':'mine','who':None}
+#	test.add_event('follow',50)
+#	test.pos = list(test.level.walking_space[i])
 
 for i in range(1,var.world.depth):
 	for r in range(0,i*2):
