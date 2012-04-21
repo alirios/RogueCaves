@@ -20,7 +20,16 @@ Bugs
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.12.2012A
+Current Version: 04.21.2012A
+----------------------------
+Added
+-----
+* Added weapons.
+* Added Crazy Miner.
+* No longer real-time (for now).
+* Fixed bug that prevented ALife from following targets between z-levels.
+
+Previous Version: 04.12.2012A
 ----------------------------
 Added
 -----

@@ -27,6 +27,8 @@ class life:
 		self.atk = 1
 		self.defe = 1
 		
+		self.weapon = None
+		
 		self.thirst = 0
 		self.thirst_timer = var.thirst_timer_max
 		self.hunger = 0
@@ -40,6 +42,13 @@ class life:
 	
 	def add_item_raw(self,item):
 		self.items.append(var.items[str(item)])
+	
+	def equip_item(self):
+		for item in self.items:
+			if item['type'] == 'weapon':
+				self.weapon = item
+				if self.player: functions.log('You equip the %s.' % (item['name']))
+				return
 	
 	def put_all_items_of_type(self,type,pos):
 		for _item in self.level.get_all_items_of_type('storage'):
@@ -91,14 +100,26 @@ class life:
 		
 		self.hunger_timer -= 5
 		self.xp += 1
+		
 		who.hp -= 1
+		
+		if self.weapon:
+			_dam = random.randint(self.atk,self.weapon['damage']+self.atk)
+			if _dam >= self.weapon['damage']:
+				if self.player:
+					functions.log('Your %s hits for maximum damage!' % self.weapon['name'])
+				elif who.player:
+					functions.log('%s hits you with a %s for maximum damage!' % 
+						(self.name,self.weapon['name']))
+			
+			who.hp -= _dam
 		
 		if who.hp<=0:
 			if who.race in ['zombie']:
 				if self.player: functions.log('You slay the %s!' % (who.race))
 				elif who.player: functions.log('The %s slays you!' % (who.race))
 			else:
-				if self.player: functions.log('You slay %s!' % (who.name))
+				if self.player: functions.log('You slay %s, the %s!' % (who.name,who.race))
 				elif who.player: functions.log('The %s slays you!' % (self.race))
 			
 			self.xp += who.xp
@@ -106,6 +127,9 @@ class life:
 			for item in who.items:
 				if self.player: functions.log('Found %s!' % item['name'])
 				self.add_item(item)
+				
+				if item['type']=='weapon':
+					self.equip_item()
 			
 			who.kill()
 		
@@ -383,10 +407,10 @@ class life:
 			if tuple(pos) in _blocking:
 				_blocking.remove(tuple(pos))
 			
-			for life in var.life:
-				if not life.z == self.z or self == life: continue
-				
-				#_blocking.append((life.pos[0],life.pos[1]))
+			#for life in var.life:
+			#	if not life.z == self.z or self == life: continue
+			#	
+			#	#_blocking.append((life.pos[0],life.pos[1]))
 			
 			if tuple(pos) in _blocking:
 				_blocking.remove(tuple(pos))
@@ -488,13 +512,17 @@ class human(life):
 		
 		self.events = []
 	
+	def on_enemy_spotted(self):
+		pass
+	
 	def add_event(self,what,score,who=None):
 		for event in self.events:
-			if event['what'] == what:
+			if event['what'] == what and event['who'] == who:
 				event['score'] = score
-				return
+				return False
 		
 		self.events.append({'what':what,'score':score,'who':who})
+		return True
 	
 	def get_event(self):
 		_highest = {'what':None,'score':-1}
@@ -575,12 +603,12 @@ class human(life):
 		
 		if self.lowest['who']:
 			if self.judge(self)>=abs(self.lowest['score']):
-				self.add_event('attack',100,who=self.lowest['who'])
+				if self.add_event('attack',100,who=self.lowest['who']):
+					self.on_enemy_spotted()
 			else:
 				self.task = 'flee'
 		else:
 			if self.task == 'attacking':
-				print 'Task reset'
 				self.task = None
 		
 		if not self.mode['task']:# and not self.task in ['attacking','flee']:
@@ -592,7 +620,6 @@ class human(life):
 			_event = self.get_event()
 			
 			if _event and not self.task==_event:
-				self.say('%s' % (_event['what']))
 				self.task = _event
 			
 			if self.task['what'] == 'food':
@@ -642,7 +669,7 @@ class human(life):
 						self.go_to(_pos,z=1)
 			elif self.task['what'] == 'attack':
 				if self.task['who'].hp>0:
-					self.go_to(self.task['who'].pos)
+					self.go_to(self.task['who'].pos,z=self.task['who'].z)
 				else:
 					self.remove_event(self.task['what'])
 					self.task = None
@@ -667,6 +694,15 @@ class human(life):
 				return _new_pos
 		
 		return self.pos
+
+class crazy_miner(human):
+	def __init__(self):
+		human.__init__(self)
+		
+		self.race = 'crazy miner'
+	
+	def on_enemy_spotted(self):
+		self.say('I see yah, you crazy bastard!')
 
 class zombie(life):
 	def __init__(self,player=False):

@@ -129,6 +129,8 @@ class LevelGen:
 	def light(self,pos):
 		self.vmap = [[self.outside] * self.size[1] for i in range(self.size[0])]
 		
+		if self.outside: return
+		
 		x = 0
 		y = 0
 		i = 0

@@ -36,7 +36,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
-var.max_fps = 10
+var.max_fps = 20
 var.fps = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -55,7 +55,8 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'13':{'name':'gold','solid':False,'type':'ore','tile':13},
 			'14':{'name':'coal','solid':False,'type':'ore','tile':14},
 			'17':{'name':'meat','solid':False,'type':'food','tile':17},
-			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18}}
+			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18},
+			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,'tile':19}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -74,7 +75,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'15':{'icon':'#','color':['white','brown']},
 	'16':{'icon':'.','color':['brown','sand']},
 	'17':{'icon':'F','color':['red','lightsand']},
-	'18':{'icon':'#','color':['brown','lightsand']}}
+	'18':{'icon':'#','color':['brown','lightsand']},
+	'19':{'icon':'/','color':['silver','black']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -101,8 +103,20 @@ var.world.generate()
 var.player = life.human(player=True)
 var.player.name = 'Player'
 var.player.z = 1
+var.player.speed = 0
+var.player.speed_max = 0
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
+
+test = life.crazy_miner()
+test.name = 'Chester'
+test.z = 1
+test.speed = 3
+test.speed_max = 3
+test.level = var.world.get_level(test.z)
+test.pos = (10,10)
+test.add_item_raw(19)
+test.equip_item()
 
 #for i in range(2):
 #	test = life.human()
@@ -128,17 +142,17 @@ var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.g
 #	test.add_event('follow',50)
 #	test.pos = list(test.level.walking_space[i])
 
-for i in range(1,var.world.depth):
-	for r in range(0,i*2):
-		_temp = life.zombie()
-		_temp.z = -i
-		_temp.speed = var.world.depth-i
-		_temp.speed_max = var.world.depth-i
-		_temp.hp = i+3
-		_temp.hp_max = i+3
-		_temp.level = var.world.get_level(_temp.z)
-		_p = random.choice(_temp.level.walking_space)
-		_temp.pos = [_p[0],_p[1]]
+#for i in range(1,var.world.depth):
+#	for r in range(0,i*2):
+#		_temp = life.zombie()
+#		_temp.z = -i
+#		_temp.speed = var.world.depth-i
+#		_temp.speed_max = var.world.depth-i
+#		_temp.hp = i+3
+#		_temp.hp_max = i+3
+#		_temp.level = var.world.get_level(_temp.z)
+#		_p = random.choice(_temp.level.walking_space)
+#		_temp.pos = [_p[0],_p[1]]
 
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 var.temp_fps = 0
@@ -184,13 +198,16 @@ def draw_screen(refresh=False):
 				
 				if not _tile['color'][1]:
 					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
+						if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor='black',bgcolor=_bgcolor)
 					else:
+						if var.view._screenchar[x][y] == _tile['icon']: continue
 						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_bgcolor)
 				
 				elif _tile['color'][1]=='blue':
 					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=pygame.Color(0, 0, random.randint(150,200)))
 				else:
+					if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
 					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
 				
 				_dist = abs(var.player.pos[0]-var.mouse_pos[0])+abs(var.player.pos[1]-var.mouse_pos[1])
@@ -208,10 +225,11 @@ def draw_screen(refresh=False):
 				#			var.view.lighten(50,(_x,_y,1,1))
 			elif var.player.level.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
+				#if var.view._screenchar[x][y] == _tile['icon']: continue
 				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
 			elif refresh:
-				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
+				var.view.putchar(']',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
@@ -303,7 +321,7 @@ def get_input():
 			elif event.key == K_z:
 				var.max_fps = 10
 			elif event.key == K_x:
-				var.max_fps = 30
+				var.max_fps = 60
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
 		elif event.type == MOUSEBUTTONDOWN:
@@ -327,11 +345,11 @@ def get_input():
 			if var.input[key]:
 				var.player.walk(key)
 	
-	_atime = time.time()
-	for life in var.life:
-		life.tick()
-		if life.player: continue
-		life.walk(None)
+				_atime = time.time()
+				for life in var.life:
+					life.tick()
+					if life.player: continue
+					life.walk(None)
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)
