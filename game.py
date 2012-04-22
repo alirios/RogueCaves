@@ -56,7 +56,8 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'14':{'name':'coal','solid':False,'type':'ore','tile':14},
 			'17':{'name':'meat','solid':False,'type':'food','tile':17},
 			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18},
-			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,'tile':19}}
+			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
+				'status':None,'rank':1,'tile':19}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -101,7 +102,7 @@ var.world.generate()
 
 #People
 var.player = life.human(player=True)
-var.player.name = 'Player'
+var.player.name = 'flags'
 var.player.z = 1
 var.player.speed = 0
 var.player.speed_max = 0
@@ -344,12 +345,21 @@ def get_input():
 		if key in ['up','down','left','right']:
 			if var.input[key]:
 				var.player.walk(key)
+				
+				if var.player.in_danger:
+					for life in var.life:
+						life.tick()
+						if life.player: continue
+						life.walk(None)
+
 	
 	_atime = time.time()
-	for life in var.life:
-		life.tick()
-		if life.player: continue
-		life.walk(None)
+	
+	if not var.player.in_danger:
+		for life in var.life:
+			life.tick()
+			if life.player: continue
+			life.walk(None)
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)

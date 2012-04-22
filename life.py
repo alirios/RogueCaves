@@ -47,7 +47,7 @@ class life:
 		for item in self.items:
 			if item['type'] == 'weapon':
 				self.weapon = item
-				if self.player: functions.log('You equip the %s.' % (item['name']))
+				if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
 				return
 	
 	def put_all_items_of_type(self,type,pos):
@@ -110,7 +110,9 @@ class life:
 					functions.log('Your %s hits for maximum damage!' % self.weapon['name'])
 				elif who.player:
 					functions.log('%s hits you with a %s for maximum damage!' % 
-						(self.name,self.weapon['name']))
+						(self.name,self.get_weapon_name()))
+				
+				self.weapon['status'] = 'the blood of %s the %s' % (who.name,who.race)
 			
 			who.hp -= _dam
 		
@@ -338,7 +340,6 @@ class life:
 					if self.player:
 						functions.log('You picked up +1 coal.')
 				elif _tile['tile'] == 17:
-					#self.add_item(17)
 					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
 					self.add_item(_item)
 					if self.player:
@@ -506,6 +507,7 @@ class human(life):
 		self.worth = None
 		self.mode = {'task':None,'who':None}
 		self.task = None
+		self.in_danger = False
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -514,6 +516,30 @@ class human(life):
 	
 	def on_enemy_spotted(self):
 		pass
+	
+	def is_in_danger(self,who):
+		self.in_danger = True
+		if self.player:
+			if who.weapon:
+				functions.log('%s the %s charges towards you with a %s!' % \
+					(who.name,who.race,who.get_weapon_name()))
+			else:
+				functions.log('%s the %s runs towards you!' % \
+					(who.name,who.race))
+	
+	def get_weapon_name(self):
+		_name = ''
+		
+		if self.weapon['rank']>1:
+			if self.weapon['rank']==2:
+				_name+='shining '
+		
+		_name+='%s' % self.weapon['name']
+		
+		if self.weapon['status']:
+			_name+=' covered in %s' % self.weapon['status']
+			
+		return _name
 	
 	def add_event(self,what,score,who=None):
 		for event in self.events:
@@ -609,6 +635,8 @@ class human(life):
 			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
 					self.on_enemy_spotted()
+					if self.lowest['who'].player:
+						self.lowest['who'].is_in_danger(self)
 			else:
 				if self.add_event('flee',100,who=self.lowest['who']):
 					self.remove_event('attack')
@@ -703,6 +731,12 @@ class human(life):
 				return _new_pos
 		
 		return self.pos
+	
+	def kill(self):
+		life.kill(self)
+		
+		if self.task['what'] == 'attack':
+			self.task['who'].in_danger = False
 
 class crazy_miner(human):
 	def __init__(self):
@@ -711,6 +745,7 @@ class crazy_miner(human):
 		self.race = 'crazy miner'
 	
 	def on_enemy_spotted(self):
+		human.on_enemy_spotted(self)
 		self.say('I see yah, you crazy bastard!')
 
 class zombie(life):

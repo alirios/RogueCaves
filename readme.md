@@ -27,6 +27,8 @@ Added
 * ALife forgets about enemies after they're killed.
 * Fixed some repeating dialog.
 * ALife now takes into consideration a target's weapon.
+* Weapons now have ranks and statuses.
+* Game now goes into turn-based mode when danger arises.
 
 Previous Version: 04.21.2012A
 ----------------------------
