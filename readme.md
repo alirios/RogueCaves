@@ -26,6 +26,7 @@ Added
 -----
 * ALife forgets about enemies after they're killed.
 * Fixed some repeating dialog.
+* ALife now takes into consideration a target's weapon.
 
 Previous Version: 04.21.2012A
 ----------------------------
