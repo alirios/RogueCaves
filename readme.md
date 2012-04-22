@@ -20,7 +20,14 @@ Bugs
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.21.2012A
+Current Version: 04.22.2012A
+----------------------------
+Added
+-----
+* ALife forgets about enemies after they're killed.
+* Fixed some repeating dialog.
+
+Previous Version: 04.21.2012A
 ----------------------------
 Added
 -----

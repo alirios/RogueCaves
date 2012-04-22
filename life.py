@@ -541,7 +541,7 @@ class human(life):
 				self.events.remove(event)
 				return True
 		
-		print 'Warning: Event %s not found!' % what
+		#print 'Warning: Event %s not found!' % what
 		return False
 	
 	def judge(self,who):
@@ -549,6 +549,9 @@ class human(life):
 		_score = 0
 		
 		_score = (who.hp+who.atk+who.defe)
+		
+		if who.weapon:
+			_score+=self.weapon['damage']*2
 		
 		if not self.race == who.race:
 			_score *= -1
@@ -602,10 +605,13 @@ class human(life):
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			if self.judge(self)>=abs(self.lowest['score']):
+			print self.judge(self),abs(self.judge(self.lowest['who']))
+			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
 					self.on_enemy_spotted()
 			else:
+				if self.add_event('flee',100,who=self.lowest['who']):
+					self.remove_event('attack')
 				self.task = 'flee'
 		else:
 			if self.task == 'attacking':
@@ -671,9 +677,12 @@ class human(life):
 				if self.task['who'].hp>0:
 					self.go_to(self.task['who'].pos,z=self.task['who'].z)
 				else:
-					self.remove_event(self.task['what'])
-					self.task = None
-					self.say('Got em.')
+					if self.remove_event(self.task['what']):
+						self.task = None
+						self.say('Got em.')
+						self.lowest = {'who':None,'score':0}
+			elif self.task['what'] == 'flee':
+				print 'Running away'
 		
 		#Take care of daily schedules here
 		#if self.hunger >= self.hungry_at:

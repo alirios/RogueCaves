@@ -36,7 +36,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
-var.max_fps = 20
+var.max_fps = 15
 var.fps = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -345,11 +345,11 @@ def get_input():
 			if var.input[key]:
 				var.player.walk(key)
 	
-				_atime = time.time()
-				for life in var.life:
-					life.tick()
-					if life.player: continue
-					life.walk(None)
+	_atime = time.time()
+	for life in var.life:
+		life.tick()
+		if life.player: continue
+		life.walk(None)
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)
