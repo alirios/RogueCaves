@@ -1,4 +1,4 @@
-import draw, var
+import life, draw, var
 import copy, math, random, time
 
 class LevelGen:
@@ -568,13 +568,11 @@ class LevelGen:
 					room['open_walls'].append(wall)
 			
 			if room['open_walls']:
-				#_pos = random.choice(room['open_walls'])
 				for _pos in room['open_walls']:
 					self.map[_pos[0]][_pos[1]] = 16
 				
 				#if _pos in self.walking_space:
 				#	self.walking_space.remove(_pos)
-			
 	
 	def generate_forest(self, entrances=[(4,4)],exits=[]):
 		self.entrances = entrances

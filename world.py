@@ -40,7 +40,7 @@ class World:
 			logging.debug('DEPTH: %s' % str(level['z']))
 			if level['type']=='cave':
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*5),size=self.size,diagtunnels=random.randint(0,1),outside=False)
-
+				level['level'].z = level['z']
 				_ctime = time.time()
 				level['level'].generate_cave(entrances=_entrances,exits=_exits)
 				logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))

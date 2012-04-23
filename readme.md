@@ -12,6 +12,7 @@ Todo
 * Let game run headless.
 * Only let ALife clip if the two have active paths.
 * Combine generate_room() and generate_cave_rooms()
+* Add XP for weapons
 
 Bugs
 ----
@@ -29,6 +30,7 @@ Added
 * ALife now takes into consideration a target's weapon.
 * Weapons now have ranks and statuses.
 * Game now goes into turn-based mode when danger arises.
+* Fixed issue with idle ALife automatically traveling to the surface for food.
 
 Previous Version: 04.21.2012A
 ----------------------------

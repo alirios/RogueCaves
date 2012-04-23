@@ -36,7 +36,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
-var.max_fps = 15
+var.max_fps = 20
 var.fps = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -100,6 +100,13 @@ var.view.update()
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
 
+#Gods
+var.ivan = life.god()
+var.ivan.name = 'Ivan'
+var.ivan.purpose = 'destruction'
+var.ivan.alignment = 'evil'
+var.ivan.accepts = ['human']
+
 #People
 var.player = life.human(player=True)
 var.player.name = 'flags'
@@ -107,11 +114,12 @@ var.player.z = 1
 var.player.speed = 0
 var.player.speed_max = 0
 var.player.level = var.world.get_level(var.player.z)
-var.player.pos = list(var.player.level.walking_space[0])#list(var.player.level.get_room('home')['door'])
+var.player.pos = list(var.player.level.walking_space[0])
+var.player.god = var.ivan
 
 test = life.crazy_miner()
 test.name = 'Chester'
-test.z = 1
+test.z = -1
 test.speed = 3
 test.speed_max = 3
 test.level = var.world.get_level(test.z)

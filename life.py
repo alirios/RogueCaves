@@ -22,7 +22,8 @@ class life:
 		self.path_type = None
 		self.path_dest = None
 		self.mine_dest = None
-		self.alignment = 'neutral'
+		self.alignment = 0
+		self.god = None
 		
 		self.atk = 1
 		self.defe = 1
@@ -132,6 +133,9 @@ class life:
 				
 				if item['type']=='weapon':
 					self.equip_item()
+			
+			if self.god:
+				self.god.on_kill(self,who)
 			
 			who.kill()
 		
@@ -351,7 +355,7 @@ class life:
 		for life in var.life:
 			if life == self or not self.z == life.z: continue
 			
-			if self.race == life.race:
+			if self.faction == life.faction:
 				pass
 				#TODO: Should I do this?
 				#if life.pos == _pos:
@@ -508,6 +512,7 @@ class human(life):
 		self.mode = {'task':None,'who':None}
 		self.task = None
 		self.in_danger = False
+		self.faction = 'good'
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -579,7 +584,7 @@ class human(life):
 		if who.weapon:
 			_score+=self.weapon['damage']*2
 		
-		if not self.race == who.race:
+		if not self.faction == who.faction:
 			_score *= -1
 		
 		return _score
@@ -631,7 +636,7 @@ class human(life):
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			print self.judge(self),abs(self.judge(self.lowest['who']))
+			#print self.judge(self),abs(self.judge(self.lowest['who']))
 			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
 					self.on_enemy_spotted()
@@ -713,8 +718,8 @@ class human(life):
 				print 'Running away'
 		
 		#Take care of daily schedules here
-		#if self.hunger >= self.hungry_at:
-		self.add_event('food',self.hunger)
+		if self.hunger >= self.hungry_at:
+			self.add_event('food',self.hunger)
 		
 		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
@@ -742,7 +747,8 @@ class crazy_miner(human):
 	def __init__(self):
 		human.__init__(self)
 		
-		self.race = 'crazy miner'
+		self.race = 'human'
+		self.faction = 'evil'
 	
 	def on_enemy_spotted(self):
 		human.on_enemy_spotted(self)
@@ -770,7 +776,7 @@ class zombie(life):
 		#Find closest
 		_lowest = {'who':None,'lowest':9000,'los':None}
 		for seen in self.seen:
-			if seen['who'].race == self.race: continue
+			if seen['who'].faction == self.faction: continue
 			
 			if len(seen['los'])<=_lowest['lowest']:
 				_lowest['who'] = seen['who']
@@ -789,3 +795,40 @@ class zombie(life):
 			return self.pos
 		
 		return [self.focus['los'][0][0],self.focus['los'][0][1]]
+
+class god:
+	def __init__(self):
+		self.alignment = 'neutral'
+		self.name = 'Default'
+		self.purpose = 'Nothing'
+		self.accepts = []
+		self.denies = []
+		
+		self.followers = []
+		
+		self.kills = []
+	
+	def get_name(self):
+		return '%s, the god of %s' % (self.name,self.purpose)
+
+	def on_kill(self,by,who):
+		if by.player:
+			if who.race in self.accepts:
+				if by.alignment<10:
+					by.alignment+=1
+					
+				self.kills.append({'by':by.name,'who':who.name,'accept':True})
+				functions.log('%s accepts your kill.' % self.get_name())
+			
+			elif who.race in self.denies:
+				if by.alignment>-10:
+					by.alignment-=1
+				
+				self.kills.append({'by':by.name,'who':who.name,'accept':False})
+				functions.log('%s denies your kill.' % self.get_name())
+			
+			if by.alignment>=1:
+				functions.log('You feel that %s is happy with your actions lately.' % self.get_name())
+			elif by.alignment<=-1:
+				functions.log('You feel that %s is not happy with your actions lately!' % self.get_name())
+		

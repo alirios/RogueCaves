@@ -139,7 +139,9 @@ class astar:
 			#fails, which we can fix in getadj()
 			#If (_x,_y) is in an array (list of ALife positions), then
 			#we could walk backwards from there...
-			if _broken: print 'Broken A*!'
+			if _broken:
+				print self.end
+				print 'Broken A*!'
 				
 		else:
 			#Roll downhill
