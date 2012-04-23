@@ -123,7 +123,7 @@ test.z = -1
 test.speed = 3
 test.speed_max = 3
 test.level = var.world.get_level(test.z)
-test.pos = (10,10)
+test.pos = random.choice(test.level.walking_space)
 test.add_item_raw(19)
 test.equip_item()
 
