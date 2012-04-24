@@ -103,7 +103,7 @@ var.world.generate()
 #Gods
 var.ivan = life.god()
 var.ivan.name = 'Ivan'
-var.ivan.purpose = 'destruction'
+var.ivan.purpose = 'death'
 var.ivan.alignment = 'evil'
 var.ivan.accepts = ['human']
 
@@ -114,18 +114,19 @@ var.player.z = 1
 var.player.speed = 0
 var.player.speed_max = 0
 var.player.level = var.world.get_level(var.player.z)
-var.player.pos = list(var.player.level.walking_space[0])
+var.player.pos = list(var.player.level.exits[0])
 var.player.god = var.ivan
 
-test = life.crazy_miner()
-test.name = 'Chester'
-test.z = -1
-test.speed = 3
-test.speed_max = 3
-test.level = var.world.get_level(test.z)
-test.pos = random.choice(test.level.walking_space)
-test.add_item_raw(19)
-test.equip_item()
+for i in range(1,var.world.depth):
+	test = life.crazy_miner()
+	test.name = 'Chester'
+	test.z = -i
+	test.speed = 3
+	test.speed_max = 3
+	test.level = var.world.get_level(test.z)
+	test.pos = random.choice(test.level.walking_space)
+	_i = test.add_item_raw(19)
+	test.equip_item(_i)
 
 #for i in range(2):
 #	test = life.human()
@@ -218,6 +219,10 @@ def draw_screen(refresh=False):
 				else:
 					if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
 					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
+				
+				if var.player.level.tmap[x][y]:
+					var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
+					var.player.level.tmap[x][y]-=1
 				
 				_dist = abs(var.player.pos[0]-var.mouse_pos[0])+abs(var.player.pos[1]-var.mouse_pos[1])
 				if (x,y)==var.mouse_pos:

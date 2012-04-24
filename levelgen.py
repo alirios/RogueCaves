@@ -20,6 +20,7 @@ class LevelGen:
 		self.lights = []
 		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
 		self.lmap = []
+		self.tmap = []
 		self.fov = []
 		self.items = []
 		
@@ -28,15 +29,18 @@ class LevelGen:
 			_y = []
 			_l = []
 			_i = []
+			_t = []
 			
 			for y in range(self.size[1]):
 				_y.append(0)
 				_l.append({'source':False,'color':(0,0,0),'brightness':0})
 				_i.append([])
+				_t.append(0)
 				self.walls.append((x,y))
 			
 			self.map.append(_y)
 			self.lmap.append(_l)
+			self.tmap.append(_t)
 			self.items.append(_i)
 		
 	def add_light(self,pos,color,life,brightness):

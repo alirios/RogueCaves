@@ -13,6 +13,7 @@ Todo
 * Only let ALife clip if the two have active paths.
 * Combine generate_room() and generate_cave_rooms()
 * Add XP for weapons
+* ALife should flee at some point during combat.
 
 Bugs
 ----
@@ -21,7 +22,13 @@ Bugs
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.22.2012A
+Current Version: 04.23.2012A
+----------------------------
+Added
+-----
+* Fixed some dialog errors.
+
+Previous Version: 04.22.2012A
 ----------------------------
 Added
 -----

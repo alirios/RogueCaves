@@ -39,17 +39,23 @@ class life:
 		var.life.append(self)
 	
 	def add_item(self,item):
-		self.items.append(item)
+		_i = item.copy()
+		self.items.append(_i)
+		
+		return _i
 	
 	def add_item_raw(self,item):
-		self.items.append(var.items[str(item)])
+		_i = var.items[str(item)].copy()
+		self.items.append(_i)
+		
+		return _i
 	
-	def equip_item(self):
-		for item in self.items:
-			if item['type'] == 'weapon':
-				self.weapon = item
-				if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
-				return
+	def equip_item(self,item):
+		#for item in self.items:
+		if item['type'] == 'weapon':
+			self.weapon = item
+			if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
+			return
 	
 	def put_all_items_of_type(self,type,pos):
 		for _item in self.level.get_all_items_of_type('storage'):
@@ -94,6 +100,9 @@ class life:
 		if who.race in ['zombie']:
 			if self.player: functions.log('You swing at the %s!' % (who.race))
 			elif who.player: functions.log('The %s swings at you!' % (who.race))
+		elif who.race in ['human']:
+			if self.player: functions.log('You swing at %s!' % (who.name))
+			elif who.player: functions.log('%s swings at you!' % (self.name))
 		else:
 			if self.player: functions.log('You swing at %s!' % (who.name))
 			elif who.player: functions.log('The %s swings at you!' % (self.race))
@@ -122,7 +131,7 @@ class life:
 				if self.player: functions.log('You slay the %s!' % (who.race))
 				elif who.player: functions.log('The %s slays you!' % (who.race))
 			else:
-				if self.player: functions.log('You slay %s, the %s!' % (who.name,who.race))
+				if self.player: functions.log('You slay %s the %s!' % (who.name,who.race))
 				elif who.player: functions.log('The %s slays you!' % (self.race))
 			
 			self.xp += who.xp
@@ -131,8 +140,8 @@ class life:
 				if self.player: functions.log('Found %s!' % item['name'])
 				self.add_item(item)
 				
-				if item['type']=='weapon':
-					self.equip_item()
+				if not self.weapon and item['type']=='weapon':
+					self.equip_item(item)
 			
 			if self.god:
 				self.god.on_kill(self,who)
@@ -491,6 +500,19 @@ class life:
 						life.highest['who'] = None
 						life.highest['score'] = 0
 		
+		#for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
+		#	(-1,1),(0,1),(1,1)]:
+		for r in range(10+random.randint(0,3)):
+			_x = self.pos[0]+random.randint(-2,2)#+pos[0]
+			_y = self.pos[1]+random.randint(-2,2)#+pos[1]
+			
+			if 0>_x or _x>=self.level.size[0]: continue
+			if 0>_y or _y>=self.level.size[1]: continue
+			
+			self.level.tmap[_x][_y] = 255
+		
+		self.level.tmap[self.pos[0]][self.pos[1]] = 255
+		
 		var.life.remove(self)
 
 class human(life):
@@ -740,7 +762,7 @@ class human(life):
 	def kill(self):
 		life.kill(self)
 		
-		if self.task['what'] == 'attack':
+		if not self.player and self.task['what'] == 'attack':
 			self.task['who'].in_danger = False
 
 class crazy_miner(human):
