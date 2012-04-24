@@ -444,8 +444,8 @@ class LevelGen:
 						if pos in self.walls:
 							self.walls.remove(pos)
 							
-						#Add it to our rooms array
-						self.rooms.append(__room)
+					#Add it to our rooms array
+					self.rooms.append(__room)
 					
 					#Instead of finding the center, just find a random
 					#spot in the array. This makes the tunnels look a
@@ -542,7 +542,9 @@ class LevelGen:
 			self.map[pos[0]][pos[1]] = 4
 	
 	def generate_cave_rooms(self):
-		for room in self.rooms:
+		if not len(self.rooms): return
+		
+		for room in random.sample(self.rooms,abs(self.z)*3):
 			for pos in room['walking_space']:
 				_x = room['walking_space'][0][0]-pos[0]
 				_y = room['walking_space'][0][1]-pos[1]
@@ -574,6 +576,9 @@ class LevelGen:
 			if room['open_walls']:
 				for _pos in room['open_walls']:
 					self.map[_pos[0]][_pos[1]] = 16
+					if _pos in self.walking_space:
+						self.walking_space.remove(_pos)
+						#print 'remove'
 				
 				#if _pos in self.walking_space:
 				#	self.walking_space.remove(_pos)

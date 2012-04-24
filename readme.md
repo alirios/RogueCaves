@@ -22,11 +22,20 @@ Bugs
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
 
-Current Version: 04.23.2012A
+Current Version: 04.24.2012A
+----------------------------
+Added
+-----
+* No longer checking large amounts rooms during generate_cave_rooms()
+* Added "sharp" flag to weapons.
+
+Previous Version: 04.23.2012A
 ----------------------------
 Added
 -----
 * Fixed some dialog errors.
+* Blood.
+* Forgot to update readme with new changes.
 
 Previous Version: 04.22.2012A
 ----------------------------

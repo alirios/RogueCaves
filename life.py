@@ -51,7 +51,6 @@ class life:
 		return _i
 	
 	def equip_item(self,item):
-		#for item in self.items:
 		if item['type'] == 'weapon':
 			self.weapon = item
 			if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
@@ -106,12 +105,9 @@ class life:
 		else:
 			if self.player: functions.log('You swing at %s!' % (who.name))
 			elif who.player: functions.log('The %s swings at you!' % (self.race))
-			#functions.log('You swing at %s!' % (who.name))
 		
 		self.hunger_timer -= 5
 		self.xp += 1
-		
-		who.hp -= 1
 		
 		if self.weapon:
 			_dam = random.randint(self.atk,self.weapon['damage']+self.atk)
@@ -122,9 +118,22 @@ class life:
 					functions.log('%s hits you with a %s for maximum damage!' % 
 						(self.name,self.get_weapon_name()))
 				
-				self.weapon['status'] = 'the blood of %s the %s' % (who.name,who.race)
+				if self.weapon['sharp']:
+					self.weapon['status'] = 'the blood of %s the %s' % (who.name,who.race)
+					
+					_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
+						(-1,1),(0,1),(1,1)])
+					_x = who.pos[0]+_pos[0]
+					_y = who.pos[1]+_pos[1]
+					
+					if not 0>_x and not _x>=self.level.size[0] and\
+						not 0>_y and not _y>=self.level.size[1]:
+						self.level.tmap[_x][_y] = random.randint(150,255)
+						
 			
 			who.hp -= _dam
+		else:
+			who.hp -= self.atk
 		
 		if who.hp<=0:
 			if who.race in ['zombie']:

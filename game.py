@@ -57,7 +57,7 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'17':{'name':'meat','solid':False,'type':'food','tile':17},
 			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18},
 			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
-				'status':None,'rank':1,'tile':19}}
+				'status':None,'rank':1,'sharp':True,'tile':19}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
