@@ -8,14 +8,13 @@ Todo
 * Extended cave generation (old bridges, rooms, etc).
 * Accept unfinished A* paths.
 * Audio.
-* Optimize the update() function in Pygcurse.
 * Let game run headless.
 * Only let ALife clip if the two have active paths.
 * Combine generate_room() and generate_cave_rooms()
 * Add XP for weapons
 * ALife should flee at some point during combat.
 * Random quests
-* ALife that tries to trick you into doing things for them
+* Tricky ALife
 
 Bugs
 ----
