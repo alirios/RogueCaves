@@ -21,6 +21,8 @@ Bugs
 * ALife continues to calculate paths that broke in the past.
 * ALife adds broken paths to cache to prevent freezes.
 * Crash on line 179 of pathfinding.py.
+* Roomgen can lead to impossible levels.
+* Walls should be destroyable, either with a pickaxe or something else.
 
 Current Version: 04.24.2012A
 ----------------------------
