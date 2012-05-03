@@ -14,6 +14,8 @@ Todo
 * Combine generate_room() and generate_cave_rooms()
 * Add XP for weapons
 * ALife should flee at some point during combat.
+* Random quests
+* ALife that tries to trick you into doing things for them
 
 Bugs
 ----
