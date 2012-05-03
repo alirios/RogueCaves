@@ -771,7 +771,8 @@ class human(life):
 	def kill(self):
 		life.kill(self)
 		
-		if not self.player and self.task['what'] == 'attack':
+		if not self.player and self.task['who'].player:
+			print self.task['who'].player
 			self.task['who'].in_danger = False
 
 class crazy_miner(human):

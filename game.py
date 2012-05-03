@@ -36,7 +36,7 @@ pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
-var.max_fps = 10
+var.max_fps = 20
 var.fps = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -111,8 +111,8 @@ var.ivan.accepts = ['human']
 var.player = life.human(player=True)
 var.player.name = 'flags'
 var.player.z = 1
-var.player.speed = 0
-var.player.speed_max = 0
+var.player.speed = 1
+var.player.speed_max = 1
 var.player.level = var.world.get_level(var.player.z)
 var.player.pos = list(var.player.level.exits[0])
 var.player.god = var.ivan
@@ -353,26 +353,34 @@ def get_input():
 			for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
 				if item['pos'] == var.mouse_pos:
 					print item
-		
+	
+	_key = None
 	for key in var.input:
 		if key in ['up','down','left','right']:
 			if var.input[key]:
-				var.player.walk(key)
-				
-				if var.player.in_danger:
-					for life in var.life:
-						life.tick()
-						if life.player: continue
-						life.walk(None)
+				_key = key
 
-	
 	_atime = time.time()
 	
-	if not var.player.in_danger:
+	if var.player.speed:
+		var.player.walk(None)
 		for life in var.life:
 			life.tick()
 			if life.player: continue
 			life.walk(None)
+	elif not var.player.in_danger:
+		if _key: var.player.walk(_key)
+		for life in var.life:
+			life.tick()
+			if life.player: continue
+			life.walk(None)
+	elif var.player.in_danger:
+		if _key:
+			var.player.walk(_key)
+			for life in var.life:
+				life.tick()
+				if life.player: continue
+				life.walk(None)
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)

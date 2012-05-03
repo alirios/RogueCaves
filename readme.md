@@ -25,7 +25,15 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 04.24.2012A
+Current Version: 05.03.2012A
+----------------------------
+Added
+-----
+* Timing is much more accurate now.
+* "Sticky" movement fixed.
+* max_fps is now set to 20 by default.
+
+Previous Version: 04.24.2012A
 ----------------------------
 Added
 -----
