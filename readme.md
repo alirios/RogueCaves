@@ -39,6 +39,7 @@ Added
 * Doors no longer built on cornerstones
 * ALife can remove items from storage
 * ALife finds the closest object first when searching for something
+* Pickaxes speed up mining
 
 Previous Version: 05.15.2012A
 ----------------------------

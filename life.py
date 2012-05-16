@@ -348,7 +348,10 @@ class life:
 						
 						self.level.items[_pos[0]][_pos[1]].pop(_i)
 					else:
-						_tile['life']-=1
+						if self.weapon:
+							_tile['life']-=self.weapon['damage']
+						else:
+							_tile['life']-=1
 					self.pos = self.pos[:]
 					return
 				elif _tile['tile'] == 13:
