@@ -56,6 +56,8 @@ class LevelGen:
 		_item = var.items[str(item)]
 		_item['pos'] = pos
 		self.items[pos[0]][pos[1]].append(_item.copy())
+		
+		return _item
 	
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
@@ -65,6 +67,11 @@ class LevelGen:
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
+					if item['type'] == 'storage':
+						for _item in item['items']:
+							if _item['tile'] == tile:
+								_ret.append(_item)					
+		
 					if item['tile'] == tile:
 						_ret.append(item)
 		
@@ -75,6 +82,10 @@ class LevelGen:
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
+					if item['type'] == 'storage':
+						for _item in item['items']:
+							if _item['type'] == type:
+								_ret.append(_item)
 					if item['type'] == type:
 						_ret.append(item)
 		
@@ -683,7 +694,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [17]
 		elif room['type'] == 'storage':
-			_needs = [17,18]
+			_needs = [18,17]
 		
 		#We like putting things in corners...
 		_possible = []
@@ -700,8 +711,14 @@ class LevelGen:
 				_possible.append(pos)
 		
 		for need in _needs:
-			#for pos in _possible:
-			if _possible:
+			_stored = False
+			for _storage in self.get_all_items_of_type('storage'):
+				if _storage['pos'] in room['walking_space']:
+					_storage['items'].append(self.add_item(need,_pos))
+					_stored = True
+					break
+			
+			if _possible and not _stored:
 				_pos = _possible.pop()
 				self.add_item(need,_pos)
 	
