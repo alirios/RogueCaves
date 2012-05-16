@@ -110,6 +110,8 @@ var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
 
 #Gods
+var.view.putchars('Gods...',x=0,y=1)
+var.view.update()
 var.ivan = life.god()
 var.ivan.name = 'Ivan'
 var.ivan.purpose = 'death'
@@ -117,6 +119,8 @@ var.ivan.alignment = 'evil'
 var.ivan.accepts = ['human']
 
 #People
+var.view.putchars('People...',x=0,y=2)
+var.view.update()
 var.player = life.human(player=True)
 var.player.name = 'flags'
 var.player.z = 1
@@ -146,7 +150,7 @@ for i in range(1):
 	test.level = var.world.get_level(test.z)
 	test.icon['color'][0] = 'blue'
 	#test.mode = {'task':'mine','who':None}
-	test.add_event('guard_house',50,where='storage',delay=10)
+	test.add_event('guard_house',50,where='storage',delay=20)
 	test.pos = list(test.level.walking_space[i])
 
 #for i in range(2):
@@ -220,14 +224,12 @@ def draw_screen(refresh=False):
 				
 				if not _tile['color'][1]:
 					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
-						if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
 						var.view.putchar(_tile['icon'],\
 							x=x,\
 							y=y,\
 							fgcolor='black',\
 							bgcolor=_bgcolor)
 					else:
-						if var.view._screenchar[x][y] == _tile['icon']: continue
 						var.view.putchar(_tile['icon'],\
 							x=x,\
 							y=y,\
@@ -241,7 +243,6 @@ def draw_screen(refresh=False):
 						fgcolor=_tile['color'][0],\
 						bgcolor=pygame.Color(0, 0, random.randint(150,200)))
 				else:
-					if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
 					var.view.putchar(_tile['icon'],\
 						x=x,\
 						y=y,\

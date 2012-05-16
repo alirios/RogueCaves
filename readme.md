@@ -31,6 +31,7 @@ Current Version: 05.16.2012A
 Added
 -----
 * Added 'delay' flag to tasks so ALife will rest between iterations
+* PygCurse now checks to see if the tile being drawn was drawn in a previous frame
 
 Previous Version: 05.15.2012A
 ----------------------------

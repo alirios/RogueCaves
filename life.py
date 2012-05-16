@@ -626,7 +626,7 @@ class human(life):
 		_score = (who.hp+who.atk+who.defe)
 		
 		if who.weapon:
-			_score+=self.weapon['damage']*2
+			_score+=who.weapon['damage']*2
 		
 		if not self.faction == who.faction:
 			_score *= -1
@@ -761,7 +761,7 @@ class human(life):
 				if not self.task_delay:
 					self.guard_building(self.task['where'])
 					self.task_delay = self.task['delay']
-				else:
+				elif self.task_delay>0:
 					self.task_delay-=1
 					
 			elif self.task['what'] == 'flee':
