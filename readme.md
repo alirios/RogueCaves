@@ -21,11 +21,26 @@ Bugs
 * ALife still occasionally teleports due to pathing errors.
 * ALife continues to calculate paths that broke in the past.
 * ALife adds broken paths to cache to prevent freezes.
+* ALife sometimes spawns in walls
 * Crash on line 179 of pathfinding.py.
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 05.03.2012A
+Current Version: 05.16.2012A
+----------------------------
+Added
+-----
+* Added 'delay' flag to tasks so ALife will rest between iterations
+
+Previous Version: 05.15.2012A
+----------------------------
+Added
+-----
+* Removed stairs going upwards in the forest.
+* Blood now fades even when outside of the player's view.
+* Fixed crash relating to removal of the forest's "entrances" variable.
+
+Previous Version: 05.03.2012A
 ----------------------------
 Added
 -----

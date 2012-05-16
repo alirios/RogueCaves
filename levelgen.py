@@ -583,9 +583,9 @@ class LevelGen:
 				#if _pos in self.walking_space:
 				#	self.walking_space.remove(_pos)
 	
-	def generate_forest(self, entrances=[(4,4)],exits=[]):
-		self.entrances = entrances
+	def generate_forest(self,exits=[]):
 		self.exits = exits
+		self.entrances = [] #ALife needs this
 		
 		self.max_rooms = 0
 		#self.generate_cave(entrances=entrances,exits=exits)
@@ -676,9 +676,6 @@ class LevelGen:
 					
 					self.landmarks.append(random.choice(_room))
 		
-		for pos in entrances:
-			self.map[pos[0]][pos[1]] = 3
-		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
 	
@@ -686,7 +683,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [17]
 		elif room['type'] == 'storage':
-			_needs = [18]
+			_needs = [17,18]
 		
 		#We like putting things in corners...
 		_possible = []

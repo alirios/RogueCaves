@@ -478,6 +478,18 @@ class life:
 			return
 		
 		self.find_path(pos)
+	
+	def guard_building(self,where):
+		_room = var.world.get_level(1).get_room(where)
+		
+		if self.path_dest in _room['walking_space']:
+			print 'In building'
+		else:
+			self.go_to(random.choice(_room['walking_space']))
+			print 'Not in building'
+		
+		#_pos = 
+		#print _room
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -509,8 +521,6 @@ class life:
 						life.highest['who'] = None
 						life.highest['score'] = 0
 		
-		#for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
-		#	(-1,1),(0,1),(1,1)]:
 		for r in range(10+random.randint(0,3)):
 			_x = self.pos[0]+random.randint(-2,2)#+pos[0]
 			_y = self.pos[1]+random.randint(-2,2)#+pos[1]
@@ -542,6 +552,7 @@ class human(life):
 		self.worth = None
 		self.mode = {'task':None,'who':None}
 		self.task = None
+		self.task_delay = 0
 		self.in_danger = False
 		self.faction = 'good'
 		
@@ -577,13 +588,13 @@ class human(life):
 			
 		return _name
 	
-	def add_event(self,what,score,who=None):
+	def add_event(self,what,score,who=None,where=None,delay=0):
 		for event in self.events:
 			if event['what'] == what and event['who'] == who:
 				event['score'] = score
 				return False
 		
-		self.events.append({'what':what,'score':score,'who':who})
+		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay})
 		return True
 	
 	def get_event(self):
@@ -591,10 +602,12 @@ class human(life):
 		for event in self.events:
 			if event['score']>=_highest['score']:
 				_highest['what'] = event['what']
-				_highest['score'] = event['score']
-				_highest['who'] = event['who']
+				_highest['ret'] = event
 		
-		return _highest
+		if _highest['what']:
+			return _highest['ret']
+		else:
+			return _highest
 	
 	def remove_event(self,what):
 		for event in self.events:
@@ -667,7 +680,6 @@ class human(life):
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			#print self.judge(self),abs(self.judge(self.lowest['who']))
 			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
 					self.on_enemy_spotted()
@@ -745,6 +757,13 @@ class human(life):
 						self.task = None
 						self.say('Got em.')
 						self.lowest = {'who':None,'score':0}
+			elif self.task['what'] == 'guard_house':
+				if not self.task_delay:
+					self.guard_building(self.task['where'])
+					self.task_delay = self.task['delay']
+				else:
+					self.task_delay-=1
+					
 			elif self.task['what'] == 'flee':
 				print 'Running away'
 		
@@ -755,12 +774,11 @@ class human(life):
 		if self.thirst >= self.thirsty_at:
 			self.add_event('water',self.thirst)
 		
-		self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
+		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
 		
 		if self.path:
 			if tuple(self.pos) == tuple(self.path[0]):
 				self.path.pop(0)
-			#if len(self.path)>1: self.path.pop(0)
 			
 			if self.path:
 				_new_pos = [self.path[0][0],self.path[0][1]]

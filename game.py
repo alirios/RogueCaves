@@ -1,4 +1,4 @@
-import levelgen, world, cache, life
+import levelgen, functions, world, cache, life
 import pygcurse, logging, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
@@ -83,9 +83,18 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 _font = pygame.font.Font('ProggyClean.ttf', 16)
 
 #Surfaces...
-var.window = pygcurse.PygcurseWindow(var.window_size[0], var.window_size[1],font=_font,caption='RogueCaves')
-var.view = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1]-6,font=_font,windowsurface=var.window._windowsurface)
-var.log = pygcurse.PygcurseSurface(var.window_size[0], var.window_size[1],font=_font,windowsurface=var.window._windowsurface)
+var.window = pygcurse.PygcurseWindow(var.window_size[0],\
+	var.window_size[1],\
+	font=_font,\
+	caption='RogueCaves')
+var.view = pygcurse.PygcurseSurface(var.window_size[0],\
+	var.window_size[1]-6,\
+	font=_font,\
+	windowsurface=var.window._windowsurface)
+var.log = pygcurse.PygcurseSurface(var.window_size[0],\
+	var.window_size[1],\
+	font=_font,\
+	windowsurface=var.window._windowsurface)
 
 #Stuff...
 var.window.autoupdate = False
@@ -128,18 +137,18 @@ for i in range(1,var.world.depth):
 	_i = test.add_item_raw(19)
 	test.equip_item(_i)
 
-#for i in range(2):
-#	test = life.human()
-#	test.name = 'derp%s' % i
-#	test.z = 1
-#	test.speed = 1
-#	test.speed_max = 1
-#	test.level = var.world.get_level(test.z)
-#	test.icon['color'][0] = 'brown'
-#	#test.mode = {'task':'mine','who':None}
-#	test.add_event('mine',50)
-#	test.pos = list(test.level.walking_space[i])
-#
+for i in range(1):
+	test = life.human()
+	test.name = 'Shopkeeper'
+	test.z = 1
+	test.speed = 3
+	test.speed_max = 3
+	test.level = var.world.get_level(test.z)
+	test.icon['color'][0] = 'blue'
+	#test.mode = {'task':'mine','who':None}
+	test.add_event('guard_house',50,where='storage',delay=10)
+	test.pos = list(test.level.walking_space[i])
+
 #for i in range(2):
 #	test = life.human()
 #	test.name = 'dude%s' % i
@@ -202,6 +211,9 @@ def draw_screen(refresh=False):
 				if life.z == var.player.z and life.pos == [x,y]:
 					_tile = life.icon
 			
+			if var.player.level.tmap[x][y]:
+				var.player.level.tmap[x][y]-=1
+			
 			if var.player.level.vmap[x][y]:
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
 				_bgcolor = tile_map[str(var.player.level.map[x][y])]['color'][1]
@@ -209,38 +221,51 @@ def draw_screen(refresh=False):
 				if not _tile['color'][1]:
 					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
 						if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
-						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor='black',bgcolor=_bgcolor)
+						var.view.putchar(_tile['icon'],\
+							x=x,\
+							y=y,\
+							fgcolor='black',\
+							bgcolor=_bgcolor)
 					else:
 						if var.view._screenchar[x][y] == _tile['icon']: continue
-						var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_bgcolor)
+						var.view.putchar(_tile['icon'],\
+							x=x,\
+							y=y,\
+							fgcolor=_tile['color'][0],\
+							bgcolor=_bgcolor)
 				
 				elif _tile['color'][1]=='blue':
-					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=pygame.Color(0, 0, random.randint(150,200)))
+					var.view.putchar(_tile['icon'],\
+						x=x,\
+						y=y,\
+						fgcolor=_tile['color'][0],\
+						bgcolor=pygame.Color(0, 0, random.randint(150,200)))
 				else:
 					if var.view._screenchar[x][y] == _tile['icon'] and var.player.level.outside: continue
-					var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
+					var.view.putchar(_tile['icon'],\
+						x=x,\
+						y=y,\
+						fgcolor=_tile['color'][0],\
+						bgcolor=_tile['color'][1])
 				
 				if var.player.level.tmap[x][y]:
 					var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
-					var.player.level.tmap[x][y]-=1
 				
-				_dist = abs(var.player.pos[0]-var.mouse_pos[0])+abs(var.player.pos[1]-var.mouse_pos[1])
+				_dist = functions.distance(var.player.pos,var.mouse_pos)
 				if (x,y)==var.mouse_pos:
 					if _dist<=5:
 						var.view.lighten(50,(x,y,1,1))
 					else:
 						var.view.darken(50,(x,y,1,1))
-				
-				#for light in _m.lights:
-				#	for pos in _m.lmap[light[0]][light[1]]['children']:
-				#		if pos == (x,y):
-				#			#var.view.settint(_m.lmap[light[0]][light[1]]['color'][0],_m.lmap[light[0]][light[1]]['color'][1],\
-				#			#	_m.lmap[light[0]][light[1]]['color'][2],(_x,_y,1,1))
-				#			var.view.lighten(50,(_x,_y,1,1))
+
 			elif var.player.level.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
-				#if var.view._screenchar[x][y] == _tile['icon']: continue
-				var.view.putchar(_tile['icon'],x=x,y=y,fgcolor=_tile['color'][0],bgcolor='altgray')
+				
+				var.view.putchar(_tile['icon'],\
+					x=x,\
+					y=y,\
+					fgcolor=_tile['color'][0],\
+					bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
 			elif refresh:
 				var.view.putchar(']',x=x,y=y,fgcolor='black',bgcolor='black')
@@ -275,10 +300,14 @@ def draw_screen(refresh=False):
 		if entry.count('gold'):
 			_fgcolor = 'gold'
 		
-		var.log.putchars(entry,x=0,y=var.window_size[1]-5+(_i),fgcolor=_fgcolor,bgcolor='black')
+		var.log.putchars(entry,\
+			x=0,\
+			y=var.\
+			window_size[1]-5+(_i),\
+			fgcolor=_fgcolor,\
+			bgcolor='black')
 		_i+=1
 	
-	#print time.time()-_starttime
 	var.log.update()
 	var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	if time.time()-var.fpstime>=1:

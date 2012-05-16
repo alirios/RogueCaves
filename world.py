@@ -64,7 +64,7 @@ class World:
 				
 			else:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
-				level['level'].generate_forest(entrances=_entrances,exits=_exits)
+				level['level'].generate_forest(exits=_exits)
 			logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
 		logging.debug('Worldgen took: %s' % (time.time()-_stime))
