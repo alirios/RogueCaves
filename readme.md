@@ -34,6 +34,9 @@ Added
 * PygCurse now checks to see if the tile being drawn was drawn in a previous frame
 * Items are now automatically put into storage by levelgen
 * Fixed crash that involved buildings being built too close together, blocking doors
+* Crazy Miner should no longer get thirsty/hungry and raid the surface for food
+* Doors no longer built on cornerstones
+* ALife can remove items from storage
 
 Previous Version: 05.15.2012A
 ----------------------------

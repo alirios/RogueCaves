@@ -670,13 +670,15 @@ class LevelGen:
 						__pos = __walls.pop(random.randint(0,len(__walls)-1))
 						
 						_found = True
-						_count = 0
+						_ecount = 0
+						_scount = 0
 						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 15:
-								_count += 1
+							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 15: _ecount += 1
+						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16: _scount += 1
 						
-						if _count>2: _found = False
-						
+						if _ecount>2: _found = False
+						if _scount<2: _found = False
 						if _found: break
 					
 					_room_walls.remove(__pos)

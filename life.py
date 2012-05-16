@@ -361,11 +361,11 @@ class life:
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 coal.')
-				elif _tile['tile'] == 17:
-					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-					self.add_item(_item)
-					if self.player:
-						functions.log('You picked up some food.')
+				#elif _tile['tile'] == 17:
+				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+				#	self.add_item(_item)
+				#	if self.player:
+				#		functions.log('You picked up some food.')
 				
 				_i+=1
 		
@@ -479,6 +479,29 @@ class life:
 		
 		self.find_path(pos)
 	
+	def pick_up_item_at(self,pos,want):
+		if not want: want=item['type']
+		
+		if tuple(self.pos) == pos:
+			for item in self.level.items[pos[0]][pos[1]]:
+				if item['type'] == want:
+					self.level.items[pos[0]][pos[1]].remove(item)
+					self.add_item(item)
+					break
+				elif item['type'] == 'storage':
+					_found = False
+					for _item in item['items']:
+						if _item['type'] == want:
+							item['items'].remove(_item)
+							print 'removed from storage!'
+							_found = True
+							break
+					
+					if _found: break
+						
+		else:
+			self.go_to(pos)
+	
 	def guard_building(self,where):
 		_room = var.world.get_level(1).get_room(where)
 		
@@ -542,7 +565,7 @@ class human(life):
 		self.hp = 20
 		self.hp_max = 20
 		
-		self.hungry_at = 50
+		self.hungry_at = 1
 		self.thirsty_at = 50
 		self.married = None
 		self.worth = None
@@ -711,16 +734,11 @@ class human(life):
 					self.task = None
 					self.say('That was good!')
 				else:
-					_pos = None
-					_room = var.world.get_level(1).get_room('home')
-					for pos in _room['walking_space']:
-						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
-							if item['type']=='food':
-								_pos = pos
-								break
+					_item = self.level.get_all_items_of_type('food')
 					
-					if _pos:
-						self.go_to(_pos,z=1)
+					if _item:
+						self.pick_up_item_at(_item[0]['pos'],'food')
+					
 			elif self.task['what'] == 'mine':
 				self.mine()
 			elif self.task['what'] == 'deliver':
@@ -764,10 +782,10 @@ class human(life):
 				print 'Running away'
 		
 		#Take care of daily schedules here
-		if self.hunger >= self.hungry_at:
+		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
 		
-		if self.thirst >= self.thirsty_at:
+		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
 		
 		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
@@ -792,6 +810,9 @@ class human(life):
 class crazy_miner(human):
 	def __init__(self):
 		human.__init__(self)
+		
+		self.hungry_at = -1
+		self.thirsty_at = -1
 		
 		self.race = 'human'
 		self.faction = 'evil'

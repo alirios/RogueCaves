@@ -151,7 +151,7 @@ for i in range(1):
 	test.icon['color'][0] = 'blue'
 	#test.mode = {'task':'mine','who':None}
 	test.add_event('guard_house',50,where='storage',delay=20)
-	test.pos = list(test.level.walking_space[i])
+	test.pos = list(test.level.get_room('storage')['door'])
 
 #for i in range(2):
 #	test = life.human()
