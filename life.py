@@ -361,11 +361,6 @@ class life:
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 coal.')
-				#elif _tile['tile'] == 17:
-				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-				#	self.add_item(_item)
-				#	if self.player:
-				#		functions.log('You picked up some food.')
 				
 				_i+=1
 		
@@ -734,10 +729,11 @@ class human(life):
 					self.task = None
 					self.say('That was good!')
 				else:
-					_item = self.level.get_all_items_of_type('food')
+					_items = self.level.get_all_items_of_type('food')
 					
-					if _item:
-						self.pick_up_item_at(_item[0]['pos'],'food')
+					if _items:
+						_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
+						self.pick_up_item_at(_item['pos'],'food')
 					
 			elif self.task['what'] == 'mine':
 				self.mine()
@@ -781,7 +777,7 @@ class human(life):
 			elif self.task['what'] == 'flee':
 				print 'Running away'
 		
-		#Take care of daily schedules here
+		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
 		

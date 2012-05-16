@@ -15,6 +15,7 @@ Todo
 * ALife should flee at some point during combat.
 * Random quests
 * Tricky ALife
+* Helper functions to automatically sort incoming item lists
 
 Bugs
 ----
@@ -37,6 +38,7 @@ Added
 * Crazy Miner should no longer get thirsty/hungry and raid the surface for food
 * Doors no longer built on cornerstones
 * ALife can remove items from storage
+* ALife finds the closest object first when searching for something
 
 Previous Version: 05.15.2012A
 ----------------------------
