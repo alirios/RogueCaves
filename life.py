@@ -483,13 +483,9 @@ class life:
 		_room = var.world.get_level(1).get_room(where)
 		
 		if self.path_dest in _room['walking_space']:
-			print 'In building'
+			pass #Something can go here...
 		else:
 			self.go_to(random.choice(_room['walking_space']))
-			print 'Not in building'
-		
-		#_pos = 
-		#print _room
 		
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:

@@ -33,6 +33,7 @@ Added
 * Added 'delay' flag to tasks so ALife will rest between iterations
 * PygCurse now checks to see if the tile being drawn was drawn in a previous frame
 * Items are now automatically put into storage by levelgen
+* Fixed crash that involved buildings being built too close together, blocking doors
 
 Previous Version: 05.15.2012A
 ----------------------------

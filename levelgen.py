@@ -664,16 +664,18 @@ class LevelGen:
 						if pos in self.walls:
 							self.walls.remove(pos)
 					
+					#Place the door
 					__walls = _room_walls[:]
 					while 1:
 						__pos = __walls.pop(random.randint(0,len(__walls)-1))
 						
-						_found = False
+						_found = True
+						_count = 0
 						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16 or\
-								(__pos[0]+___pos[0],__pos[1]+___pos[1]) in self.exits:
-								_found = True
-								break
+							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 15:
+								_count += 1
+						
+						if _count>2: _found = False
 						
 						if _found: break
 					
