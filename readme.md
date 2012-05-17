@@ -27,7 +27,15 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 05.16.2012A
+Current Version: 05.17.2012A
+----------------------------
+Added
+-----
+* Items spawned in chests are no longer duplicated and placed outside of the chest
+* Starting to add docstrings
+* Life: in_building()
+
+Previous Version: 05.16.2012A
 ----------------------------
 Added
 -----

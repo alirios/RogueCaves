@@ -19,12 +19,10 @@ def sort_item_array_by_distance(items,pos):
 		if not len(_t): _t.append(_temp);continue
 		
 		_lowest = 9001
-		#_highest = -1
 		for _item in _t:
 			if _item['item'] == item: continue
 			if _temp['dist'] < _item['dist']:
 				if _t.index(_item) < _lowest: _lowest = _t.index(_item)
-			#if _temp['dist'] > _item['dist']: _highest = _t.index(_item)
 		
 		_t.insert(_lowest,_temp)
 	

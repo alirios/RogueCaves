@@ -52,10 +52,11 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
 		self.lmap[pos[0]][pos[1]]['children'] =[]
 	
-	def add_item(self,item,pos):
+	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)]
 		_item['pos'] = pos
-		self.items[pos[0]][pos[1]].append(_item.copy())
+		
+		if not no_place: self.items[pos[0]][pos[1]].append(_item.copy())
 		
 		return _item
 	
@@ -121,6 +122,17 @@ class LevelGen:
 				return room
 		
 		return False
+	
+	def get_room_items(self,type):
+		_ret = []
+		
+		for room in self.rooms:
+			if room['type'].lower() == type.lower():
+				for pos in room['walking_space']:
+					for item in self.items[pos[0]][pos[1]]:
+						_ret.append(item)
+		
+		return _ret
 	
 	def dofov(self,pos,x,y,dist,efov=False):
 		#This next bit comes from http://roguebasin.roguelikedevelopment.org/index.php/Eligloscode
@@ -718,7 +730,7 @@ class LevelGen:
 			_stored = False
 			for _storage in self.get_all_items_of_type('storage'):
 				if _storage['pos'] in room['walking_space']:
-					_storage['items'].append(self.add_item(need,_pos))
+					_storage['items'].append(self.add_item(need,_pos,no_place=True))
 					_stored = True
 					break
 			

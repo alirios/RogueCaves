@@ -39,24 +39,32 @@ class life:
 		var.life.append(self)
 	
 	def add_item(self,item):
-		_i = item.copy()
-		self.items.append(_i)
+		"""Helper function. Originally copied the item, added it to the items
+		array, and returned itself. No longer copies."""
+		#TODO: Should we copy the item?
+		#_i = item.copy()
+		self.items.append(item)
 		
-		return _i
+		return item
 	
 	def add_item_raw(self,item):
+		"""Returns a raw (new) copy of an item from the global items array
+		and adds it to the items array."""
 		_i = var.items[str(item)].copy()
 		self.items.append(_i)
 		
 		return _i
 	
 	def equip_item(self,item):
+		"""Helper function. Automatically equips weapons."""
 		if item['type'] == 'weapon':
 			self.weapon = item
 			if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
 			return
 	
 	def put_all_items_of_type(self,type,pos):
+		"""Dumps items of type 'type' into a container located at 'pos'"""
+		#TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
 		for _item in self.level.get_all_items_of_type('storage'):
 			_found = False
 			if tuple(_item['pos']) == tuple(pos):
@@ -69,6 +77,7 @@ class life:
 				break
 	
 	def get_item_name(self,name):
+		"""Helper function. Returns item with name 'name'"""
 		for item in self.items:
 			if item['name'] == name:
 				return item
@@ -76,6 +85,7 @@ class life:
 		return False
 	
 	def get_all_items_of_type(self,type):
+		"""Returns items of type 'type'"""
 		_ret = []
 		
 		for item in self.items:
@@ -85,6 +95,7 @@ class life:
 		return _ret
 	
 	def get_item_id(self,id):
+		"""Returns item of id 'id'"""
 		for item in self.items:
 			if item['tile'] == id:
 				return item
@@ -166,6 +177,14 @@ class life:
 		for seen in self.seen:
 			if seen['who'] == who:
 				return seen
+		
+		return False
+	
+	def in_building(self):
+		"""Returns the building the ALife is currently in"""
+		for room in self.level.rooms:
+			if tuple(self.pos) in room['walking_space']:
+				return room
 		
 		return False
 	
@@ -563,7 +582,7 @@ class human(life):
 		self.hp = 20
 		self.hp_max = 20
 		
-		self.hungry_at = 1
+		self.hungry_at = 50
 		self.thirsty_at = 50
 		self.married = None
 		self.worth = None
@@ -572,6 +591,7 @@ class human(life):
 		self.task_delay = 0
 		self.in_danger = False
 		self.faction = 'good'
+		self.trading = False
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}

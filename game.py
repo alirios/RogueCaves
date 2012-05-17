@@ -49,6 +49,7 @@ var.blocking = [10]
 var.items = [13,14]
 var.cache = cache.cache()
 var.mouse_pos = (0,0)
+var.in_menu = None
 var.input = {'up':False,
 	'down':False}
 var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
@@ -282,9 +283,8 @@ def draw_screen(refresh=False):
 	_hunger = 'Hunger (%s\\100)' % (var.player.hunger)
 	
 	if var.player.level.outside:
-		for room in var.player.level.rooms:
-			if tuple(var.player.pos) in room['walking_space']:
-				_depth += ' (%s)' % (room['name'])
+		_in_building = var.player.in_building()
+		if _in_building: _depth += ' (%s)' % (_in_building['name'])
 	
 	var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
 	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
@@ -293,6 +293,13 @@ def draw_screen(refresh=False):
 	var.log.putchars(_thirst,x=len(_char)+len(_health)+len(_depth)+len(_skill)+4,y=var.window_size[1]-6,fgcolor='blue',bgcolor='black')
 	var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
 	var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
+	
+	if var.in_menu:
+		if var.player.trading:
+			for item in var.in_menu:
+				var.view.putchars(item['name'],x=0,y=var.in_menu.index(item),fgcolor='white',bgcolor='black')
+			
+	var.log.putchars
 	
 	_i=0
 	for entry in var.history:
@@ -343,6 +350,8 @@ def get_input():
 				var.player.place((1,0),12)
 			elif event.key == K_s:
 				var.player.place((0,1),12)
+			elif event.key == K_b:
+				print var.player.level.get_room_items('storage')
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:
