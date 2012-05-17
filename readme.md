@@ -34,6 +34,7 @@ Added
 * Items spawned in chests are no longer duplicated and placed outside of the chest
 * Starting to add docstrings
 * Life: in_building()
+* Level: get_room_items()
 
 Previous Version: 05.16.2012A
 ----------------------------

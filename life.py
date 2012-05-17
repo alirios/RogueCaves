@@ -180,11 +180,17 @@ class life:
 		
 		return False
 	
-	def in_building(self):
-		"""Returns the building the ALife is currently in"""
+	def in_building(self,name=None):
+		"""Returns the building the ALife is currently in
+		
+		if 'name', check to see if the current building is 'name'
+		"""
 		for room in self.level.rooms:
 			if tuple(self.pos) in room['walking_space']:
-				return room
+				if name:
+					if room['name'] == name: return room
+				else:
+					return room
 		
 		return False
 	

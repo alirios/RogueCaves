@@ -130,7 +130,11 @@ class LevelGen:
 			if room['type'].lower() == type.lower():
 				for pos in room['walking_space']:
 					for item in self.items[pos[0]][pos[1]]:
-						_ret.append(item)
+						if item['type'] == 'storage':
+							for _item in item['items']:
+								_ret.append(_item)		
+						else:
+							_ret.append(item)
 		
 		return _ret
 	

@@ -128,7 +128,8 @@ var.player.z = 1
 var.player.speed = 1
 var.player.speed_max = 1
 var.player.level = var.world.get_level(var.player.z)
-var.player.pos = list(var.player.level.exits[0])
+#var.player.pos = list(var.player.level.exits[0])
+var.player.pos = list(var.player.level.get_room('storage')['door'])
 var.player.god = var.ivan
 
 for i in range(1,var.world.depth):
@@ -351,7 +352,9 @@ def get_input():
 			elif event.key == K_s:
 				var.player.place((0,1),12)
 			elif event.key == K_b:
-				print var.player.level.get_room_items('storage')
+				if var.player.in_building(name='storage'):
+					var.player.trading = True
+					var.in_menu = var.player.level.get_room_items('storage')
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:
