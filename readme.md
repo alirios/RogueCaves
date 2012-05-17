@@ -16,6 +16,7 @@ Todo
 * Random quests
 * Tricky ALife
 * Helper functions to automatically sort incoming item lists
+* Helper functions to create menus without altering the variables directly
 
 Bugs
 ----
@@ -35,6 +36,7 @@ Added
 * Starting to add docstrings
 * Life: in_building()
 * Level: get_room_items()
+* Menu system
 
 Previous Version: 05.16.2012A
 ----------------------------

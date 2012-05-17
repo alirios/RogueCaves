@@ -30,3 +30,20 @@ def sort_item_array_by_distance(items,pos):
 		_ret.append(item['item'])
 	
 	return _ret
+
+def item_list_to_menu(list):
+	_ret = []
+	
+	for item in list:
+		_found = False
+		for entry in _ret:
+			if entry['item']['name'] == item['name']:
+				entry['count']+=1
+				_found = True
+				break
+			
+		if not _found:
+			_ret.append({'item':item,'count':1})
+				
+	
+	return _ret

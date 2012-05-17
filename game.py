@@ -50,6 +50,8 @@ var.items = [13,14]
 var.cache = cache.cache()
 var.mouse_pos = (0,0)
 var.in_menu = None
+var.menu_index = 0
+var.menu_name = ''
 var.input = {'up':False,
 	'down':False}
 var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
@@ -295,10 +297,15 @@ def draw_screen(refresh=False):
 	var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
 	var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
 	
+	#TODO: Resetting colors here might help.
 	if var.in_menu:
-		if var.player.trading:
-			for item in var.in_menu:
-				var.view.putchars(item['name'],x=0,y=var.in_menu.index(item),fgcolor='white',bgcolor='black')
+		_menu = functions.item_list_to_menu(var.in_menu)
+		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-len(_menu)-3,fgcolor='white',bgcolor='black')
+		for item in _menu:
+			_entry = '%s x%s' % (item['item']['name'],item['count'])
+			_center_x = (var.window_size[0]/2)-(len(_entry)/2)
+			_center_y = (var.window_size[1]/2)-(len(_menu)/2)+_menu.index(item)-3
+			var.view.putchars(_entry,x=_center_x,y=_center_y,fgcolor='white',bgcolor='black')
 			
 	var.log.putchars
 	
@@ -329,8 +336,10 @@ def draw_screen(refresh=False):
 def get_input():
 	for event in pygame.event.get():
 		if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
-			pygame.quit()
-			sys.exit()
+			if var.in_menu: var.in_menu = None
+			else:
+				pygame.quit()
+				sys.exit()
 		elif event.type == KEYDOWN:
 			if event.key == K_UP:
 				var.input['up'] = True
@@ -355,6 +364,10 @@ def get_input():
 				if var.player.in_building(name='storage'):
 					var.player.trading = True
 					var.in_menu = var.player.level.get_room_items('storage')
+					var.menu_name = 'Shopping'
+			elif event.key == K_i:
+				var.in_menu = var.player.items
+				var.menu_name = 'Inventory'
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:
@@ -404,25 +417,33 @@ def get_input():
 
 	_atime = time.time()
 	
-	if var.player.speed:
-		var.player.walk(None)
-		for life in var.life:
-			life.tick()
-			if life.player: continue
-			life.walk(None)
-	elif not var.player.in_danger:
-		if _key: var.player.walk(_key)
-		for life in var.life:
-			life.tick()
-			if life.player: continue
-			life.walk(None)
-	elif var.player.in_danger:
-		if _key:
-			var.player.walk(_key)
+	if var.in_menu:
+		if _key == 'up': var.menu_index-=1
+		elif _key == 'down': var.menu_index+=1
+		
+		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
+		if var.menu_index>len(var.in_menu)-1: var.menu_index = 0
+		
+	else:
+		if var.player.speed:
+			var.player.walk(None)
 			for life in var.life:
 				life.tick()
 				if life.player: continue
 				life.walk(None)
+		elif not var.player.in_danger:
+			if _key: var.player.walk(_key)
+			for life in var.life:
+				life.tick()
+				if life.player: continue
+				life.walk(None)
+		elif var.player.in_danger:
+			if _key:
+				var.player.walk(_key)
+				for life in var.life:
+					life.tick()
+					if life.player: continue
+					life.walk(None)
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)

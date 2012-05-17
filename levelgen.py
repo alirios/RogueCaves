@@ -605,10 +605,6 @@ class LevelGen:
 					self.map[_pos[0]][_pos[1]] = 16
 					if _pos in self.walking_space:
 						self.walking_space.remove(_pos)
-						#print 'remove'
-				
-				#if _pos in self.walking_space:
-				#	self.walking_space.remove(_pos)
 	
 	def generate_forest(self,exits=[]):
 		self.exits = exits
@@ -703,18 +699,18 @@ class LevelGen:
 					__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
 						'door':__pos,'type':_room_type}
 					self.rooms.append(__room)
-					self.generate_room(__room)
+					self.generate_building(__room)
 					
 					self.landmarks.append(random.choice(_room))
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
 	
-	def generate_room(self,room):
+	def generate_building(self,room):
 		if room['type'] == 'home':
 			_needs = [17]
 		elif room['type'] == 'storage':
-			_needs = [18,17]
+			_needs = [18,17,17]
 		
 		#We like putting things in corners...
 		_possible = []
@@ -741,12 +737,3 @@ class LevelGen:
 			if _possible and not _stored:
 				_pos = _possible.pop()
 				self.add_item(need,_pos)
-	
-	def out(self):
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
-				_tile = self.map[x][y]
-				if not _tile: print ' ',
-				else: print _tile,
-			
-			print
