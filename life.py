@@ -13,6 +13,7 @@ class life:
 		self.hp_max = 10
 		self.speed = 0
 		self.speed_max = 0
+		self.last_pos = [0,0]
 		self.pos = [0,0]
 		self.z = 0
 		self.xp = 0
@@ -288,6 +289,19 @@ class life:
 		if self.thirst_timer <= 0:
 			self.thirst_timer = 75
 			self.thirst+=1
+		
+		if self.pos == self.last_pos or self.z<1: return
+		
+		for room in self.level.rooms:
+			if room['owner'] == self: continue
+			if not room['owner'] or \
+				not tuple(room['owner'].pos) in room['walking_space']: continue
+			if tuple(self.pos) in room['walking_space']:
+				if not tuple(self.last_pos) in room['walking_space']:
+					room['owner'].say('Welcome to \'%s\'!' % room['name'])
+			elif tuple(self.last_pos) in room['walking_space']:
+				if not tuple(self.pos) in room['walking_space']:
+					room['owner'].say('Thanks for stopping by!')
 	
 	def think(self):
 		"""Tracks whether ALife on the current level have been seen for the
@@ -325,6 +339,7 @@ class life:
 	def walk(self,dir):
 		"""Movement rules for all ALife. Tracks collisions along with the
 		pickup of items like gold and ore."""
+		self.last_pos = self.pos[:]
 		_pos = self.pos[:]
 		
 		if self.speed>0:
@@ -541,10 +556,21 @@ class life:
 		_room = var.world.get_level(1).get_room(where)
 		
 		if self.path_dest in _room['walking_space']:
-			pass #Something can go here...
+			pass
 		else:
 			self.go_to(random.choice(_room['walking_space']))
+	
+	def run_shop(self,where):
+		if where in self.claims: return
 		
+		_room = var.world.get_level(1).get_room(where)
+		
+		#Ownership
+		if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
+			self.claims.append(where)
+			_room['owner'] = self
+			functions.log('%s has claimed \'%s\'!' % (self.name,where))
+	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
 			self.z += 1
@@ -610,6 +636,7 @@ class human(life):
 		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
+		self.claims = []
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -814,6 +841,8 @@ class human(life):
 					self.task_delay = self.task['delay']
 				elif self.task_delay>0:
 					self.task_delay-=1
+				
+				self.run_shop(self.task['where'])
 					
 			elif self.task['what'] == 'flee':
 				print 'Running away'

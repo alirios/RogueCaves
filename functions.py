@@ -45,5 +45,4 @@ def item_list_to_menu(list):
 		if not _found:
 			_ret.append({'item':item,'count':1})
 				
-	
 	return _ret

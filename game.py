@@ -362,9 +362,14 @@ def get_input():
 				var.player.place((0,1),12)
 			elif event.key == K_b:
 				if var.player.in_building(name='storage'):
-					var.player.trading = True
-					var.in_menu = var.player.level.get_room_items('storage')
-					var.menu_name = 'Shopping'
+					_building_owner = var.player.level.get_room('storage')['owner']
+					
+					if _building_owner.in_building(name='storage'):
+						var.player.trading = True
+						var.in_menu = var.player.level.get_room_items('storage')
+						var.menu_name = 'Shopping'
+						_building_owner.say('What would you like today?')
+						
 			elif event.key == K_i:
 				var.in_menu = var.player.items
 				var.menu_name = 'Inventory'

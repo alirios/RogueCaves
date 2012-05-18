@@ -28,7 +28,14 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 05.17.2012A
+Current Version: 05.18.2012A
+----------------------------
+Added
+-----
+* ALife can claim buildings
+* Messages when entering/leaving buildings
+
+Previous Version: 05.17.2012A
 ----------------------------
 Added
 -----

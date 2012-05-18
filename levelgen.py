@@ -697,7 +697,7 @@ class LevelGen:
 						
 					self.map[__pos[0]][__pos[1]] = 16
 					__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
-						'door':__pos,'type':_room_type}
+						'door':__pos,'type':_room_type,'owner':None}
 					self.rooms.append(__room)
 					self.generate_building(__room)
 					
