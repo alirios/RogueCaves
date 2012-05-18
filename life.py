@@ -323,6 +323,8 @@ class life:
 					_temp['in_los'] = False
 	
 	def walk(self,dir):
+		"""Movement rules for all ALife. Tracks collisions along with the
+		pickup of items like gold and ore."""
 		_pos = self.pos[:]
 		
 		if self.speed>0:
