@@ -103,10 +103,12 @@ class life:
 		return False
 	
 	def say(self,what):
+		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
 			functions.log('%s: %s' % (self.name,what))
 	
 	def attack(self,who):
+		"""Performs attack on object 'who'"""
 		if who.race in ['zombie']:
 			if self.player: functions.log('You swing at the %s!' % (who.race))
 			elif who.player: functions.log('The %s swings at you!' % (who.race))
@@ -174,6 +176,7 @@ class life:
 			self.hp = self.hp_max
 	
 	def has_seen(self,who):
+		"""Helper function. Searches 'seen' for object 'who'"""
 		for seen in self.seen:
 			if seen['who'] == who:
 				return seen
@@ -195,6 +198,7 @@ class life:
 		return False
 	
 	def can_see(self,pos):
+		"""Performs a series of checks to determine if the ALife can see 'pos'"""
 		_seen = True
 		_l = draw.draw_diag_line(self.pos,pos)
 		
@@ -222,6 +226,8 @@ class life:
 		return _seen
 	
 	def can_see_ext(self,pos):
+		"""Legacy function. Uses A* to determine if the ALife can see 'pos'"""
+		#TODO: Deprecated. Marked for removal in 2012A."""
 		_seen = True
 		_path = self.path = pathfinding.astar(start=self.pos,end=pos,\
 			omap=self.level.map,size=self.level.size).path
@@ -232,6 +238,7 @@ class life:
 			return False
 	
 	def can_traverse(self,pos):
+		"""Checks to see if the ALife can travel to 'pos'"""
 		_seen = True
 		_l = draw.draw_diag_line(self.pos,pos)
 		
@@ -259,6 +266,7 @@ class life:
 		return _seen
 	
 	def place(self,pos,tile):
+		"""Places a tile of 'tile' at position 'pos'"""
 		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
 		if not self.level.map[_pos[0]][_pos[1]] in var.solid:
 			self.level.map[_pos[0]][_pos[1]] = tile
@@ -269,6 +277,7 @@ class life:
 				self.level.walking_space.append(_pos)
 	
 	def tick(self):
+		"""Performs a single tick, incrementing various counters."""
 		self.hunger_timer -= 1
 		self.thirst_timer -= 1
 		
@@ -280,7 +289,9 @@ class life:
 			self.thirst_timer = 75
 			self.thirst+=1
 	
-	def think(self):		
+	def think(self):
+		"""Tracks whether ALife on the current level have been seen for the
+		first time, lost, or moved in the last tick."""
 		for life in var.life:
 			if life == self or not self.z == life.z: continue
 			
@@ -288,7 +299,6 @@ class life:
 			
 			if not self.z == life.z and _temp:
 				if _temp and _temp['in_los']:
-					#print _temp['who'].name,'lost'
 					_temp['in_los'] = False
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
