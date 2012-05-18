@@ -273,7 +273,7 @@ def draw_screen(refresh=False):
 					bgcolor='altgray')
 				var.view.darken(100,(x,y,1,1))
 			elif refresh:
-				var.view.putchar(']',x=x,y=y,fgcolor='black',bgcolor='black')
+				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
@@ -302,10 +302,12 @@ def draw_screen(refresh=False):
 		_menu = functions.item_list_to_menu(var.in_menu)
 		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-len(_menu)-3,fgcolor='white',bgcolor='black')
 		for item in _menu:
+			_tile = tile_map[str(item['item']['tile'])]
 			_entry = '%s x%s' % (item['item']['name'],item['count'])
-			_center_x = (var.window_size[0]/2)-(len(_entry)/2)
+			_center_x = (var.window_size[0]/2)-len(var.menu_name)/2
 			_center_y = (var.window_size[1]/2)-(len(_menu)/2)+_menu.index(item)-3
-			var.view.putchars(_entry,x=_center_x,y=_center_y,fgcolor='white',bgcolor='black')
+			var.view.putchars(_tile['icon'],x=_center_x-1,y=_center_y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
+			var.view.putchars(' '+_entry,x=_center_x,y=_center_y,fgcolor='white',bgcolor='black')
 			
 	var.log.putchars
 	
@@ -371,8 +373,9 @@ def get_input():
 						_building_owner.say('What would you like today?')
 						
 			elif event.key == K_i:
-				var.in_menu = var.player.items
-				var.menu_name = 'Inventory'
+				if len(var.player.items):
+					var.in_menu = var.player.items
+					var.menu_name = 'Inventory'
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:

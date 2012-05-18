@@ -34,6 +34,7 @@ Added
 -----
 * ALife can claim buildings
 * Messages when entering/leaving buildings
+* Icons now listed in inventory
 
 Previous Version: 05.17.2012A
 ----------------------------
