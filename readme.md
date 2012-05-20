@@ -27,14 +27,28 @@ Bugs
 * Crash on line 179 of pathfinding.py.
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
+* Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.18.2012A
+Current Version: 05.20.2012A
+----------------------------
+Added
+-----
+* Purchasing items no longer leaves a duplicate in the shop
+* Shop owner now stores items in chests
+* Life: get_all_items_tagged()
+* Life: put_all_items_tagged()
+* Life: go_to_and_do()
+
+Previous Version: 05.18.2012A
 ----------------------------
 Added
 -----
 * ALife can claim buildings
 * Messages when entering/leaving buildings
-* Icons now listed in inventory
+* Icons now listed next to items in inventory
+* Extended menu system
+* New item: Bronze
+* Buying items now works
 
 Previous Version: 05.17.2012A
 ----------------------------

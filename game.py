@@ -55,12 +55,13 @@ var.menu_name = ''
 var.input = {'up':False,
 	'down':False}
 var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
-			'13':{'name':'gold','solid':False,'type':'ore','tile':13},
-			'14':{'name':'coal','solid':False,'type':'ore','tile':14},
-			'17':{'name':'meat','solid':False,'type':'food','tile':17},
-			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18},
+			'13':{'name':'gold','solid':False,'type':'ore','tile':13,'price':15},
+			'14':{'name':'coal','solid':False,'type':'ore','tile':14,'price':2},
+			'17':{'name':'meat','solid':False,'type':'food','tile':17,'price':8},
+			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18,'price':25},
 			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
-				'status':None,'rank':1,'sharp':True,'tile':19}}
+				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
+			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -80,7 +81,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'16':{'icon':'.','color':['brown','sand']},
 	'17':{'icon':'F','color':['red','lightsand']},
 	'18':{'icon':'#','color':['brown','lightsand']},
-	'19':{'icon':'/','color':['silver','black']}}
+	'19':{'icon':'/','color':['silver','black']},
+	'20':{'icon':'b','color':['gray','brown']}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -154,7 +156,7 @@ for i in range(1):
 	test.level = var.world.get_level(test.z)
 	test.icon['color'][0] = 'blue'
 	#test.mode = {'task':'mine','who':None}
-	test.add_event('guard_house',50,where='storage',delay=20)
+	test.add_event('run_shop',50,where='storage',delay=20)
 	test.pos = list(test.level.get_room('storage')['door'])
 
 #for i in range(2):
@@ -299,17 +301,19 @@ def draw_screen(refresh=False):
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
-		_menu = functions.item_list_to_menu(var.in_menu)
-		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-len(_menu)-3,fgcolor='white',bgcolor='black')
-		for item in _menu:
+		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-len(var.in_menu)-3,fgcolor='white',bgcolor='black')
+		
+		for item in var.in_menu:
+			if var.menu_index == var.in_menu.index(item):
+				_color = 'white'
+			else:
+				_color = 'gray'
 			_tile = tile_map[str(item['item']['tile'])]
-			_entry = '%s x%s' % (item['item']['name'],item['count'])
+			_entry = '%s x%s (%sb)' % (item['item']['name'],item['count'],functions.get_item_price(item['item']))
 			_center_x = (var.window_size[0]/2)-len(var.menu_name)/2
-			_center_y = (var.window_size[1]/2)-(len(_menu)/2)+_menu.index(item)-3
+			_center_y = (var.window_size[1]/2)-(len(var.in_menu)/2)+var.in_menu.index(item)-3
 			var.view.putchars(_tile['icon'],x=_center_x-1,y=_center_y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
-			var.view.putchars(' '+_entry,x=_center_x,y=_center_y,fgcolor='white',bgcolor='black')
-			
-	var.log.putchars
+			var.view.putchars(' '+_entry,x=_center_x,y=_center_y,fgcolor=_color,bgcolor='black')
 	
 	_i=0
 	for entry in var.history:
@@ -317,6 +321,8 @@ def draw_screen(refresh=False):
 		
 		if entry.count('gold'):
 			_fgcolor = 'gold'
+		elif entry.count('bronze'):
+			_fgcolor = 'brown'
 		
 		var.log.putchars(entry,\
 			x=0,\
@@ -338,22 +344,27 @@ def draw_screen(refresh=False):
 def get_input():
 	for event in pygame.event.get():
 		if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
-			if var.in_menu: var.in_menu = None
+			if var.in_menu: functions.destroy_menu(who=var.player)
 			else:
 				pygame.quit()
 				sys.exit()
 		elif event.type == KEYDOWN:
 			if event.key == K_UP:
 				var.input['up'] = True
+				var.menu_index-=1
 			elif event.key == K_DOWN:
 				var.input['down'] = True
+				var.menu_index+=1
 			elif event.key == K_LEFT:
 				var.input['left'] = True
 			elif event.key == K_RIGHT:
 				var.input['right'] = True
 			elif event.key == K_RETURN:
-				var.player.enter()
-				draw_screen(refresh=True)
+				if var.in_menu:
+					functions.menu_select()
+				else:
+					var.player.enter()
+					draw_screen(refresh=True)
 			elif event.key == K_w:
 				var.player.place((0,-1),12)
 			elif event.key == K_a:
@@ -363,19 +374,37 @@ def get_input():
 			elif event.key == K_s:
 				var.player.place((0,1),12)
 			elif event.key == K_b:
-				if var.player.in_building(name='storage'):
+				if var.player.in_building(name='storage') and not var.in_menu:
 					_building_owner = var.player.level.get_room('storage')['owner']
 					
-					if _building_owner.in_building(name='storage'):
-						var.player.trading = True
-						var.in_menu = var.player.level.get_room_items('storage')
-						var.menu_name = 'Shopping'
-						_building_owner.say('What would you like today?')
+					if _building_owner and _building_owner.in_building(name='storage'):
+						_menu = var.player.level.get_room_items('storage')
+						if len(_menu):
+							functions.build_menu(var.player.level.get_room_items('storage'),
+								who=var.player,
+								name='Shopping (Buy)',
+								trading=True,
+								callback=var.player.buy_item)
+							_building_owner.say('What would you like today?')
+						else:
+							_building_owner.say('I have nothing to sell!')
+			
+			elif event.key == K_n:
+				if var.player.in_building(name='storage') and not var.in_menu:
+					_building_owner = var.player.level.get_room('storage')['owner']
+					
+					if _building_owner and _building_owner.in_building(name='storage'):
+						functions.build_menu(var.player.items,
+							who=var.player,
+							name='Shopping (Sell)',
+							trading=True,
+							callback=var.player.sell_item,
+							sell_to=_building_owner)
+						_building_owner.say('What items do you have for me?')
 						
 			elif event.key == K_i:
 				if len(var.player.items):
-					var.in_menu = var.player.items
-					var.menu_name = 'Inventory'
+					functions.build_menu(var.player.items,name='Inventory')
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:
@@ -426,9 +455,6 @@ def get_input():
 	_atime = time.time()
 	
 	if var.in_menu:
-		if _key == 'up': var.menu_index-=1
-		elif _key == 'down': var.menu_index+=1
-		
 		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
 		if var.menu_index>len(var.in_menu)-1: var.menu_index = 0
 		

@@ -56,6 +56,21 @@ class life:
 		
 		return _i
 	
+	def buy_item(self,item):
+		"""Removes item from menu and adds it to the items array."""
+		print self.get_money()
+		functions.remove_menu_item(item)
+		self.level.remove_item_at(item['item'],item['item']['pos'])
+		self.add_item(item['item'])
+	
+	def sell_item(self,item,**kargv):
+		"""Removes item from inventory and adds it to the items array."""
+		print self.get_money()
+		functions.remove_menu_item(item)
+		self.items.remove(item['item'])
+		item['item']['traded'] = True
+		kargv['args']['sell_to'].add_item(item['item'])
+	
 	def equip_item(self,item):
 		"""Helper function. Automatically equips weapons."""
 		if item['type'] == 'weapon':
@@ -72,6 +87,20 @@ class life:
 				_found = True
 				for item in self.items:
 					if item['type'] == type:
+						self.items.remove(item)
+						_item['items'].append(item)
+				
+				break
+	
+	def put_all_items_tagged(self,tag,pos):
+		"""Dumps items with flag 'tag' into a container located at 'pos'"""
+		#TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
+		for _item in self.level.get_all_items_of_type('storage'):
+			_found = False
+			if tuple(_item['pos']) == tuple(pos):
+				_found = True
+				for item in self.items:
+					if item.has_key(tag) and item[tag]:
 						self.items.remove(item)
 						_item['items'].append(item)
 				
@@ -95,6 +124,16 @@ class life:
 		
 		return _ret
 	
+	def get_all_items_tagged(self,tag):
+		"""Returns items with flag 'tag'."""
+		_ret = []
+		
+		for item in self.items:
+			if item.has_key(tag) and item[tag]:
+				_ret.append(item)
+		
+		return _ret
+	
 	def get_item_id(self,id):
 		"""Returns item of id 'id'"""
 		for item in self.items:
@@ -102,6 +141,15 @@ class life:
 				return item
 		
 		return False
+	
+	def get_money(self):
+		"""Returns amount of money the ALife has."""
+		_ret = 0
+		
+		for ore in self.get_all_items_of_type('ore'):
+			_ret+=ore['price']
+		
+		return _ret
 	
 	def say(self,what):
 		"""Sends a string prefixed with the ALife's name to the log."""
@@ -370,17 +418,7 @@ class life:
 				self.path_dest = None
 		
 		_tile = self.level.map[_pos[0]][_pos[1]]
-		if _tile in var.blocking or _tile in var.solid:
-			if _tile == 11:
-				_chance = random.randint(0,100)
-				
-				if _chance <= 75:
-					self.level.map[_pos[0]][_pos[1]] = 1
-				elif 75<_chance<=95:
-					self.level.add_item(14,_pos)
-				else:
-					self.level.add_item(13,_pos)
-			
+		if _tile in var.blocking or _tile in var.solid:			
 			self.pos = self.pos[:]
 			return
 		
@@ -391,8 +429,10 @@ class life:
 				if _tile['tile'] == 11:
 					if _tile['life']<=0:
 						_chance = random.randint(0,100)
-						if _chance <= 75:
+						if _chance <= 55:
 							self.level.map[_pos[0]][_pos[1]] = 1
+						elif 55<_chance<=75:
+							self.level.add_item(20,_pos)
 						elif 75<_chance<=95:
 							self.level.add_item(14,_pos)
 						else:
@@ -416,6 +456,11 @@ class life:
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 coal.')
+				elif _tile['tile'] == 20:
+					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					self.add_item(_item)
+					if self.player:
+						functions.log('You picked up +1 bronze.')
 				
 				_i+=1
 		
@@ -517,17 +562,22 @@ class life:
 		if z == None:
 			z = self.z
 		
-		if self.pos == pos:
-			return
+		if tuple(self.pos) == pos and z == self.z:
+			return True
 		
 		if not self.z == z:
 			if self.z<z:
 				self.find_path(self.level.entrances[0])
 			else:
 				self.find_path(self.level.exits[0])
-			return
+			return False
 		
 		self.find_path(pos)
+	
+	def go_to_and_do(self,pos,callback,**kargv):
+		_there = self.go_to(pos)
+		
+		if _there: callback(kargv['arg'],pos)
 	
 	def pick_up_item_at(self,pos,want):
 		if not want: want=item['type']
@@ -561,15 +611,27 @@ class life:
 			self.go_to(random.choice(_room['walking_space']))
 	
 	def run_shop(self,where):
-		if where in self.claims: return
-		
-		_room = var.world.get_level(1).get_room(where)
-		
-		#Ownership
-		if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
-			self.claims.append(where)
-			_room['owner'] = self
-			functions.log('%s has claimed \'%s\'!' % (self.name,where))
+		if where in self.claims:
+			_storage = self.level.get_all_items_of_type('storage')
+			_dump = self.get_all_items_tagged('traded')
+			
+			if _dump and _storage:
+				self.go_to_and_do(_storage[0]['pos'],self.put_all_items_tagged,arg='traded')
+				#self.put_all_items_of_tag('traded')
+			else:
+				if not self.task_delay:
+					self.guard_building(where)
+					self.task_delay = self.task['delay']
+				elif self.task_delay>0:
+					self.task_delay-=1
+		else:
+			_room = var.world.get_level(1).get_room(where)
+			self.guard_building(where)
+			#Ownership
+			if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
+				self.claims.append(where)
+				_room['owner'] = self
+				functions.log('%s has claimed \'%s\'!' % (self.name,where))
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -835,13 +897,7 @@ class human(life):
 						self.task = None
 						self.say('Got em.')
 						self.lowest = {'who':None,'score':0}
-			elif self.task['what'] == 'guard_house':
-				if not self.task_delay:
-					self.guard_building(self.task['where'])
-					self.task_delay = self.task['delay']
-				elif self.task_delay>0:
-					self.task_delay-=1
-				
+			elif self.task['what'] == 'run_shop':
 				self.run_shop(self.task['where'])
 					
 			elif self.task['what'] == 'flee':

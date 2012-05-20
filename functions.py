@@ -46,3 +46,46 @@ def item_list_to_menu(list):
 			_ret.append({'item':item,'count':1})
 				
 	return _ret
+
+def build_menu(list,who=None,name='Menu',trading=False,callback=None,**kargv):
+	if trading: who.trading = True
+	var.menu_index = 0
+	var.in_menu = item_list_to_menu(list)
+	var.menu_name = name
+	var.menu_callback = callback
+	var.callback_args = kargv
+
+def destroy_menu(who=None):
+	if who: who.trading = False
+	var.menu_index = 0
+	var.in_menu = None
+	var.menu_name = ''
+	var.menu_callback = None
+	var.callback_args = None
+
+def menu_select():
+	if var.callback_args:
+		var.menu_callback(var.in_menu[var.menu_index],args=var.callback_args)
+	else:
+		var.menu_callback(var.in_menu[var.menu_index])
+	
+
+def remove_menu_item(item):
+	if item['count']==1:
+		var.in_menu.remove(item)
+	else: item['count']-=1
+
+def get_item_price(item):
+	"""Returns the price of an item.
+	
+	Shops are only allowed to hold a certain amount of goods (100 of any item.)
+	After this limit is reached, another shop must open to store the overflow.
+	As the supply of an item decreases, the price increases, and the seller
+	will recieve a bonus for selling this type of item while its supply is
+	low.
+	
+	Formula: base_price + (100-supply)
+	
+	But until all of this gets implemented, we'll just return the base price
+	"""
+	return item['price']

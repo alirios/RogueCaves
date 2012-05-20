@@ -5,24 +5,24 @@ class LevelGen:
 	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True,overlaprooms=False,outside=False):
 		self.size = size
 		
-		self.map = []
-		self.rooms = []
-		self.max_rooms = rooms
-		self.room_size = room_size
-		self.diagtunnels = diagtunnels
-		self.overlaprooms = overlaprooms
-		self.outside = outside
-		self.landmarks = []
-		self.walking_space = []
-		self.walls = []
+		self.map 			= []
+		self.rooms 			= []
+		self.max_rooms 		= rooms
+		self.room_size 		= room_size
+		self.diagtunnels 	= diagtunnels
+		self.overlaprooms 	= overlaprooms
+		self.outside 		= outside
+		self.landmarks 		= []
+		self.walking_space 	= []
+		self.walls 			= []
 		
 		#Lights and maps...
-		self.lights = []
-		self.fmap = [[0] * self.size[1] for i in range(self.size[0])]
-		self.lmap = []
-		self.tmap = []
-		self.fov = []
-		self.items = []
+		self.lights 		= []
+		self.fmap 			= [[0] * self.size[1] for i in range(self.size[0])]
+		self.lmap 			= []
+		self.tmap 			= []
+		self.fov 			= []
+		self.items 			= []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in range(self.size[0]):
@@ -46,11 +46,11 @@ class LevelGen:
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
 		
-		self.lmap[pos[0]][pos[1]]['source'] = True
-		self.lmap[pos[0]][pos[1]]['color'] = color
-		self.lmap[pos[0]][pos[1]]['life'] = life
+		self.lmap[pos[0]][pos[1]]['source'] 	= True
+		self.lmap[pos[0]][pos[1]]['color'] 		= color
+		self.lmap[pos[0]][pos[1]]['life'] 		= life
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
-		self.lmap[pos[0]][pos[1]]['children'] =[]
+		self.lmap[pos[0]][pos[1]]['children'] 	=[]
 	
 	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)]
@@ -115,6 +115,17 @@ class LevelGen:
 				return True
 		
 		return False
+	
+	def remove_item_at(self,item,pos):
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for _item in self.items[x][y]:
+					if _item['type'] == 'storage':
+						for __item in _item['items']:
+							if __item == item:
+								_item['items'].remove(item)
+					if _item == item:
+						self.items[x][y].remove(item)						
 	
 	def get_room(self,type):
 		for room in self.rooms:
@@ -710,7 +721,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [17]
 		elif room['type'] == 'storage':
-			_needs = [18,17,17]
+			_needs = [18,17,17,14,14]
 		
 		#We like putting things in corners...
 		_possible = []
