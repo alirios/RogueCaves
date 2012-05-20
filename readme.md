@@ -34,7 +34,7 @@ Current Version: 05.20.2012A
 Added
 -----
 * Purchasing items no longer leaves a duplicate in the shop
-* Shop owner now stores items in chests
+* Shop owner now stores traded items in chests
 * Life: get_all_items_tagged()
 * Life: put_all_items_tagged()
 * Life: go_to_and_do()

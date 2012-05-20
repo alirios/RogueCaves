@@ -575,9 +575,10 @@ class life:
 		self.find_path(pos)
 	
 	def go_to_and_do(self,pos,callback,**kargv):
+		"""Go to location and call function 'callback' with argument 'kargv'"""
 		_there = self.go_to(pos)
 		
-		if _there: callback(kargv['arg'],pos)
+		if _there: callback(kargv['first'],pos)
 	
 	def pick_up_item_at(self,pos,want):
 		if not want: want=item['type']
@@ -616,7 +617,7 @@ class life:
 			_dump = self.get_all_items_tagged('traded')
 			
 			if _dump and _storage:
-				self.go_to_and_do(_storage[0]['pos'],self.put_all_items_tagged,arg='traded')
+				self.go_to_and_do(_storage[0]['pos'],self.put_all_items_tagged,first='traded')
 				#self.put_all_items_of_tag('traded')
 			else:
 				if not self.task_delay:
