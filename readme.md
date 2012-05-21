@@ -33,11 +33,14 @@ Current Version: 05.20.2012A
 ----------------------------
 Added
 -----
+* Moved all event code for run_shop into the function of the same name
 * Purchasing items no longer leaves a duplicate in the shop
 * Shop owner now stores traded items in chests
+* LevelGen: Walkers no longer travel to the edge of the map
 * Life: get_all_items_tagged()
 * Life: put_all_items_tagged()
 * Life: go_to_and_do()
+* Life: run_shop()
 
 Previous Version: 05.18.2012A
 ----------------------------

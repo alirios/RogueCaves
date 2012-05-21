@@ -3,7 +3,9 @@ import pygcurse, logging, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
 
-__version__ = time.strftime('%m.%d.%YA')
+__release__ = '05.20.2012A'
+if not __release__: __version__ = time.strftime('%m.%d.%YA')
+else: __version__ = 'Release %s' % __release__
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -16,10 +18,10 @@ console_formatter = logging.Formatter('%(message)s')
 #logger.addHandler(fh)
 
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 ch.setFormatter(console_formatter)
 logger.addHandler(ch)
-logging.debug('Rogue Caves - %s' % __version__)
+logging.info('Rogue Caves - %s' % __version__)
 
 #Colors...
 pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
@@ -415,6 +417,8 @@ def get_input():
 				var.player.teleport(-2)
 			elif event.key == K_5:
 				var.player.teleport(-3)
+			elif event.key == K_6:
+				var.player.teleport(-4)
 		elif event.type == KEYUP:
 			if event.key == K_UP:
 				var.input['up'] = False

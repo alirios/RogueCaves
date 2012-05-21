@@ -757,11 +757,9 @@ class human(life):
 	def remove_event(self,what):
 		for event in self.events:
 			if event['what'] == what:
-				print 'Removed! %s' % what
 				self.events.remove(event)
 				return True
 		
-		#print 'Warning: Event %s not found!' % what
 		return False
 	
 	def judge(self,who):
@@ -802,7 +800,7 @@ class human(life):
 	def think(self):
 		life.think(self)
 		
-		#ACT HUMANLY!		
+		#ACT HUMANLY!
 		for seen in self.seen:
 			if seen['in_los']:
 				_score = self.judge(seen['who'])
@@ -927,7 +925,6 @@ class human(life):
 		life.kill(self)
 		
 		if not self.player and self.task['who'].player:
-			print self.task['who'].player
 			self.task['who'].in_danger = False
 
 class crazy_miner(human):

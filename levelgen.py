@@ -290,16 +290,16 @@ class LevelGen:
 					_y = walker[1]+_pos[1]
 					
 					if (_x,_y) in self.landmarks: continue
-					if 0>_x or _x>self.size[0]-1: continue
-					if 0>_y or _y>self.size[1]-1: continue
+					if 1>_x or _x>self.size[0]-2: continue
+					if 1>_y or _y>self.size[1]-2: continue
 					
 					walker[0] = _x
 					walker[1] = _y
 					
 					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 						if (_x+pos[0],_y+pos[1]) in self.landmarks: continue
-						if 0>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
-						if 0>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
+						if 1>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
+						if 1>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
 						
 						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
 						_ret.append((_x+pos[0],_y+pos[1]))
