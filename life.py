@@ -72,11 +72,34 @@ class life:
 		kargv['args']['sell_to'].add_item(item['item'])
 	
 	def equip_item(self,item):
-		"""Helper function. Automatically equips weapons."""
+		"""Helper function. Equips item 'item'"""
+		if item.has_key('item'): item=item['item']
+		
 		if item['type'] == 'weapon':
+			if self.weapon==item:
+				functions.log('You\'re already holding the %s!' % (self.get_weapon_name()))
+				return
+			
 			self.weapon = item
 			if self.player: functions.log('You equip the %s.' % (self.get_weapon_name()))
 			return
+	
+	def place_item(self,item,pos):
+		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
+		if 0>_pos[0] or _pos[0]>=self.level.size[0]: return
+		if 0>_pos[1] or _pos[1]>=self.level.size[1]: return
+		if len(self.level.items[_pos[0]][_pos[1]]): return
+		
+		_items = self.get_all_items_of_id(item)
+		
+		if len(_items): _item=_items[0]
+		else: return False
+		
+		if _item['type'] == 'seed':
+			_item['planted_by'] = self
+			_item['pos'] = _pos
+			self.level.items[_pos[0]][_pos[1]].append(_item)
+			self.items.remove(_item)
 	
 	def put_all_items_of_type(self,type,pos):
 		"""Dumps items of type 'type' into a container located at 'pos'"""
@@ -113,6 +136,16 @@ class life:
 				return item
 		
 		return False
+	
+	def get_all_items_of_id(self,id):
+		"""Returns items of id 'id'"""
+		_ret = []
+		
+		for item in self.items:
+			if item['tile'] == id:
+				_ret.append(item)
+		
+		return _ret
 	
 	def get_all_items_of_type(self,type):
 		"""Returns items of type 'type'"""
@@ -314,7 +347,7 @@ class life:
 		
 		return _seen
 	
-	def place(self,pos,tile):
+	def place_tile(self,pos,tile):
 		"""Places a tile of 'tile' at position 'pos'"""
 		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
 		if not self.level.map[_pos[0]][_pos[1]] in var.solid:

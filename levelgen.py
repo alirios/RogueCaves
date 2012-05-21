@@ -53,7 +53,7 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['children'] 	=[]
 	
 	def add_item(self,item,pos,no_place=False):
-		_item = var.items[str(item)]
+		_item = var.items[str(item)].copy()
 		_item['pos'] = pos
 		
 		if not no_place: self.items[pos[0]][pos[1]].append(_item.copy())
@@ -182,6 +182,18 @@ class LevelGen:
 			y=math.sin(i*0.01745);
 			self.dofov(pos,x,y,10);
 			i+=1
+	
+	def tick(self):
+		for item in self.get_all_items_of_type('seed'):
+			if item['growth']==item['growth_max']:
+				self.items[item['pos'][0]][item['pos'][1]].remove(item)
+				self.add_item(item['makes'],item['pos'])
+			
+			if item['growth_time']>=item['growth_time_max']:
+				item['growth']+=1
+				item['image_index']+=1
+				item['growth_time']=0
+			else: item['growth_time']+=1
 	
 	def tick_lights(self):
 		for _l in self.lights:
@@ -721,7 +733,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [17]
 		elif room['type'] == 'storage':
-			_needs = [18,17,17,14,14]
+			_needs = [18,17,17,14,14,23]
 		
 		#We like putting things in corners...
 		_possible = []

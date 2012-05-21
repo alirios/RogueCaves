@@ -29,7 +29,15 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.20.2012A
+Current Version: 05.21.2012A
+----------------------------
+Added
+-----
+* Added wheat
+* Levels now have a tick function that is called every second
+* Crops can have different images for each stage of growth
+
+Previous Version: 05.20.2012A
 ----------------------------
 Added
 -----
@@ -37,6 +45,7 @@ Added
 * Purchasing items no longer leaves a duplicate in the shop
 * Shop owner now stores traded items in chests
 * LevelGen: Walkers no longer travel to the edge of the map
+* Fixed error in go_to() that caused it to never return if the destination had been reached
 * Life: get_all_items_tagged()
 * Life: put_all_items_tagged()
 * Life: go_to_and_do()

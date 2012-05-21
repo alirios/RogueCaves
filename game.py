@@ -3,7 +3,7 @@ import pygcurse, logging, pygame, random, time, var, sys
 from pygame.locals import *
 pygame.font.init()
 
-__release__ = '05.20.2012A'
+__release__ = None
 if not __release__: __version__ = time.strftime('%m.%d.%YA')
 else: __version__ = 'Release %s' % __release__
 
@@ -40,6 +40,7 @@ var.window_size = (99,33)
 var.world_size = (99,33)
 var.max_fps = 20
 var.fps = 0
+var.time = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
 var.hunger_timer_max = 100
@@ -63,7 +64,13 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18,'price':25},
 			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
 				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
-			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1}}
+			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
+			'21':{'name':'wheat (seed)','solid':False,'type':'seed','tile':21,'price':2,\
+				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':3,'image_index':0,\
+				'images':['i','I','Y'],'makes':22},
+			'22':{'name':'wheat','solid':False,'type':'food','tile':22,'price':4},
+			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
+				'status':None,'rank':1,'sharp':True,'tile':23,'price':9}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -83,8 +90,11 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'16':{'icon':'.','color':['brown','sand']},
 	'17':{'icon':'F','color':['red','lightsand']},
 	'18':{'icon':'#','color':['brown','lightsand']},
-	'19':{'icon':'/','color':['silver','black']},
-	'20':{'icon':'b','color':['gray','brown']}}
+	'19':{'icon':'/','color':['silver',None]},
+	'20':{'icon':'b','color':['gray','brown']},
+	'21':{'icon':'i','color':['sand',None]},
+	'22':{'icon':'Y','color':['brown',None]},
+	'23':{'icon':'L','color':['silver',None]}}
 
 #Fonts...
 _font = pygame.font.Font('ProggyClean.ttf', 16)
@@ -137,6 +147,9 @@ var.player.level = var.world.get_level(var.player.z)
 #var.player.pos = list(var.player.level.exits[0])
 var.player.pos = list(var.player.level.get_room('storage')['door'])
 var.player.god = var.ivan
+
+for i in range(9):
+	var.player.add_item_raw(21)
 
 for i in range(1,var.world.depth):
 	test = life.crazy_miner()
@@ -217,7 +230,11 @@ def draw_screen(refresh=False):
 			_tile = None
 			
 			if var.player.level.items[x][y]:
-				_tile = tile_map[str(var.player.level.items[x][y][0]['tile'])]
+				_item = var.player.level.items[x][y][0]
+				_tile = tile_map[str(_item['tile'])]
+				
+				if _item.has_key('images'):
+					_tile['icon'] = _item['images'][_item['image_index']]
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
@@ -339,7 +356,12 @@ def draw_screen(refresh=False):
 	if time.time()-var.fpstime>=1:
 		var.fpstime=time.time()
 		var.fps = var.temp_fps
+		var.time += 1
 		var.temp_fps = 0
+		
+		for level in var.world.levels:
+			level['level'].tick()
+		
 	else:
 		var.temp_fps += 1
 
@@ -368,13 +390,13 @@ def get_input():
 					var.player.enter()
 					draw_screen(refresh=True)
 			elif event.key == K_w:
-				var.player.place((0,-1),12)
+				var.player.place_item(21,(0,-1))
 			elif event.key == K_a:
-				var.player.place((-1,0),12)
+				var.player.place_item(21,(-1,0))
 			elif event.key == K_d:
-				var.player.place((1,0),12)
+				var.player.place_item(21,(1,0))
 			elif event.key == K_s:
-				var.player.place((0,1),12)
+				var.player.place_item(21,(0,1))
 			elif event.key == K_b:
 				if var.player.in_building(name='storage') and not var.in_menu:
 					_building_owner = var.player.level.get_room('storage')['owner']
@@ -406,7 +428,9 @@ def get_input():
 						
 			elif event.key == K_i:
 				if len(var.player.items):
-					functions.build_menu(var.player.items,name='Inventory')
+					functions.build_menu(var.player.items,
+						name='Inventory',
+						callback=var.player.equip_item)
 			elif event.key == K_1:
 				var.player.teleport(1)
 			elif event.key == K_2:

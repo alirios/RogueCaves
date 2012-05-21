@@ -69,7 +69,6 @@ def menu_select():
 	else:
 		var.menu_callback(var.in_menu[var.menu_index])
 	
-
 def remove_menu_item(item):
 	if item['count']==1:
 		var.in_menu.remove(item)
