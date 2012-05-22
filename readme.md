@@ -16,7 +16,6 @@ Todo
 * Random quests
 * Tricky ALife
 * Helper functions to automatically sort incoming item lists
-* Helper functions to create menus without altering the variables directly
 
 Bugs
 ----
@@ -29,7 +28,15 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.21.2012A
+Current Version: 05.22.2012A
+----------------------------
+Added
+-----
+* Fixed menu title rendering too far above the menu items
+* Disabled thirst, which caused the ALife to become unresponsive
+* Added farming task for ALife
+
+Previous Version: 05.21.2012A
 ----------------------------
 Added
 -----

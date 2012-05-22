@@ -33,8 +33,10 @@ class life:
 		
 		self.thirst = 0
 		self.thirst_timer = var.thirst_timer_max
+		self.thirsty_at = 50
 		self.hunger = 0
 		self.hunger_timer = var.hunger_timer_max
+		self.hungry_at = 50
 		self.items = []
 		
 		var.life.append(self)
@@ -92,7 +94,7 @@ class life:
 			return
 	
 	def place_item(self,item,pos):
-		_pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
+		_pos = pos#(self.pos[0]+pos[0],self.pos[1]+pos[1])
 		if 0>_pos[0] or _pos[0]>=self.level.size[0]: return
 		if 0>_pos[1] or _pos[1]>=self.level.size[1]: return
 		if len(self.level.items[_pos[0]][_pos[1]]): return
@@ -658,6 +660,8 @@ class life:
 	def guard_building(self,where):
 		_room = var.world.get_level(1).get_room(where)
 		
+		if not _room: return False
+		
 		if self.path_dest in _room['walking_space']:
 			pass
 		else:
@@ -685,6 +689,32 @@ class life:
 				self.claims.append(where)
 				_room['owner'] = self
 				functions.log('%s has claimed \'%s\'!' % (self.name,where))
+	
+	def farm(self,where):
+		"""Instructs the ALife to farm a plot of land at 'where',
+		'where' is expected to be (x,y,width,height)"""
+		##TODO: Should we check for (x1,y1,x2,y2)?
+		#Each iteration we will scan for what tiles in 'where' are already planted
+		#Until the array returned is empty, we will travel to the nearest tile and
+		#plant there.
+		_open = []
+		
+		for x in range(where[2]):
+			for y in range(where[3]):
+				_pos = (where[0]+x,where[1]+y)
+				
+				if not len(self.level.items[_pos[0]][_pos[1]]):
+					_open.append(_pos)
+		
+		if not self.task_delay:
+			self.task_delay = self.task['delay']
+			if not _open:
+				self.guard_building('home')
+			else:
+				self.go_to_and_do(_open[0],self.place_item,first=21)
+				return True
+		elif self.task_delay>0:
+			self.task_delay-=1
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -742,7 +772,7 @@ class human(life):
 		self.hp_max = 20
 		
 		self.hungry_at = 50
-		self.thirsty_at = 50
+		self.thirsty_at = -1
 		self.married = None
 		self.worth = None
 		self.mode = {'task':None,'who':None}
@@ -950,9 +980,10 @@ class human(life):
 						self.lowest = {'who':None,'score':0}
 			elif self.task['what'] == 'run_shop':
 				self.run_shop(self.task['where'])
-					
 			elif self.task['what'] == 'flee':
 				print 'Running away'
+			elif self.task['what'] == 'farm':
+				self.farm(self.task['where'])
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:

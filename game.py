@@ -173,6 +173,19 @@ for i in range(1):
 	#test.mode = {'task':'mine','who':None}
 	test.add_event('run_shop',50,where='storage',delay=20)
 	test.pos = list(test.level.get_room('storage')['door'])
+	
+for i in range(1):
+	test = life.human()
+	test.name = 'Farmer'
+	test.z = 1
+	test.speed = 1
+	test.speed_max = 1
+	test.level = var.world.get_level(test.z)
+	test.icon['color'][0] = 'red'
+	for i in range(9):
+		test.add_item_raw(21)
+	test.add_event('farm',50,where=(10,10,3,3),delay=5)
+	test.pos = list(test.level.get_room('storage')['door'])
 
 #for i in range(2):
 #	test = life.human()
@@ -320,7 +333,7 @@ def draw_screen(refresh=False):
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
-		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-len(var.in_menu)-3,fgcolor='white',bgcolor='black')
+		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-(len(var.in_menu)/2)-4,fgcolor='white',bgcolor='black')
 		
 		for item in var.in_menu:
 			if var.menu_index == var.in_menu.index(item):
