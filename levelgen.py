@@ -50,13 +50,13 @@ class LevelGen:
 		self.lmap[pos[0]][pos[1]]['color'] 		= color
 		self.lmap[pos[0]][pos[1]]['life'] 		= life
 		self.lmap[pos[0]][pos[1]]['brightness'] = brightness
-		self.lmap[pos[0]][pos[1]]['children'] 	=[]
+		self.lmap[pos[0]][pos[1]]['children'] 	= []
 	
 	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)].copy()
 		_item['pos'] = pos
 		
-		if not no_place: self.items[pos[0]][pos[1]].append(_item.copy())
+		if not no_place: self.items[pos[0]][pos[1]].append(_item)
 		
 		return _item
 	
@@ -185,9 +185,11 @@ class LevelGen:
 	
 	def tick(self):
 		for item in self.get_all_items_of_type('seed'):
-			if item['growth']==item['growth_max']:
+			if item.has_key('planted_by') and item['growth']==item['growth_max']:
 				self.items[item['pos'][0]][item['pos'][1]].remove(item)
-				self.add_item(item['makes'],item['pos'])
+				_i = self.add_item(item['makes'],item['pos'])
+				#if item.has_key('planted_by'):
+				_i['planted_by'] = item['planted_by']
 			
 			if item['growth_time']>=item['growth_time_max']:
 				item['growth']+=1

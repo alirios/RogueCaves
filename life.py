@@ -44,6 +44,7 @@ class life:
 		array, and returned itself. No longer copies."""
 		#TODO: Should we copy the item?
 		#_i = item.copy()
+		item['pos'] = tuple(self.pos)
 		self.items.append(item)
 		
 		return item
@@ -52,23 +53,29 @@ class life:
 		"""Returns a raw (new) copy of an item from the global items array
 		and adds it to the items array."""
 		_i = var.items[str(item)].copy()
+		_i['pos'] = tuple(self.pos)
 		self.items.append(_i)
 		
 		return _i
 	
 	def buy_item(self,item):
 		"""Removes item from menu and adds it to the items array."""
-		print self.get_money()
 		functions.remove_menu_item(item)
 		self.level.remove_item_at(item['item'],item['item']['pos'])
 		self.add_item(item['item'])
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
-		print self.get_money()
 		functions.remove_menu_item(item)
-		self.items.remove(item['item'])
+		_i = item['item'].copy()
 		item['item']['traded'] = True
+		
+		for _item in self.items:
+			if _item['name'] == item['item']['name']:
+				self.items.remove(_item)
+				break
+		
+		#self.items.remove(_i)
 		kargv['args']['sell_to'].add_item(item['item'])
 	
 	def equip_item(self,item):
@@ -111,6 +118,7 @@ class life:
 				for item in self.items:
 					if item['type'] == type:
 						self.items.remove(item)
+						item['pos'] = pos
 						_item['items'].append(item)
 				
 				break
@@ -479,21 +487,32 @@ class life:
 							_tile['life']-=1
 					self.pos = self.pos[:]
 					return
-				elif _tile['tile'] == 13:
+					#elif _tile['tile'] == 13:
+					#_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					#self.add_item(_item)
+					#if self.player:
+					#	functions.log('You picked up +1 gold.')
+				elif _tile['tile'] in [13,14,20]:
 					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
 					self.add_item(_item)
 					if self.player:
-						functions.log('You picked up +1 gold.')
-				elif _tile['tile'] == 14:
-					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-					self.add_item(_item)
-					if self.player:
-						functions.log('You picked up +1 coal.')
-				elif _tile['tile'] == 20:
-					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-					self.add_item(_item)
-					if self.player:
-						functions.log('You picked up +1 bronze.')
+						functions.log('You picked up +1 %s.' % _tile['name'])
+				#elif _tile['tile'] == 14:
+				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+				#	self.add_item(_item)
+				#	if self.player:
+				#		functions.log('You picked up +1 coal.')
+				#elif _tile['tile'] == 20:
+				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+				#	self.add_item(_item)
+				#	if self.player:
+				#		functions.log('You picked up +1 bronze.')
+				elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
+					if _tile['planted_by'] == self:
+						_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+						self.add_item(_item)
+						if self.player:
+							functions.log('You picked up some %s.' % _tile['name'])
 				
 				_i+=1
 		

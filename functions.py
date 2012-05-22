@@ -44,7 +44,7 @@ def item_list_to_menu(list):
 			
 		if not _found:
 			_ret.append({'item':item,'count':1})
-				
+	
 	return _ret
 
 def build_menu(list,who=None,name='Menu',trading=False,callback=None,**kargv):

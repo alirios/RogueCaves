@@ -34,6 +34,8 @@ Current Version: 05.21.2012A
 Added
 -----
 * Added wheat
+* life.add_item() and life.add_item() now set 'pos' key
+* levelgen.add_item() no longer returns a pointer to the original item
 * Levels now have a tick function that is called every second
 * Crops can have different images for each stage of growth
 
