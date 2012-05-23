@@ -69,7 +69,6 @@ class life:
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
 		functions.remove_menu_item(item)
-		_i = item['item'].copy()
 		item['item']['traded'] = True
 		
 		for _item in self.items:
@@ -77,8 +76,13 @@ class life:
 				self.items.remove(_item)
 				break
 		
-		#self.items.remove(_i)
 		kargv['args']['sell_to'].add_item(item['item'])
+	
+	def sell_item_alife(self,item,who):
+		"""Helper function for ALife. Sells 'item' to 'who'"""
+		self.items.remove(item)
+		item['traded'] = True
+		who.add_item(item)
 	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
@@ -632,7 +636,7 @@ class life:
 		"""Go to location and call function 'callback' with argument 'kargv'"""
 		_there = self.go_to(pos)
 		
-		if _there: callback(kargv['first'],pos)
+		if _there: callback(kargv['first'],kargv['second'])
 	
 	def pick_up_item_at(self,pos,want):
 		if not want: want=item['type']
@@ -673,7 +677,10 @@ class life:
 			_dump = self.get_all_items_tagged('traded')
 			
 			if _dump and _storage:
-				self.go_to_and_do(_storage[0]['pos'],self.put_all_items_tagged,first='traded')
+				self.go_to_and_do(_storage[0]['pos'],\
+					self.put_all_items_tagged,\
+					first='traded',
+					second=_storage[0]['pos'])
 				#self.put_all_items_of_tag('traded')
 			else:
 				if not self.task_delay:
@@ -709,19 +716,33 @@ class life:
 		if not self.task_delay:
 			self.task_delay = self.task['delay']
 			if not _open or not len(self.get_all_items_of_type('seed')):
-				_crops = self.level.get_all_items_tagged('planted_by')
-				_ret = []
+				self.task['delay'] = 5
+				_crops_to_get = self.level.get_all_items_tagged('planted_by')
+				_crops_to_sell = self.get_all_items_tagged('planted_by')
+				_get = []
+				_sell = []
 				
-				for crop in _crops:
+				for crop in _crops_to_get:
+					if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('traded'):
+						_get.append(crop)
+				
+				for crop in _crops_to_sell:
 					if crop['type']=='food' and crop['planted_by']==self:
-						_ret.append(crop)
+						_sell.append(crop)
 				
-				if _ret:
-					self.pick_up_item_at(_ret[0]['pos'],_ret[0]['type'])
+				if _get:
+					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
+				elif _sell:
+					_building_owner = self.level.get_room('storage')['owner']
+					self.go_to_and_do(self.level.get_room('storage')['walking_space'][0],\
+						self.sell_item_alife,\
+						first=_sell[0],\
+						second=_building_owner)
 				else:
 					self.guard_building('home')
+					self.task['delay'] = 20
 			else:
-				self.go_to_and_do(_open[0],self.place_item,first=21)
+				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
 		elif self.task_delay>0:
 			self.task_delay-=1
@@ -940,12 +961,12 @@ class human(life):
 				self.task = _event
 			
 			if self.task['what'] == 'food':
-				_item = self.get_item_id(17)
+				_item = self.get_all_items_of_type('food')
 				
 				if _item:
 					self.hunger = 0
 					self.hunger_timer = var.hunger_timer_max
-					self.items.remove(_item)
+					self.items.remove(_item[0])
 					self.remove_event(self.task['what'])
 					self.task = None
 					self.say('That was good!')

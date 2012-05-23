@@ -28,7 +28,14 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.22.2012A
+Current Version: 05.23.2012A
+----------------------------
+Added
+-----
+* Farmers now sell their crops
+* life.go_to_and_do() now supports most two-argument functions
+
+Previous Version: 05.22.2012A
 ----------------------------
 Added
 -----

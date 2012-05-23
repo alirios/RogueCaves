@@ -185,7 +185,7 @@ for i in range(1):
 	for i in range(9):
 		test.add_item_raw(21)
 	test.add_event('farm',50,where=(10,10,3,3),delay=5)
-	test.pos = list(test.level.get_room('storage')['door'])
+	test.pos = (10,10)#list(test.level.get_room('home')['door'])
 
 #for i in range(2):
 #	test = life.human()
