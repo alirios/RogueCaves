@@ -92,6 +92,22 @@ class LevelGen:
 		
 		return _ret
 	
+	def get_all_items_tagged(self,tag):
+		"""Returns items with flag 'tag'."""
+		_ret = []
+		
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					if item['type'] == 'storage':
+						for _item in item['items']:
+							if _item.has_key(tag) and _item[tag]:
+								_ret.append(_item)
+					if item.has_key(tag) and item[tag]:
+						_ret.append(item)
+		
+		return _ret
+	
 	def get_all_solid_items(self):
 		_ret = []
 		for y in range(self.size[1]):

@@ -708,8 +708,18 @@ class life:
 		
 		if not self.task_delay:
 			self.task_delay = self.task['delay']
-			if not _open:
-				self.guard_building('home')
+			if not _open or not len(self.get_all_items_of_type('seed')):
+				_crops = self.level.get_all_items_tagged('planted_by')
+				_ret = []
+				
+				for crop in _crops:
+					if crop['type']=='food' and crop['planted_by']==self:
+						_ret.append(crop)
+				
+				if _ret:
+					self.pick_up_item_at(_ret[0]['pos'],_ret[0]['type'])
+				else:
+					self.guard_building('home')
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21)
 				return True

@@ -35,6 +35,8 @@ Added
 * Fixed menu title rendering too far above the menu items
 * Disabled thirst, which caused the ALife to become unresponsive
 * Added farming task for ALife
+* Farmers now pickup their crops
+* Added level.get_all_items_tagged()
 
 Previous Version: 05.21.2012A
 ----------------------------
