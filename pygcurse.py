@@ -1056,15 +1056,11 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         if x < 0 or y < 0 or x >= self._width or y >= self._height:
             return None
         
-        _match = 0        
-        if fgcolor is not None:
-            if getpygamecolor(fgcolor) == self._screenfgcolor[x][y]: _match+=1
-            else: self._screenfgcolor[x][y] = getpygamecolor(fgcolor)
-        if bgcolor is not None:
-            if getpygamecolor(bgcolor) == self._screenbgcolor[x][y]: _match+=1
-            else: self._screenbgcolor[x][y] = getpygamecolor(bgcolor)
-
-        if char[0] == self._screenchar[x][y] and _match==2: return
+        #_match = 0        
+        #if fgcolor is not None:
+        #    if getpygamecolor(fgcolor) == self._screenfgcolor[x][y]: _match+=1
+        self._screenfgcolor[x][y] = getpygamecolor(fgcolor)
+        self._screenbgcolor[x][y] = getpygamecolor(bgcolor)
         
         self._screenchar[x][y] = char[0]
         self._screendirty[x][y] = True

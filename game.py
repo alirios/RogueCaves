@@ -220,6 +220,7 @@ def draw_tile(tile,pos,color):
 	if tile.has_key('id'):
 		if var.buffer[pos[0]][pos[1]] == tile['id']: return
 		else:
+			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['id']
 	
 	var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
@@ -228,7 +229,7 @@ def draw_screen(refresh=False):
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 	_starttime = time.time()
 	#var.view.fill('black','black',region=region)
-	var.view.setbrightness(0, region=region)
+	#var.view.setbrightness(0, region=region)
 
 	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
@@ -253,10 +254,11 @@ def draw_screen(refresh=False):
 			if var.player.level.items[x][y]:
 				_item = var.player.level.items[x][y][0]
 				_tile = tile_map[str(_item['tile'])]
+				#_tile['id'] = var.player.level.items[x][y][0]['tile']
 				
 				if _item.has_key('images'):
 					_tile['icon'] = _item['images'][_item['image_index']]
-					_tile['id'] = var.player.level.items[x][y][0]['tile']
+					#_tile['id'] = -2#var.player.level.items[x][y][0]['tile']
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
@@ -286,12 +288,12 @@ def draw_screen(refresh=False):
 				if var.player.level.tmap[x][y]:
 					var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
 				
-				_dist = functions.distance(var.player.pos,var.mouse_pos)
-				if (x,y)==var.mouse_pos:
-					if _dist<=5:
-						var.view.lighten(50,(x,y,1,1))
-					else:
-						var.view.darken(50,(x,y,1,1))
+				#_dist = functions.distance(var.player.pos,var.mouse_pos)
+				#if (x,y)==var.mouse_pos:
+				#	if _dist<=5:
+				#		var.view.lighten(50,(x,y,1,1))
+				#	else:
+				#		var.view.darken(50,(x,y,1,1))
 
 			elif var.player.level.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
