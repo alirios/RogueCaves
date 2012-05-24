@@ -54,6 +54,9 @@ class LevelGen:
 	
 	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)].copy()
+		
+		if item == 18: _item['items'] = []
+		
 		_item['pos'] = pos
 		
 		if not no_place: self.items[pos[0]][pos[1]].append(_item)
@@ -92,19 +95,51 @@ class LevelGen:
 		
 		return _ret
 	
-	def get_all_items_tagged(self,tag):
+	def get_all_items_tagged(self,tag,ignore_storage=False):
 		"""Returns items with flag 'tag'."""
 		_ret = []
 		
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
-					if item['type'] == 'storage':
+					if item['type'] == 'storage' and not ignore_storage:
 						for _item in item['items']:
 							if _item.has_key(tag) and _item[tag]:
 								_ret.append(_item)
 					if item.has_key(tag) and item[tag]:
 						_ret.append(item)
+		
+		return _ret
+	
+	def get_all_items_in_building(self,building):
+		"""Returns all items in 'building'"""
+		_ret = []
+		
+		for room in self.rooms:
+			if room['type'].lower() == building.lower():
+				for pos in room['walking_space']:
+					for item in self.items[pos[0]][pos[1]]:
+						if item['type'] == 'storage':
+							for _item in item['items']:
+								_ret.append(_item)
+						_ret.append(item)
+		
+		return _ret
+	
+	def get_all_items_in_building_of_type(self,building,type):
+		"""Returns all items in 'building' of 'type'"""
+		_ret = []
+		
+		for room in self.rooms:
+			if room['type'].lower() == building.lower():
+				for pos in room['walking_space']:
+					for item in self.items[pos[0]][pos[1]]:
+						if item['type'] == 'storage':
+							for _item in item['items']:
+								if _item['type'] == type:
+									_ret.append(_item)
+						if item['type'] == type:
+							_ret.append(item)
 		
 		return _ret
 	
@@ -749,7 +784,7 @@ class LevelGen:
 	
 	def generate_building(self,room):
 		if room['type'] == 'home':
-			_needs = [17]
+			_needs = [18]
 		elif room['type'] == 'storage':
 			_needs = [18,17,17,14,14,23]
 		
@@ -769,11 +804,15 @@ class LevelGen:
 		
 		for need in _needs:
 			_stored = False
-			for _storage in self.get_all_items_of_type('storage'):
-				if _storage['pos'] in room['walking_space']:
-					_storage['items'].append(self.add_item(need,_pos,no_place=True))
-					_stored = True
-					break
+			#for _storage in self.get_all_items_of_type('storage'):
+			#	if _storage['pos'] in room['walking_space']:
+			#		_storage['items'].append(self.add_item(need,_pos,no_place=True))
+			#		_stored = True
+			#		break
+			for _storage in self.get_all_items_in_building_of_type('storage','storage'):
+				_storage['items'].append(self.add_item(need,_pos,no_place=True))
+				_stored = True
+				break
 			
 			if _possible and not _stored:
 				_pos = _possible.pop()

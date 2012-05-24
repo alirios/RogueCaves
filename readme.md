@@ -32,7 +32,11 @@ Current Version: 05.23.2012A
 ----------------------------
 Added
 -----
+* Added `ignore_storage` flag to level.get_all_items_tagged(), should probably be put everywhere else
 * Farmers now sell their crops
+* Farmers store some food for themselves
+* level: get_all_items_in_building_of_type()
+* life: put_item_of_type()
 * life.go_to_and_do() now supports most two-argument functions
 
 Previous Version: 05.22.2012A

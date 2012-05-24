@@ -114,8 +114,24 @@ class life:
 			self.level.items[_pos[0]][_pos[1]].append(_item)
 			self.items.remove(_item)
 	
+	def put_item_of_type(self,type,pos):
+		"""Dumps a single item of 'type' in a container at 'pos'"""
+		##TODO: Could probably merge this with the below function
+		##TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
+		for _item in self.level.get_all_items_of_type('storage'):
+			_found = False
+			if tuple(_item['pos']) == tuple(pos):
+				_found = True
+				for item in self.items:
+					if item['type'] == type:
+						self.items.remove(item)
+						item['pos'] = pos
+						_item['items'].append(item)
+						break
+				break
+	
 	def put_all_items_of_type(self,type,pos):
-		"""Dumps items of type 'type' into a container located at 'pos'"""
+		"""Dumps items of 'type' into a container at 'pos'"""
 		#TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
 		for _item in self.level.get_all_items_of_type('storage'):
 			_found = False
@@ -673,7 +689,7 @@ class life:
 	
 	def run_shop(self,where):
 		if where in self.claims:
-			_storage = self.level.get_all_items_of_type('storage')
+			_storage = self.level.get_all_items_in_building_of_type('storage','storage')
 			_dump = self.get_all_items_tagged('traded')
 			
 			if _dump and _storage:
@@ -717,7 +733,7 @@ class life:
 			self.task_delay = self.task['delay']
 			if not _open or not len(self.get_all_items_of_type('seed')):
 				self.task['delay'] = 5
-				_crops_to_get = self.level.get_all_items_tagged('planted_by')
+				_crops_to_get = self.level.get_all_items_tagged('planted_by',ignore_storage=True)
 				_crops_to_sell = self.get_all_items_tagged('planted_by')
 				_get = []
 				_sell = []
@@ -733,11 +749,32 @@ class life:
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
 				elif _sell:
-					_building_owner = self.level.get_room('storage')['owner']
-					self.go_to_and_do(self.level.get_room('storage')['walking_space'][0],\
-						self.sell_item_alife,\
-						first=_sell[0],\
-						second=_building_owner)
+					##TODO: _sell is a bit misleading
+					#_sell actually refers to items that are harvested
+					#they can be sold, but first the ALife must consider
+					#whether it needs them or not to feed themselves/others
+					#We do that check now.
+					_food = []
+					
+					for item in self.level.get_all_items_in_building('home'):
+						if item['type'] == 'food':
+							_food.append(item)
+					
+					if _food:
+						_building_owner = self.level.get_room('storage')['owner']
+						self.go_to_and_do(self.level.get_room('storage')['walking_space'][0],\
+							self.sell_item_alife,\
+							first=_sell[0],\
+							second=_building_owner)
+					else:
+						_storage = self.level.get_all_items_in_building_of_type('home','storage')
+						
+						if len(_storage):						
+							self.go_to_and_do(_storage[0]['pos'],\
+								self.put_item_of_type,\
+								first=_sell[0]['type'],\
+								second=_storage[0]['pos'])
+						
 				else:
 					self.guard_building('home')
 					self.task['delay'] = 20
