@@ -229,8 +229,9 @@ def draw_screen(refresh=False):
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 	_starttime = time.time()
 	#var.view.fill('black','black',region=region)
-	#var.view.setbrightness(0, region=region)
-
+	if not var.player.level.outside:
+		var.view.setbrightness(0, region=region)
+	
 	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
 	

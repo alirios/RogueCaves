@@ -28,6 +28,12 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
+Current Version: 05.24.2012A
+----------------------------
+Added
+-----
+* Drawing is a lot faster
+
 Current Version: 05.23.2012A
 ----------------------------
 Added
