@@ -39,6 +39,7 @@ var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
 var.max_fps = 20
+var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
 var.fps = 0
 var.time = 0
 var.view_dist = 11
@@ -215,6 +216,14 @@ for i in range(1):
 var.temp_fps = 0
 var.fpstime = time.time()
 
+def draw_tile(tile,pos,color):
+	if tile.has_key('id'):
+		if var.buffer[pos[0]][pos[1]] == tile['id']: return
+		else:
+			var.buffer[pos[0]][pos[1]] = tile['id']
+	
+	var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
+
 def draw_screen(refresh=False):	
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 	_starttime = time.time()
@@ -239,7 +248,6 @@ def draw_screen(refresh=False):
 	
 	for x in range(_xrange[0],_xrange[1]):
 		for y in range(_yrange[0],_yrange[1]):
-			
 			_tile = None
 			
 			if var.player.level.items[x][y]:
@@ -248,44 +256,32 @@ def draw_screen(refresh=False):
 				
 				if _item.has_key('images'):
 					_tile['icon'] = _item['images'][_item['image_index']]
+					_tile['id'] = var.player.level.items[x][y][0]['tile']
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
 					_tile = life.icon
+					_tile['id'] = -1
 			
 			if var.player.level.tmap[x][y]:
 				var.player.level.tmap[x][y]-=1
 			
 			if var.player.level.vmap[x][y]:
-				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
+				if not _tile:
+					_tile = tile_map[str(var.player.level.map[x][y])]
+					_tile['id'] = var.player.level.map[x][y]
 				_bgcolor = tile_map[str(var.player.level.map[x][y])]['color'][1]
 				
 				if not _tile['color'][1]:
 					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
-						var.view.putchar(_tile['icon'],\
-							x=x,\
-							y=y,\
-							fgcolor='black',\
-							bgcolor=_bgcolor)
+						draw_tile(_tile,(x,y),('black',_bgcolor))
 					else:
-						var.view.putchar(_tile['icon'],\
-							x=x,\
-							y=y,\
-							fgcolor=_tile['color'][0],\
-							bgcolor=_bgcolor)
+						draw_tile(_tile,(x,y),(_tile['color'][0],_bgcolor))
 				
 				elif _tile['color'][1]=='blue':
-					var.view.putchar(_tile['icon'],\
-						x=x,\
-						y=y,\
-						fgcolor=_tile['color'][0],\
-						bgcolor=pygame.Color(0, 0, random.randint(150,200)))
+					draw_tile(_tile,(x,y),(_tile['color'][0],pygame.Color(0, 0, random.randint(150,200))))
 				else:
-					var.view.putchar(_tile['icon'],\
-						x=x,\
-						y=y,\
-						fgcolor=_tile['color'][0],\
-						bgcolor=_tile['color'][1])
+					draw_tile(_tile,(x,y),_tile['color'])
 				
 				if var.player.level.tmap[x][y]:
 					var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
@@ -466,7 +462,7 @@ def get_input():
 			elif event.key == K_RIGHT:
 				var.input['right'] = False
 			elif event.key == K_z:
-				var.max_fps = 10
+				var.max_fps = 20
 			elif event.key == K_x:
 				var.max_fps = 60
 		elif event.type == MOUSEMOTION:
