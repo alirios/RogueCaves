@@ -399,6 +399,8 @@ def get_input():
 					functions.menu_select()
 				else:
 					var.player.enter()
+					var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+					var.view.setbrightness(0, region=region)
 					draw_screen(refresh=True)
 			elif event.key == K_w:
 				var.player.place_item(21,(0,-1))

@@ -28,7 +28,15 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.24.2012A
+Current Version: 05.25.2012A
+----------------------------
+Added
+-----
+* Fixed drawing in caves
+* Fixed level not clearing brightness settings
+* Added ID system for future use
+
+Previous Version: 05.24.2012A
 ----------------------------
 Added
 -----
