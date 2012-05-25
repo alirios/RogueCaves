@@ -8,6 +8,7 @@ class life:
 		if self.player:
 			self.icon = {'icon':'@','color':['white',None]}
 		
+		self.id = functions.get_id()
 		self.name = 'Default'
 		self.hp = 10
 		self.hp_max = 10

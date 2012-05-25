@@ -31,6 +31,10 @@ def sort_item_array_by_distance(items,pos):
 	
 	return _ret
 
+def get_id():
+	var.id-=1
+	return var.id
+
 def item_list_to_menu(list):
 	_ret = []
 	

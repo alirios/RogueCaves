@@ -40,6 +40,7 @@ var.window_size = (99,33)
 var.world_size = (99,33)
 var.max_fps = 20
 var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+var.id = 0
 var.fps = 0
 var.time = 0
 var.view_dist = 11
@@ -218,7 +219,7 @@ var.fpstime = time.time()
 
 def draw_tile(tile,pos,color):
 	if tile.has_key('id'):
-		if var.buffer[pos[0]][pos[1]] == tile['id']: return
+		if var.buffer[pos[0]][pos[1]] == tile['id'] and var.player.level.outside: return
 		else:
 			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['id']
@@ -255,16 +256,14 @@ def draw_screen(refresh=False):
 			if var.player.level.items[x][y]:
 				_item = var.player.level.items[x][y][0]
 				_tile = tile_map[str(_item['tile'])]
-				#_tile['id'] = var.player.level.items[x][y][0]['tile']
 				
 				if _item.has_key('images'):
 					_tile['icon'] = _item['images'][_item['image_index']]
-					#_tile['id'] = -2#var.player.level.items[x][y][0]['tile']
 			
 			for life in var.life:
 				if life.z == var.player.z and life.pos == [x,y]:
 					_tile = life.icon
-					_tile['id'] = -1
+					_tile['id'] = life.id
 			
 			if var.player.level.tmap[x][y]:
 				var.player.level.tmap[x][y]-=1
