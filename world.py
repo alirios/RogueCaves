@@ -81,6 +81,9 @@ class World:
 			_levels.append(level['level'].save())
 		
 		logging.debug('[World.save] Offloading strings to disk...')
+		
+		try: os.mkdir('data')
+		except: pass
 		_save_file = open(os.path.join('data','test01.sav'),'w')
 		_save_file.write(json.dumps({'alife':_alife}))
 		_save_file.write(json.dumps({'levels':_levels}))

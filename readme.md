@@ -32,7 +32,9 @@ Current Version: 05.26.2012A
 ----------------------------
 Added
 -----
-* Working on saving
+* Server should now be able to tick at specified TPS: var.server_tick_rate
+* 'data' directory now auto-created
+* Saving
 * Most major functions now use logging.debug()
 * Fixed some code that casued life.path_dest to be reset
 * Menus now draw on their own surface

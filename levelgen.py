@@ -65,6 +65,11 @@ class LevelGen:
 				for item in _items[x][y]:
 					if item.has_key('planted_by'):
 						item['planted_by'] = item['planted_by'].id
+					
+					if item['type'] == 'storage':
+						for _item in item['items']:
+							if _item.has_key('planted_by'):
+								_item['planted_by'] = _item['planted_by'].id
 		
 		_keys['items'] = _items
 		

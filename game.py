@@ -39,6 +39,7 @@ var.tick_history = []
 var.ticks = 0
 var.id = 0
 var.fps = 0
+var.server_tick_rate = 60
 var.time = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -411,9 +412,10 @@ def tick():
 			if not len(var.tick_history):
 				var.tick_history.append(var.ticks)
 			else:
-				logging.debug('Ticks this frame: %s' % str(var.ticks-var.tick_history[0]))
-				var.tick_history.insert(0,var.ticks-var.tick_history[0])
+				logging.debug('Ticks this frame: %s' % str(var.ticks))
+				var.tick_history.insert(0,var.ticks)
 			
+			var.ticks = 0
 			if len(var.tick_history)>10: var.tick_history.pop()
 		
 		var.gametime = time.time()
@@ -448,7 +450,13 @@ def tick():
 					if life.player: continue
 					life.walk(None)
 	
-	if var.server: var.ticks += 1;return
+	if var.server:
+		var.ticks += 1
+		
+		if var.ticks>=var.server_tick_rate:
+			time.sleep(1)
+		
+		return
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)
