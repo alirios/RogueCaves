@@ -28,7 +28,17 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.25.2012A
+Current Version: 05.26.2012A
+----------------------------
+Added
+-----
+* Working on saving
+* Most major functions now use logging.debug()
+* Fixed some code that casued life.path_dest to be reset
+* Menus now draw on their own surface
+* Added headless (server) mode. Run with -server
+
+Previous Version: 05.25.2012A
 ----------------------------
 Added
 -----

@@ -1,7 +1,13 @@
 import levelgen, functions, world, cache, life
-import pygcurse, logging, pygame, random, time, var, sys
-from pygame.locals import *
-pygame.font.init()
+import logging, random, time, var, sys
+
+if '-server' in sys.argv:
+	var.server = True
+else:
+	import pygcurse, pygame
+	from pygame.locals import *
+	pygame.font.init()
+	var.server = False
 
 __release__ = None
 if not __release__: __version__ = time.strftime('%m.%d.%YA')
@@ -18,28 +24,19 @@ console_formatter = logging.Formatter('%(message)s')
 #logger.addHandler(fh)
 
 ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
+ch.setLevel(logging.DEBUG)
 ch.setFormatter(console_formatter)
 logger.addHandler(ch)
-logging.info('Rogue Caves - %s' % __version__)
 
-#Colors...
-pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
-pygcurse.colornames['darkergray'] = pygame.Color(46, 46, 46)
-pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
-pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
-pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
-pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
-pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
-pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
-pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
+if var.server: logging.info('Rogue Caves Server - %s' % __version__)
+else: logging.info('Rogue Caves - %s' % __version__)
 
 #Setup stuff...
-var.clock = pygame.time.Clock()
 var.window_size = (99,33)
 var.world_size = (99,33)
 var.max_fps = 20
-var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+var.tick_history = []
+var.ticks = 0
 var.id = 0
 var.fps = 0
 var.time = 0
@@ -98,39 +95,61 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'22':{'icon':'Y','color':['brown',None]},
 	'23':{'icon':'L','color':['silver',None]}}
 
-#Fonts...
-_font = pygame.font.Font('ProggyClean.ttf', 16)
+if not var.server:
+	#Colors...
+	pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
+	pygcurse.colornames['darkergray'] = pygame.Color(46, 46, 46)
+	pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
+	pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
+	pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
+	pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
+	pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
+	pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
+	pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
+	
+	#Setup
+	var.clock = pygame.time.Clock()
+	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+	
+	#Fonts...
+	_font = pygame.font.Font('ProggyClean.ttf', 16)
 
-#Surfaces...
-var.window = pygcurse.PygcurseWindow(var.window_size[0],\
-	var.window_size[1],\
-	font=_font,\
-	caption='RogueCaves')
-var.view = pygcurse.PygcurseSurface(var.window_size[0],\
-	var.window_size[1]-6,\
-	font=_font,\
-	windowsurface=var.window._windowsurface)
-var.log = pygcurse.PygcurseSurface(var.window_size[0],\
-	var.window_size[1],\
-	font=_font,\
-	windowsurface=var.window._windowsurface)
+	#Surfaces...
+	var.window = pygcurse.PygcurseWindow(var.window_size[0],\
+		var.window_size[1],\
+		font=_font,\
+		caption='RogueCaves')
+	var.view = pygcurse.PygcurseSurface(var.window_size[0],\
+		var.window_size[1]-6,\
+		font=_font,\
+		windowsurface=var.window._windowsurface)
+	var.menu = pygcurse.PygcurseSurface(var.window_size[0],\
+		var.window_size[1]-6,\
+		font=_font,\
+		windowsurface=var.window._windowsurface)
+	var.log = pygcurse.PygcurseSurface(var.window_size[0],\
+		var.window_size[1],\
+		font=_font,\
+		windowsurface=var.window._windowsurface)
 
-#Stuff...
-var.window.autoupdate = False
-var.view.autoupdate = False
-var.log.autoupdate = False
+	#Stuff...
+	var.window.autoupdate = False
+	var.view.autoupdate = False
+	var.log.autoupdate = False
 
-#Log
-var.view.putchars('Generating world...',x=0,y=0)
-var.view.update()
+	#Log
+	var.view.putchars('Generating world...',x=0,y=0)
+	var.view.update()
 
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
 
 #Gods
-var.view.putchars('Gods...',x=0,y=1)
-var.view.update()
+if not var.server:
+	var.view.putchars('Gods...',x=0,y=1)
+	var.view.update()
+
 var.ivan = life.god()
 var.ivan.name = 'Ivan'
 var.ivan.purpose = 'death'
@@ -138,8 +157,10 @@ var.ivan.alignment = 'evil'
 var.ivan.accepts = ['human']
 
 #People
-var.view.putchars('People...',x=0,y=2)
-var.view.update()
+if not var.server:
+	var.view.putchars('People...',x=0,y=2)
+	var.view.update()
+
 var.player = life.human(player=True)
 var.player.name = 'flags'
 var.player.z = 1
@@ -215,6 +236,7 @@ for i in range(1):
 
 #_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 var.temp_fps = 0
+var.gametime = time.time()
 var.fpstime = time.time()
 
 def draw_tile(tile,pos,color):
@@ -331,7 +353,7 @@ def draw_screen(refresh=False):
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
-		var.view.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-(len(var.in_menu)/2)-4,fgcolor='white',bgcolor='black')
+		var.menu.putchars(var.menu_name,x=(var.window_size[0]/2)-len(var.menu_name)/2,y=(var.window_size[1]/2)-(len(var.in_menu)/2)-4,fgcolor='white',bgcolor='black')
 		
 		for item in var.in_menu:
 			if var.menu_index == var.in_menu.index(item):
@@ -342,8 +364,8 @@ def draw_screen(refresh=False):
 			_entry = '%s x%s (%sb)' % (item['item']['name'],item['count'],functions.get_item_price(item['item']))
 			_center_x = (var.window_size[0]/2)-len(var.menu_name)/2
 			_center_y = (var.window_size[1]/2)-(len(var.in_menu)/2)+var.in_menu.index(item)-3
-			var.view.putchars(_tile['icon'],x=_center_x-1,y=_center_y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
-			var.view.putchars(' '+_entry,x=_center_x,y=_center_y,fgcolor=_color,bgcolor='black')
+			var.menu.putchars(_tile['icon'],x=_center_x-1,y=_center_y,fgcolor=_tile['color'][0],bgcolor=_tile['color'][1])
+			var.menu.putchars(' '+_entry,x=_center_x,y=_center_y,fgcolor=_color,bgcolor='black')
 	
 	_i=0
 	for entry in var.history:
@@ -362,25 +384,91 @@ def draw_screen(refresh=False):
 			bgcolor='black')
 		_i+=1
 	
-	var.log.update()
-	var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+	if var.in_menu: var.menu.update()
+	else:
+		var.log.update()
+		var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+	
 	if time.time()-var.fpstime>=1:
 		var.fpstime=time.time()
 		var.fps = var.temp_fps
 		var.time += 1
 		var.temp_fps = 0
-		
-		for level in var.world.levels:
-			level['level'].tick()
-		
 	else:
 		var.temp_fps += 1
+
+def tick():
+	_key = None
+	for key in var.input:
+		if key in ['up','down','left','right']:
+			if var.input[key]:
+				_key = key
+
+	_atime = time.time()
+	
+	if time.time()-var.gametime>=1:
+		if var.server:
+			if not len(var.tick_history):
+				var.tick_history.append(var.ticks)
+			else:
+				logging.debug('Ticks this frame: %s' % str(var.ticks-var.tick_history[0]))
+				var.tick_history.insert(0,var.ticks-var.tick_history[0])
+			
+			if len(var.tick_history)>10: var.tick_history.pop()
+		
+		var.gametime = time.time()
+		for level in var.world.levels:
+			level['level'].tick()
+	
+	if var.in_menu:
+		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
+		if var.menu_index>len(var.in_menu)-1: var.menu_index = 0
+		
+	else:
+		if var.player.speed:
+			var.player.walk(None)
+					
+			for life in var.life:
+				life.tick()
+				if life.player: continue
+				life.walk(None)
+		elif not var.player.in_danger:
+			if _key: var.player.walk(_key)
+			
+			for life in var.life:
+				life.tick()
+				if life.player: continue
+				life.walk(None)
+		elif var.player.in_danger:
+			if _key:
+				var.player.walk(_key)
+				
+				for life in var.life:
+					life.tick()
+					if life.player: continue
+					life.walk(None)
+	
+	if var.server: var.ticks += 1;return
+	
+	if var.mouse_pos == (None,None):
+		var.mouse_pos = (0,0)
+	if var.player.level.outside:
+		draw_screen(refresh=True)
+	else:
+		draw_screen()
+	var.clock.tick(var.max_fps)
 
 def get_input():
 	for event in pygame.event.get():
 		if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
-			if var.in_menu: functions.destroy_menu(who=var.player)
+			if var.in_menu:
+				#for x in range(var.world_size[0]):
+				#	for y in range(var.world_size[1]):
+				#		var.menu.putchar(' ',x=x,y=y)
+				#var.menu.fill('black','black')
+				functions.destroy_menu(who=var.player)
 			else:
+				var.world.save()
 				pygame.quit()
 				sys.exit()
 		elif event.type == KEYDOWN:
@@ -400,6 +488,7 @@ def get_input():
 				else:
 					var.player.enter()
 					var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+					region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
 					var.view.setbrightness(0, region=region)
 					draw_screen(refresh=True)
 			elif event.key == K_w:
@@ -487,46 +576,22 @@ def get_input():
 				if item['pos'] == var.mouse_pos:
 					print item
 	
-	_key = None
-	for key in var.input:
-		if key in ['up','down','left','right']:
-			if var.input[key]:
-				_key = key
+	tick()
 
-	_atime = time.time()
-	
-	if var.in_menu:
-		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
-		if var.menu_index>len(var.in_menu)-1: var.menu_index = 0
-		
-	else:
-		if var.player.speed:
-			var.player.walk(None)
-			for life in var.life:
-				life.tick()
-				if life.player: continue
-				life.walk(None)
-		elif not var.player.in_danger:
-			if _key: var.player.walk(_key)
-			for life in var.life:
-				life.tick()
-				if life.player: continue
-				life.walk(None)
-		elif var.player.in_danger:
-			if _key:
-				var.player.walk(_key)
-				for life in var.life:
-					life.tick()
-					if life.player: continue
-					life.walk(None)
-	
-	if var.mouse_pos == (None,None):
-		var.mouse_pos = (0,0)
-	if var.player.level.outside:
-		draw_screen(refresh=True)
-	else:
-		draw_screen()
-	var.clock.tick(var.max_fps)
+if not var.server: draw_screen()
 
-draw_screen()
-while 1: get_input()
+while 1:
+	if var.server:
+		try:
+			tick()
+		except KeyboardInterrupt:
+			logging.info('Shutting down.')
+			
+			_total = 0
+			for entry in var.tick_history:
+				_total+=entry
+			
+			logging.info('Average FPS: %s' % str((_total/len(var.tick_history))))
+			var.world.save()
+			sys.exit()
+	else: get_input()

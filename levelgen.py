@@ -42,7 +42,34 @@ class LevelGen:
 			self.lmap.append(_l)
 			self.tmap.append(_t)
 			self.items.append(_i)
+	
+	def save(self):
+		_keys = {}
+		_keys['map'] = self.map
+		_keys['fmap'] = self.fmap
 		
+		_rooms = []
+		for room in self.rooms:
+			if room.has_key('owner') and room['owner']:
+				_r = room.copy()
+				_r['owner'] = _r['owner'].id
+				_rooms.append(_r)
+			else:
+				_rooms.append(room)
+		
+		_keys['rooms'] = _rooms
+		
+		_items = copy.deepcopy(self.items)
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in _items[x][y]:
+					if item.has_key('planted_by'):
+						item['planted_by'] = item['planted_by'].id
+		
+		_keys['items'] = _items
+		
+		return _keys
+	
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
 		

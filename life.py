@@ -14,8 +14,8 @@ class life:
 		self.hp_max = 10
 		self.speed = 0
 		self.speed_max = 0
-		self.last_pos = [0,0]
 		self.pos = [0,0]
+		self.last_pos = [0,0]
 		self.z = 0
 		self.xp = 0
 		self.skill_level = 1
@@ -41,6 +41,46 @@ class life:
 		self.items = []
 		
 		var.life.append(self)
+	
+	def save(self):
+		_keys = {}
+		_keys['id'] = self.id
+		_keys['name'] = self.name
+		_keys['hp'] = self.hp
+		_keys['hp_max'] = self.hp_max
+		_keys['speed'] = self.speed
+		_keys['speed_max'] = self.speed_max
+		_keys['pos'] = self.pos
+		_keys['last_pos'] = self.last_pos
+		_keys['z'] = self.z
+		_keys['xp'] = self.xp
+		_keys['skill_level'] = self.skill_level
+		
+		_keys['seen'] = []
+		for seen in self.seen:
+			_s = seen.copy()
+			_s['who'] = _s['who'].id
+			_keys['seen'].append(_s)
+		
+		##TODO: Save self.seen
+		_keys['path'] = self.path
+		_keys['path_type'] = self.path_type
+		_keys['path_dest'] = self.path_dest
+		_keys['mine_dest'] = self.mine_dest
+		_keys['alignment'] = self.alignment
+		##TODO: Save god
+		_keys['atk'] = self.atk
+		_keys['defe'] = self.defe
+		##TODO: Save weapon
+		_keys['thirst'] = self.thirst
+		_keys['thirst_timer'] = self.thirst_timer
+		_keys['thirsty_at'] = self.thirsty_at
+		_keys['hunger'] = self.hunger
+		_keys['hunger_timer'] = self.hunger_timer
+		_keys['hungry_at'] = self.hungry_at
+		_keys['items'] = self.items
+		
+		return _keys
 	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
@@ -510,26 +550,11 @@ class life:
 							_tile['life']-=1
 					self.pos = self.pos[:]
 					return
-					#elif _tile['tile'] == 13:
-					#_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-					#self.add_item(_item)
-					#if self.player:
-					#	functions.log('You picked up +1 gold.')
 				elif _tile['tile'] in [13,14,20]:
 					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 %s.' % _tile['name'])
-				#elif _tile['tile'] == 14:
-				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-				#	self.add_item(_item)
-				#	if self.player:
-				#		functions.log('You picked up +1 coal.')
-				#elif _tile['tile'] == 20:
-				#	_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-				#	self.add_item(_item)
-				#	if self.player:
-				#		functions.log('You picked up +1 bronze.')
 				elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
 					if _tile['planted_by'] == self:
 						_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
@@ -545,7 +570,7 @@ class life:
 			
 			if self.faction == life.faction:
 				pass
-				#TODO: Should I do this?
+				##TODO: Should I do this?
 				#if life.pos == _pos:
 				#	if self.player:
 				#		functions.log('%s is in the way.' % life.name)
@@ -578,7 +603,7 @@ class life:
 			self.path_type = 'Line'
 		else:
 			if self.path_dest and (pos[0],pos[1]) == tuple(self.path_dest):
-				self.path_dest = None
+				#self.path_dest = None
 				return
 			
 			self.path_type = 'A*'
@@ -669,7 +694,8 @@ class life:
 					for _item in item['items']:
 						if _item['type'] == want:
 							item['items'].remove(_item)
-							print 'removed from storage!'
+							logging.debug('%s removed from storage by %s' %
+								(want,self.name))
 							_found = True
 							break
 					
@@ -826,6 +852,7 @@ class life:
 		
 		self.level.tmap[self.pos[0]][self.pos[1]] = 255
 		
+		logging.debug('%s died!' % self.name)
 		var.life.remove(self)
 
 class human(life):
@@ -887,9 +914,12 @@ class human(life):
 	def add_event(self,what,score,who=None,where=None,delay=0):
 		for event in self.events:
 			if event['what'] == what and event['who'] == who:
+				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
+				#	(self.name,event['what'],event['score'],score))
 				event['score'] = score
 				return False
 		
+		logging.debug('[ALife.%s.Event] Added: %s' % (self.name,what))
 		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay})
 		return True
 	

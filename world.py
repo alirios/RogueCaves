@@ -1,5 +1,5 @@
-import levelgen
-import logging, random, time
+import levelgen, var
+import logging, random, time, json, os
 
 class World:
 	def __init__(self,height=1,depth=5,size=(50,50)):
@@ -68,4 +68,22 @@ class World:
 			logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
 		logging.debug('Worldgen took: %s' % (time.time()-_stime))
+	
+	def save(self):
+		logging.debug('[World.save] Gathering ALife strings...')
+		_alife = []
+		for life in var.life:
+			_alife.append(life.save())
 		
+		logging.debug('[World.save] Gathering level strings...')
+		_levels = []
+		for level in self.levels:
+			_levels.append(level['level'].save())
+		
+		logging.debug('[World.save] Offloading strings to disk...')
+		_save_file = open(os.path.join('data','test01.sav'),'w')
+		_save_file.write(json.dumps({'alife':_alife}))
+		_save_file.write(json.dumps({'levels':_levels}))
+		_save_file.close()
+		
+		logging.debug('[World.save] Done')
