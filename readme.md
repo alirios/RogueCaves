@@ -28,12 +28,18 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.26.2012A
+Current Version: 05.27.2012A
+----------------------------
+Added
+-----
+* Fixed error in life.pick_up_item_at() that caused ALife to not remove item from chest
+
+Previous Version: 05.26.2012A
 ----------------------------
 Added
 -----
 * Server should now be able to tick at specified TPS: var.server_tick_rate
-* 'data' directory now auto-created
+* 'data' directory created. Stores save files and name files
 * Saving
 * Most major functions now use logging.debug()
 * Fixed some code that casued life.path_dest to be reset

@@ -87,6 +87,7 @@ class life:
 		array, and returned itself. No longer copies."""
 		#TODO: Should we copy the item?
 		#_i = item.copy()
+		item['owner_id'] = self.id
 		item['pos'] = tuple(self.pos)
 		self.items.append(item)
 		
@@ -97,6 +98,7 @@ class life:
 		and adds it to the items array."""
 		_i = var.items[str(item)].copy()
 		_i['pos'] = tuple(self.pos)
+		_i['owner_id'] = self.id
 		self.items.append(_i)
 		
 		return _i
@@ -694,6 +696,7 @@ class life:
 					for _item in item['items']:
 						if _item['type'] == want:
 							item['items'].remove(_item)
+							self.add_item(_item)
 							logging.debug('%s removed from storage by %s' %
 								(want,self.name))
 							_found = True
@@ -856,18 +859,25 @@ class life:
 		var.life.remove(self)
 
 class human(life):
-	def __init__(self,player=False):
+	def __init__(self,player=False,male=True):
 		self.icon = {'icon':'H','color':['white',None]}
 		
 		life.__init__(self,player=player)
 		
 		self.race = 'human'
-		self.gender = 'male'
+		if male:
+			self.gender = 'male'
+			self.name = functions.get_name_by_gender('male')
+			self.attracted_to = ['looks']
+		else:
+			self.gender = 'female'
+			self.name = functions.get_name_by_gender('female')
+			self.attracted_to = ['power']
 		
 		self.hp = 20
 		self.hp_max = 20
 		
-		self.hungry_at = 50
+		self.hungry_at = 13
 		self.thirsty_at = -1
 		self.married = None
 		self.worth = None
@@ -943,20 +953,6 @@ class human(life):
 		
 		return False
 	
-	def judge(self,who):
-		#This is so much easier...
-		_score = 0
-		
-		_score = (who.hp+who.atk+who.defe)
-		
-		if who.weapon:
-			_score+=who.weapon['damage']*2
-		
-		if not self.faction == who.faction:
-			_score *= -1
-		
-		return _score
-	
 	def mine(self):
 		if self.mine_dest and self.path_dest == self.mine_dest: return
 		
@@ -977,6 +973,30 @@ class human(life):
 			_pos = var.world.get_level(self.z-1).entrances[0]
 			
 			self.go_to(_pos,z=self.z-1)
+
+	def judge(self,who):
+		#This is so much easier...
+		_score = 0
+		_score = (who.hp+who.atk+who.defe)
+		
+		if self.faction == who.faction:
+			if not self.gender == who.gender:
+				_score+=5
+		
+				if ['power'] in self.attracted_to:
+					if who.weapon: _score += who.weapon['damage']*2
+				if ['wealth'] in self.attracted_to:
+					##TODO: We should probably search for "apparent" money here
+					#based on the prices on the armor being worn, etc
+					_score+=(who.get_money()/4)
+				if ['strength'] in self.attracted_to:
+					_score+=who.atk*2
+				
+		else:
+			if who.weapon: _score+=who.weapon['damage']*2
+			_score *= -1
+		
+		return _score
 	
 	def think(self):
 		life.think(self)
@@ -1017,6 +1037,11 @@ class human(life):
 			if self.task == 'attacking':
 				self.task = None
 		
+		if self.highest['who']:
+			if not self.married:
+				pass
+				#self.add_event('run_shop',50,where='storage',delay=20)
+		
 		if not self.mode['task']:# and not self.task in ['attacking','flee']:
 			#elif self.highest['who'] and self.married == self.highest['who']:
 			#	#TODO: This one will happen too much...
@@ -1032,6 +1057,7 @@ class human(life):
 				_item = self.get_all_items_of_type('food')
 				
 				if _item:
+					if self.name == 'Farmer': print 'I have food'
 					self.hunger = 0
 					self.hunger_timer = var.hunger_timer_max
 					self.items.remove(_item[0])
@@ -1039,11 +1065,19 @@ class human(life):
 					self.task = None
 					self.say('That was good!')
 				else:
-					_items = self.level.get_all_items_of_type('food')
+					_items = []
+					
+					for claim in self.claims:
+						for item in self.level.get_all_items_in_building_of_type(claim,'food'):
+							_items.append(item)
+					
+					if self.name == 'Farmer':
+						print self.name,_items
 					
 					if _items:
 						_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
 						self.pick_up_item_at(_item['pos'],'food')
+						if self.name == 'Farmer': print 'GETTING FOOD YO'
 					
 			elif self.task['what'] == 'mine':
 				self.mine()

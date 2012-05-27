@@ -25,13 +25,6 @@ class cache:
 				and __path['z']==z:
 				logging.debug('[Cache.old_path] Returning: %s,%s to %s,%s, z=%s' %
 					((start[0],start[1],end[0],end[1],z)))
-				return __path['path']
-			elif __path['end'] == tuple(start) and __path['start'] == tuple(end)\
-				and __path['z']==z:
-				logging.debug('[Cache.old_path.reverse] Returning: %s,%s to %s,%s, z=%s' %
-					((start[0],start[1],end[0],end[1],z)))
-				_temp = __path['path'][:]
-				_temp.reverse()
-				return _temp				
+				return __path['path']			
 		
 		return False

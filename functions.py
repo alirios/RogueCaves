@@ -1,4 +1,4 @@
-import var
+import random, var
 
 def log(text):
 	if len(var.history)>=5: var.history.pop(0)
@@ -7,6 +7,12 @@ def log(text):
 
 def distance(pos1,pos2):
 	return abs(pos1[0]-pos2[0])+abs(pos1[1]-pos2[1])
+
+def get_name_by_gender(gender):
+	if gender == 'male':
+		return 'derp'
+	else:
+		return random.choice(var.names_female).strip()
 
 def sort_item_array_by_distance(items,pos):
 	_ret = []

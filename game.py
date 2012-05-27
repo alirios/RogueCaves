@@ -1,5 +1,5 @@
 import levelgen, functions, world, cache, life
-import logging, random, time, var, sys
+import logging, random, time, var, sys, os
 
 if '-server' in sys.argv:
 	var.server = True
@@ -55,6 +55,8 @@ var.mouse_pos = (0,0)
 var.in_menu = None
 var.menu_index = 0
 var.menu_name = ''
+var.names_female = []
+var.names_male = []
 var.input = {'up':False,
 	'down':False}
 var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
@@ -142,13 +144,24 @@ if not var.server:
 	var.view.putchars('Generating world...',x=0,y=0)
 	var.view.update()
 
+#Load dictionary files
+if not var.server:
+	var.view.putchars('Loading dictionaries...',x=0,y=1)
+	var.view.update()
+logging.debug('Loading dictionaries')
+
+_fnames = open(os.path.join('data','names_female.txt'),'r')
+for line in _fnames.readlines():
+	var.names_female.append(line)
+_fnames.close()
+
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
 
 #Gods
 if not var.server:
-	var.view.putchars('Gods...',x=0,y=1)
+	var.view.putchars('Gods...',x=0,y=2)
 	var.view.update()
 
 var.ivan = life.god()
@@ -159,7 +172,7 @@ var.ivan.accepts = ['human']
 
 #People
 if not var.server:
-	var.view.putchars('People...',x=0,y=2)
+	var.view.putchars('People...',x=0,y=3)
 	var.view.update()
 
 var.player = life.human(player=True)
@@ -187,8 +200,7 @@ for i in range(1,var.world.depth):
 	test.equip_item(_i)
 
 for i in range(1):
-	test = life.human()
-	test.name = 'Shopkeeper'
+	test = life.human(male=False)
 	test.z = 1
 	test.speed = 3
 	test.speed_max = 3
@@ -201,6 +213,7 @@ for i in range(1):
 for i in range(1):
 	test = life.human()
 	test.name = 'Farmer'
+	test.claims.append('home')
 	test.z = 1
 	test.speed = 1
 	test.speed_max = 1
@@ -476,7 +489,7 @@ def get_input():
 				#var.menu.fill('black','black')
 				functions.destroy_menu(who=var.player)
 			else:
-				var.world.save()
+				#var.world.save()
 				pygame.quit()
 				sys.exit()
 		elif event.type == KEYDOWN:
