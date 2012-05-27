@@ -47,7 +47,7 @@ var.hunger_timer_max = 100
 var.life = []
 var.history = []
 var.skill_mod = 6
-var.solid= [0,11,15]
+var.solid = [0,11,15]
 var.blocking = [10]
 var.items = [13,14]
 var.cache = cache.cache()
@@ -221,7 +221,7 @@ for i in range(1):
 	test.icon['color'][0] = 'red'
 	for i in range(9):
 		test.add_item_raw(21)
-	test.add_event('farm',50,where=(10,10,3,3),delay=5)
+	test.add_event('farm',50,where=None,delay=5)
 	test.pos = (10,10)#list(test.level.get_room('home')['door'])
 
 #for i in range(2):

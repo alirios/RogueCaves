@@ -33,6 +33,7 @@ Current Version: 05.27.2012A
 Added
 -----
 * Fixed error in life.pick_up_item_at() that caused ALife to not remove item from chest
+* Real estate
 
 Previous Version: 05.26.2012A
 ----------------------------

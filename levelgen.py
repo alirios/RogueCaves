@@ -1,10 +1,9 @@
-import life, draw, var
-import copy, math, random, time
+import functions, life, draw, var
+import logging, copy, math, random, time
 
 class LevelGen:
-	def __init__(self,size=(80,80),rooms=25,room_size=(3,6),diagtunnels=True,overlaprooms=False,outside=False):
-		self.size = size
-		
+	def __init__(self,size=(80,80),rooms=25,room_size=(4,6),diagtunnels=True,overlaprooms=False,outside=False):
+		self.size 			= size
 		self.map 			= []
 		self.rooms 			= []
 		self.max_rooms 		= rooms
@@ -19,6 +18,7 @@ class LevelGen:
 		#Lights and maps...
 		self.lights 		= []
 		self.fmap 			= [[0] * self.size[1] for i in range(self.size[0])]
+		self.real_estate	= []
 		self.lmap 			= []
 		self.tmap 			= []
 		self.fov 			= []
@@ -47,6 +47,7 @@ class LevelGen:
 		_keys = {}
 		_keys['map'] = self.map
 		_keys['fmap'] = self.fmap
+		_keys['real_estate'] = self.real_estate
 		
 		_rooms = []
 		for room in self.rooms:
@@ -183,7 +184,52 @@ class LevelGen:
 					if item['solid']:
 						_ret.append(item)
 		
-		return _ret		
+		return _ret
+	
+	def get_real_estate(self,size):
+		_ret = []
+		for x1 in range(self.size[0]):
+			if x1 == 0: continue
+			for y1 in range(self.size[1]):
+				if y1 == 0: continue
+				_break = False
+				for x2 in range(size[0]):
+					for y2 in range(size[1]):
+						if (x1+x2,y1+y2) in self.real_estate:
+							_break = True
+							break
+					
+					if _break: break
+					else:
+						_ret.append((x1,y1))
+		
+		return _ret
+	
+	def get_real_estate_near(self,pos,size):
+		_ret = []
+		for x1 in range(pos[0],self.size[0]):
+			if x1 == 0: continue
+			for y1 in range(pos[1],self.size[1]):
+				if y1 == 0: continue
+				_break = False
+				for x2 in range(-size[0],size[0]):
+					for y2 in range(-size[1],size[1]):
+						if (x1+x2,y1+y2) in self.real_estate:
+							_break = True
+							break
+					
+					if _break: break
+					else:
+						_ret.append((x1,y1))
+		
+		return _ret
+	
+	def claim_real_estate(self,pos,size):
+		for x1 in range(self.size[0]):
+			for y1 in range(self.size[1]):
+				for x2 in range(size[0]):
+					for y2 in range(size[1]):
+						self.real_estate.append(((x1+y1,x2+y2)))
 	
 	def has_item_type_at(self,type,pos):
 		for item in self.items[pos[0]][pos[1]]:
@@ -739,35 +785,24 @@ class LevelGen:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False
-			_room_size = (random.randint(self.room_size[0]+3,self.room_size[1]+3),\
-				random.randint(self.room_size[0]+2,self.room_size[1]+2))
+			_room_size = (random.randint(self.room_size[0],self.room_size[1]),\
+				random.randint(self.room_size[0],self.room_size[1]))
 
 			_walking = self.walking_space[:]
 
 			while not _found:
 				_found = True
 				_room = []
-				_pos = random.choice(_walking)
-
-				_walking.pop(_walking.index(_pos))
-
-				if _pos[0]==0 or _pos[1]==0: _found=False;continue
-				if _pos[0]+(_room_size[0])>=self.size[0]-1: _found=False;continue
-				if _pos[1]+(_room_size[1])>=self.size[1]-1: _found=False;continue
+				_pos = self.get_real_estate(_room_size)[10]
+				
+				logging.debug('[LevelGen] %s claimed %s' % (_room_type,_pos))
 				
 				for x in range(0,_room_size[0]):
 					_x = _pos[0]+x
 					
 					for y in range(0,_room_size[1]):
 						_y = _pos[1]+y
-
-						if self.map[_x][_y] in [15]:
-							_found = False
-							break
-						else:
-							_room.append((_x,_y))
-					
-					if not _found: break
+						_room.append((_x,_y))
 				
 				if _found:
 					_room_walls = []
@@ -776,9 +811,11 @@ class LevelGen:
 						if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
 							or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
 							self.map[pos[0]][pos[1]] = 15
+							self.real_estate.append((pos[0],pos[1]))
 							_room_walls.append(pos)
 						else:
 							self.map[pos[0]][pos[1]] = 16
+							self.real_estate.append((pos[0],pos[1]))
 							_room_floor.append(pos)
 						
 						if pos in self.walls:
@@ -796,6 +833,11 @@ class LevelGen:
 							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 15: _ecount += 1
 						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16: _scount += 1
+						
+						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+							____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
+							if not ____pos in self.real_estate:
+								self.real_estate.append(____pos)
 						
 						if _ecount>2: _found = False
 						if _scount<2: _found = False

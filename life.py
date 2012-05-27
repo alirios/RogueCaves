@@ -750,6 +750,15 @@ class life:
 		#Each iteration we will scan for what tiles in 'where' are already planted
 		#Until the array returned is empty, we will travel to the nearest tile and
 		#plant there.
+		if not self.task['where']:
+			random.seed()
+			_res = self.level.get_real_estate_near((10,10),(3,3))
+			_x = random.randint(6,12)
+			where = (_res[_x][0],_res[_x][1],3,3)
+			self.task['where'] = where
+			
+			self.level.claim_real_estate((where[0],where[1]),(where[2],where[3]))
+		
 		_open = []
 		
 		for x in range(where[2]):
@@ -1057,7 +1066,6 @@ class human(life):
 				_item = self.get_all_items_of_type('food')
 				
 				if _item:
-					if self.name == 'Farmer': print 'I have food'
 					self.hunger = 0
 					self.hunger_timer = var.hunger_timer_max
 					self.items.remove(_item[0])
@@ -1071,13 +1079,9 @@ class human(life):
 						for item in self.level.get_all_items_in_building_of_type(claim,'food'):
 							_items.append(item)
 					
-					if self.name == 'Farmer':
-						print self.name,_items
-					
 					if _items:
 						_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
 						self.pick_up_item_at(_item['pos'],'food')
-						if self.name == 'Farmer': print 'GETTING FOOD YO'
 					
 			elif self.task['what'] == 'mine':
 				self.mine()

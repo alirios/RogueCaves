@@ -14,6 +14,29 @@ def get_name_by_gender(gender):
 	else:
 		return random.choice(var.names_female).strip()
 
+def sort_array_by_distance(items,pos):
+	_ret = []
+	_t = []
+	
+	for item in items:
+		_dist = distance(item,pos)
+		_temp = {'dist':_dist,'item':item}
+		
+		if not len(_t): _t.append(_temp);continue
+		
+		_lowest = 9001
+		for _item in _t:
+			if _item == item: continue
+			if _temp['dist'] < _item['dist']:
+				if _t.index(_item) < _lowest: _lowest = _t.index(_item)
+		
+		_t.insert(_lowest,_temp)
+	
+	for item in _t:
+		_ret.append(item)
+	
+	return _ret
+
 def sort_item_array_by_distance(items,pos):
 	_ret = []
 	_t = []
