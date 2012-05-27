@@ -10,7 +10,7 @@ def distance(pos1,pos2):
 
 def get_name_by_gender(gender):
 	if gender == 'male':
-		return 'derp'
+		return random.choice(var.names_male).strip()
 	else:
 		return random.choice(var.names_female).strip()
 

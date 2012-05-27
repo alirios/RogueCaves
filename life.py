@@ -338,13 +338,17 @@ class life:
 		
 		return False
 	
-	def in_building(self,name=None):
+	def in_building(self,pos=None,name=None):
 		"""Returns the building the ALife is currently in
 		
 		if 'name', check to see if the current building is 'name'
+		if 'pos', check to see if 'pos' is in 'name'
 		"""
+		
+		if not pos: pos = tuple(self.pos)
+		
 		for room in self.level.rooms:
-			if tuple(self.pos) in room['walking_space']:
+			if pos in room['walking_space']:
 				if name:
 					if room['name'] == name: return room
 				else:
@@ -752,9 +756,17 @@ class life:
 		#plant there.
 		if not self.task['where']:
 			random.seed()
-			_res = self.level.get_real_estate_near((10,10),(3,3))
-			_x = random.randint(6,12)
-			where = (_res[_x][0],_res[_x][1],3,3)
+			_res = self.level.get_real_estate((3,3))
+			
+			_lowest = {'entry':None,'dist':100}
+			for entry in _res:
+				_pos = self.level.get_room(self.claims[0])['walking_space'][0]
+				_dist = functions.distance(tuple(_pos),entry)
+				if _dist<_lowest['dist']:
+					_lowest['dist'] = _dist
+					_lowest['entry'] = entry
+			
+			where = (_lowest['entry'][0],_lowest['entry'][1],3,3)
 			self.task['where'] = where
 			
 			self.level.claim_real_estate((where[0],where[1]),(where[2],where[3]))
@@ -801,7 +813,11 @@ class life:
 					
 					if _food:
 						_building_owner = self.level.get_room('storage')['owner']
-						self.go_to_and_do(self.level.get_room('storage')['walking_space'][0],\
+						if not self.in_building(pos=self.path_dest,name='storage'):
+							_pos = random.choice(self.level.get_room('storage')['walking_space'])
+						else:
+							_pos = tuple(self.pos)
+						self.go_to_and_do(_pos,\
 							self.sell_item_alife,\
 							first=_sell[0],\
 							second=_building_owner)

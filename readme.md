@@ -30,15 +30,16 @@ Bugs
 
 Current Version: 05.27.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed error in life.pick_up_item_at() that caused ALife to not remove item from chest
 * Real estate
+* Farmers attempt to plant closer to their homes
 
 Previous Version: 05.26.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Server should now be able to tick at specified TPS: var.server_tick_rate
 * 'data' directory created. Stores save files and name files
 * Saving
@@ -49,22 +50,22 @@ Added
 
 Previous Version: 05.25.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed drawing in caves
 * Fixed level not clearing brightness settings
 * Added ID system for future use
 
 Previous Version: 05.24.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Drawing is a lot faster
 
 Current Version: 05.23.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Added `ignore_storage` flag to level.get_all_items_tagged(), should probably be put everywhere else
 * Farmers now sell their crops
 * Farmers store some food for themselves
@@ -74,8 +75,8 @@ Added
 
 Previous Version: 05.22.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed menu title rendering too far above the menu items
 * Disabled thirst, which caused the ALife to become unresponsive
 * Added farming task for ALife
@@ -84,8 +85,8 @@ Added
 
 Previous Version: 05.21.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Added wheat
 * life.add_item() and life.add_item() now set 'pos' key
 * levelgen.add_item() no longer returns a pointer to the original item
@@ -94,8 +95,8 @@ Added
 
 Previous Version: 05.20.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Moved all event code for run_shop into the function of the same name
 * Purchasing items no longer leaves a duplicate in the shop
 * Shop owner now stores traded items in chests
@@ -108,8 +109,8 @@ Added
 
 Previous Version: 05.18.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * ALife can claim buildings
 * Messages when entering/leaving buildings
 * Icons now listed next to items in inventory
@@ -119,8 +120,8 @@ Added
 
 Previous Version: 05.17.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Items spawned in chests are no longer duplicated and placed outside of the chest
 * Starting to add docstrings
 * Life: in_building()
@@ -129,8 +130,8 @@ Added
 
 Previous Version: 05.16.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Added 'delay' flag to tasks so ALife will rest between iterations
 * PygCurse now checks to see if the tile being drawn was drawn in a previous frame
 * Items are now automatically put into storage by levelgen
@@ -143,39 +144,39 @@ Added
 
 Previous Version: 05.15.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Removed stairs going upwards in the forest.
 * Blood now fades even when outside of the player's view.
 * Fixed crash relating to removal of the forest's "entrances" variable.
 
 Previous Version: 05.03.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Timing is much more accurate now.
 * "Sticky" movement fixed.
 * max_fps is now set to 20 by default.
 
 Previous Version: 04.24.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * No longer checking large amounts rooms during generate_cave_rooms()
 * Added "sharp" flag to weapons.
 
 Previous Version: 04.23.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed some dialog errors.
 * Blood.
 * Forgot to update readme with new changes.
 
 Previous Version: 04.22.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * ALife forgets about enemies after they're killed.
 * Fixed some repeating dialog.
 * ALife now takes into consideration a target's weapon.
@@ -185,8 +186,8 @@ Added
 
 Previous Version: 04.21.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Added weapons.
 * Added Crazy Miner.
 * No longer real-time (for now).
@@ -194,15 +195,15 @@ Added
 
 Previous Version: 04.12.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed possible bug relating to A* cache returning paths for wrong z-level.
 * Started room generation for caves.
 
 Previous Version: 04.11.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Optimized draw_screen() for caves.
 * ALife clips through fellow workers.
 * Fixed additional pathing issues.
@@ -210,15 +211,15 @@ Added
 
 Previous Version: 04.09.2012A
 ----------------------------
-Added
------
+Changed
+-------
 * Fixed crash relating to old item system.
 * A* cache.
 
 Current Version: 04.08.2012A
 --------------------------
-Added
------
+Changed
+-------
 * ALife can path a bit better. No longer teleports (as much.)
 * Optimized A*.
 * Composed some music.
@@ -228,8 +229,8 @@ Added
 
 Previous Version: 04.07.2012A
 --------------------------
-Added
------
+Changed
+-------
 * ALife understands difference between solid and blocking objects when pathing.
 * ALife can mine.
 * ALife counts attacking as an event, doing away with the need for interrupts.
@@ -237,8 +238,8 @@ Added
 
 Previous Version: 04.06.2012A
 ---------------------------
-Added
------
+Changed
+-------
 * Working buildings
 * Items overhauled to allow extensive customization
 * ALife follows events, has basic wants/needs.

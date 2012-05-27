@@ -68,7 +68,7 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
 			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
 			'21':{'name':'wheat (seed)','solid':False,'type':'seed','tile':21,'price':2,\
-				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':10,'image_index':0,\
+				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':3,'image_index':0,\
 				'images':['i','I','Y'],'makes':22},
 			'22':{'name':'wheat','solid':False,'type':'food','tile':22,'price':4},
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
@@ -155,6 +155,12 @@ for line in _fnames.readlines():
 	var.names_female.append(line)
 _fnames.close()
 
+_mnames = open(os.path.join('data','names_male.txt'),'r')
+for line in _mnames.readlines():
+	var.names_male.append(line)
+_mnames.close()
+
+
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
 var.world.generate()
@@ -222,7 +228,7 @@ for i in range(1):
 	for i in range(9):
 		test.add_item_raw(21)
 	test.add_event('farm',50,where=None,delay=5)
-	test.pos = (10,10)#list(test.level.get_room('home')['door'])
+	test.pos = list(test.level.get_room('home')['door'])
 
 #for i in range(2):
 #	test = life.human()

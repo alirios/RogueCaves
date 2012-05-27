@@ -188,10 +188,8 @@ class LevelGen:
 	
 	def get_real_estate(self,size):
 		_ret = []
-		for x1 in range(self.size[0]):
-			if x1 == 0: continue
-			for y1 in range(self.size[1]):
-				if y1 == 0: continue
+		for y1 in range(self.size[1]):
+			for x1 in range(self.size[0]):
 				_break = False
 				for x2 in range(size[0]):
 					for y2 in range(size[1]):
@@ -202,15 +200,15 @@ class LevelGen:
 					if _break: break
 					else:
 						_ret.append((x1,y1))
+				
+				if _break: break
 		
 		return _ret
 	
 	def get_real_estate_near(self,pos,size):
 		_ret = []
-		for x1 in range(pos[0],self.size[0]):
-			if x1 == 0: continue
-			for y1 in range(pos[1],self.size[1]):
-				if y1 == 0: continue
+		for y1 in range(pos[1],self.size[1]):
+			for x1 in range(pos[0],self.size[0]):
 				_break = False
 				for x2 in range(-size[0],size[0]):
 					for y2 in range(-size[1],size[1]):
@@ -221,6 +219,8 @@ class LevelGen:
 					if _break: break
 					else:
 						_ret.append((x1,y1))
+				
+				if _break: break
 		
 		return _ret
 	
@@ -793,7 +793,7 @@ class LevelGen:
 			while not _found:
 				_found = True
 				_room = []
-				_pos = self.get_real_estate(_room_size)[10]
+				_pos = self.get_real_estate(_room_size)[random.randint(10,150)]
 				
 				logging.debug('[LevelGen] %s claimed %s' % (_room_type,_pos))
 				
@@ -808,14 +808,13 @@ class LevelGen:
 					_room_walls = []
 					_room_floor = []
 					for pos in _room:
+						self.real_estate.append((pos[0],pos[1]))
 						if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
 							or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
 							self.map[pos[0]][pos[1]] = 15
-							self.real_estate.append((pos[0],pos[1]))
 							_room_walls.append(pos)
 						else:
 							self.map[pos[0]][pos[1]] = 16
-							self.real_estate.append((pos[0],pos[1]))
 							_room_floor.append(pos)
 						
 						if pos in self.walls:
