@@ -225,11 +225,11 @@ class LevelGen:
 		return _ret
 	
 	def claim_real_estate(self,pos,size):
-		for x1 in range(self.size[0]):
-			for y1 in range(self.size[1]):
-				for x2 in range(size[0]):
-					for y2 in range(size[1]):
-						self.real_estate.append(((x1+y1,x2+y2)))
+		#for x1 in range(self.size[0]):
+		#	for y1 in range(self.size[1]):
+		for x1 in range(size[0]):
+			for y1 in range(size[1]):
+				self.real_estate.append((pos[0]+x1,pos[1]+y1))
 	
 	def has_item_type_at(self,type,pos):
 		for item in self.items[pos[0]][pos[1]]:

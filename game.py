@@ -526,6 +526,9 @@ def get_input():
 				var.player.place_item(21,(1,0))
 			elif event.key == K_s:
 				var.player.place_item(21,(0,1))
+			elif event.key == K_c:
+				for pos in var.player.level.real_estate:
+					var.view.tint(r=255,region=(pos[0],pos[1],1,1))
 			elif event.key == K_b:
 				if var.player.in_building(name='storage') and not var.in_menu:
 					_building_owner = var.player.level.get_room('storage')['owner']

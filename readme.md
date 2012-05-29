@@ -28,6 +28,13 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
+Current Version: 05.28.2012A
+----------------------------
+Changed
+-------
+* levelgen.claim_real_estate() no longer the worst function I have ever written
+* Pressing 'c' now shows real_estate on the map
+
 Current Version: 05.27.2012A
 ----------------------------
 Changed
