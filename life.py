@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import logging, random
+import logging, random, copy
 
 class life:
 	def __init__(self,player=False):
@@ -47,6 +47,8 @@ class life:
 		_keys = {}
 		_keys['id'] = self.id
 		_keys['name'] = self.name
+		_keys['player'] = self.player
+		_keys['icon'] = self.icon
 		_keys['hp'] = self.hp
 		_keys['hp_max'] = self.hp_max
 		_keys['speed'] = self.speed
@@ -56,6 +58,8 @@ class life:
 		_keys['z'] = self.z
 		_keys['xp'] = self.xp
 		_keys['skill_level'] = self.skill_level
+		_keys['race'] = self.race
+		_keys['faction'] = self.faction
 		
 		_keys['seen'] = []
 		for seen in self.seen:
@@ -63,7 +67,6 @@ class life:
 			_s['who'] = _s['who'].id
 			_keys['seen'].append(_s)
 		
-		##TODO: Save self.seen
 		_keys['path'] = self.path
 		_keys['path_type'] = self.path_type
 		_keys['path_dest'] = self.path_dest
@@ -79,9 +82,66 @@ class life:
 		_keys['hunger'] = self.hunger
 		_keys['hunger_timer'] = self.hunger_timer
 		_keys['hungry_at'] = self.hungry_at
-		_keys['items'] = self.items
+		_keys['in_danger'] = self.in_danger
+		
+		_items = copy.deepcopy(self.items)
+		for item in _items:
+			#_keys['items'] = self.items
+			if item.has_key('planted_by'):
+				item['planted_by'] = item['planted_by'].id
+		
+		_keys['items'] = _items
 		
 		return _keys
+	
+	def load(self,keys):
+		self.id = keys['id']
+		self.name = keys['name']
+		self.player = keys['player']
+		
+		if self.player:
+			var.player = self
+		
+		self.icon = keys['icon']
+		self.icon['icon'] = str(self.icon['icon'])
+		self.hp = keys['hp']
+		self.hp_max = keys['hp_max']
+		self.speed = keys['speed']
+		self.speed_max = keys['speed_max']
+		self.pos = keys['pos']
+		self.last_pos = keys['last_pos']
+		self.z = keys['z']
+		
+		self.level = var.world.get_level(self.z)
+		
+		self.xp = keys['xp']
+		self.skill_level = keys['skill_level']
+		self.race = keys['race']
+		self.faction = keys['faction']
+		
+		#_keys['seen'] = []
+		#for seen in self.seen:
+		#	_s = seen.copy()
+		#	_s['who'] = _s['who'].id
+		#	_keys['seen'].append(_s)
+		
+		self.path = keys['path']
+		self.path_type = keys['path_type']
+		self.path_dest = keys['path_dest']
+		self.mine_dest = keys['mine_dest']
+		self.alignment = keys['alignment']
+		##TODO: Save god
+		self.atk = keys['atk']
+		self.defe = keys['defe']
+		##TODO: Save weapon
+		self.thirst = keys['thirst']
+		self.thirst_timer = keys['thirst_timer']
+		self.thirsty_at = keys['thirsty_at']
+		self.hunger = keys['hunger']
+		self.hunger_timer = keys['hunger_timer']
+		self.hungry_at = keys['hungry_at']
+		self.in_danger = keys['in_danger']
+		self.items = keys['items']
 	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
@@ -192,8 +252,8 @@ class life:
 						self.items.remove(item)
 						item['pos'] = pos
 						_item['items'].append(item)
-						logging.debug('[ALife.%s] Put %s in chest at %s,%s' %
-							(self.name,item['name'],pos[0],pos[1]))
+						logging.debug('[ALife.%s] Put %s in chest at %s' %
+							(self.name,item['name'],pos))
 						break
 				break
 	
@@ -293,7 +353,7 @@ class life:
 		self.owned_land.append({'where':pos,'size':size,'label':label})
 		self.level.claim_real_estate((pos[0],pos[1]),(size[0],size[1]))
 		
-		logging.info('[ALife.%s.Land] Claimed %s,%s with size %s,%s as %s'
+		logging.debug('[ALife.%s.Land] Claimed %s,%s with size %s,%s as %s'
 			% (self.name,pos[0],pos[1],size[0],size[1],label))
 	
 	def say(self,what):
@@ -532,6 +592,8 @@ class life:
 				if _temp and _temp['in_los']:
 					#print _temp['who'].name,'lost'
 					_temp['in_los'] = False
+		
+		return self.pos
 	
 	def walk(self,dir):
 		"""Movement rules for all ALife. Tracks collisions along with the

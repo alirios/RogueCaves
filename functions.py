@@ -14,6 +14,13 @@ def get_name_by_gender(gender):
 	else:
 		return random.choice(var.names_female).strip()
 
+def get_alife_by_id(id):
+	for life in var.life:
+		if life.id == id: return life
+	
+	print 'OH MAN NO ALIFE WITH ID %s' % id
+	return False
+
 def sort_array_by_distance(items,pos):
 	_ret = []
 	_t = []

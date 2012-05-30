@@ -37,6 +37,7 @@ var.window_size = (99,33)
 var.world_size = (99,33)
 var.max_fps = 20
 var.tick_history = []
+var.timer = 0
 var.ticks = 0
 var.id = 0
 var.fps = 0
@@ -163,72 +164,74 @@ _mnames.close()
 
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
-var.world.generate()
-
-#Gods
-if not var.server:
-	var.view.putchars('Gods...',x=0,y=2)
-	var.view.update()
-
-var.ivan = life.god()
-var.ivan.name = 'Ivan'
-var.ivan.purpose = 'death'
-var.ivan.alignment = 'evil'
-var.ivan.accepts = ['human']
-
-#People
-if not var.server:
-	var.view.putchars('People...',x=0,y=3)
-	var.view.update()
-
-var.player = life.human(player=True)
-var.player.name = 'flags'
-var.player.z = 1
-var.player.speed = 1
-var.player.speed_max = 1
-var.player.level = var.world.get_level(var.player.z)
-#var.player.pos = list(var.player.level.exits[0])
-var.player.pos = list(var.player.level.get_room('storage')['door'])
-var.player.god = var.ivan
-
-for i in range(9):
-	var.player.add_item_raw(21)
-
-for i in range(1,var.world.depth):
-	test = life.crazy_miner()
-	test.name = 'Chester'
-	test.z = -i
-	test.speed = 3
-	test.speed_max = 3
-	test.level = var.world.get_level(test.z)
-	test.pos = random.choice(test.level.walking_space)
-	_i = test.add_item_raw(19)
-	test.equip_item(_i)
-
-for i in range(1):
-	test = life.human(male=False)
-	test.z = 1
-	test.speed = 3
-	test.speed_max = 3
-	test.level = var.world.get_level(test.z)
-	test.icon['color'][0] = 'blue'
-	#test.mode = {'task':'mine','who':None}
-	test.add_event('run_shop',50,where='storage',delay=20)
-	test.pos = list(test.level.get_room('storage')['door'])
+if '-load' in sys.argv:
+	var.world.load()
+else:
+	var.world.generate()
 	
-for i in range(1):
-	test = life.human()
-	test.name = 'Farmer'
-	test.claims.append('home')
-	test.z = 1
-	test.speed = 1
-	test.speed_max = 1
-	test.level = var.world.get_level(test.z)
-	test.icon['color'][0] = 'red'
+	#Gods
+	if not var.server:
+		var.view.putchars('Gods...',x=0,y=2)
+		var.view.update()
+
+	var.ivan = life.god()
+	var.ivan.name = 'Ivan'
+	var.ivan.purpose = 'death'
+	var.ivan.alignment = 'evil'
+	var.ivan.accepts = ['human']
+
+	#People
+	if not var.server:
+		var.view.putchars('People...',x=0,y=3)
+		var.view.update()
+
+	var.player = life.human(player=True)
+	var.player.name = 'flags'
+	var.player.z = 1
+	var.player.speed = 1
+	var.player.speed_max = 1
+	var.player.level = var.world.get_level(var.player.z)
+	var.player.pos = list(var.player.level.get_room('storage')['door'])
+	var.player.god = var.ivan
+
 	for i in range(9):
-		test.add_item_raw(21)
-	test.add_event('farm',50,where=None,delay=5)
-	test.pos = list(test.level.get_room('home')['door'])
+		var.player.add_item_raw(21)
+
+	for i in range(1,var.world.depth):
+		test = life.crazy_miner()
+		test.name = 'Chester'
+		test.z = -i
+		test.speed = 3
+		test.speed_max = 3
+		test.level = var.world.get_level(test.z)
+		test.pos = random.choice(test.level.walking_space)
+		_i = test.add_item_raw(19)
+		test.equip_item(_i)
+
+	for i in range(1):
+		test = life.human(male=False)
+		test.z = 1
+		test.speed = 3
+		test.speed_max = 3
+		test.level = var.world.get_level(test.z)
+		test.icon['color'][0] = 'blue'
+		#test.mode = {'task':'mine','who':None}
+		test.add_event('run_shop',50,where='storage',delay=20)
+		test.pos = list(test.level.get_room('storage')['door'])
+		
+	for i in range(1):
+		test = life.human()
+		test.name = 'Farmer'
+		test.claims.append('home')
+		test.z = 1
+		test.speed = 1
+		test.speed_max = 1
+		test.level = var.world.get_level(test.z)
+		test.icon['color'][0] = 'red'
+		for i in range(9):
+			test.add_item_raw(21)
+		test.add_event('farm',50,where=None,delay=5)
+		test.pos = list(test.level.get_room('home')['door'])
 
 #for i in range(2):
 #	test = life.human()
@@ -265,6 +268,9 @@ def draw_tile(tile,pos,color):
 		else:
 			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['id']
+	
+	if isinstance(tile['icon'],unicode):
+		tile['icon'] = str(tile['icon'])
 	
 	var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
 
@@ -438,10 +444,14 @@ def tick():
 			if len(var.tick_history)>10: var.tick_history.pop()
 		
 		var.gametime = time.time()
-		
+	
+	if var.timer>=20:
 		if not var.in_menu:
 			for level in var.world.levels:
 				level['level'].tick()
+		var.timer = 0
+	else:
+		var.timer+=1
 	
 	if var.in_menu:
 		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
@@ -497,7 +507,7 @@ def get_input():
 				#var.menu.fill('black','black')
 				functions.destroy_menu(who=var.player)
 			else:
-				#var.world.save()
+				var.world.save()
 				pygame.quit()
 				sys.exit()
 		elif event.type == KEYDOWN:
@@ -626,7 +636,10 @@ while 1:
 			for entry in var.tick_history:
 				_total+=entry
 			
-			logging.info('Average FPS: %s' % str((_total/len(var.tick_history))))
+			try:
+				logging.info('Average FPS: %s' % str((_total/len(var.tick_history))))
+			except:
+				logging.error('Wasn\'t running long enough to find average FPS')
 			var.world.save()
 			sys.exit()
 	else: get_input()

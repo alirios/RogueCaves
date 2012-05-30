@@ -28,6 +28,13 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
+Current Version: 05.30.2012A
+----------------------------
+Changed
+-------
+* Saving/loading
+* Level no longer ticks every second, but instead every 20 frames
+
 Current Version: 05.29.2012A
 ----------------------------
 Changed

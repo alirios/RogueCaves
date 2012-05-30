@@ -2,7 +2,7 @@ import functions, life, draw, var
 import logging, copy, math, random, time
 
 class LevelGen:
-	def __init__(self,size=(80,80),rooms=25,room_size=(4,6),diagtunnels=True,overlaprooms=False,outside=False):
+	def __init__(self,size=(50,50),rooms=25,room_size=(4,6),diagtunnels=True,overlaprooms=False,outside=False):
 		self.size 			= size
 		self.map 			= []
 		self.rooms 			= []
@@ -45,9 +45,15 @@ class LevelGen:
 	
 	def save(self):
 		_keys = {}
+		_keys['size'] = self.size
 		_keys['map'] = self.map
 		_keys['fmap'] = self.fmap
+		_keys['tmap'] = self.tmap
 		_keys['real_estate'] = self.real_estate
+		_keys['z'] = self.z
+		_keys['entrances'] = self.entrances
+		_keys['exits'] = self.exits
+		_keys['outside'] = self.outside
 		
 		_rooms = []
 		for room in self.rooms:
@@ -75,6 +81,37 @@ class LevelGen:
 		_keys['items'] = _items
 		
 		return _keys
+	
+	def load(self,keys):
+		self.size = keys['size']
+		self.map = keys['map']
+		self.fmap = keys['fmap']
+		self.tmap = keys['tmap']
+		self.real_estate = keys['real_estate']
+		self.z = keys['z']
+		self.entrances = keys['entrances']
+		self.exits = keys['exits']
+		self.outside = keys['outside']
+		
+		self.rooms = keys['rooms']
+		self.items = keys['items']
+	
+	def finalize(self):
+		"""Cleans up after load()"""
+		for room in self.rooms:
+			if room.has_key('owner') and room['owner']:
+				room['owner'] = functions.get_alife_by_id(room['owner'])
+		
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					if item.has_key('planted_by'):
+						item['planted_by'] = functions.get_alife_by_id(item['planted_by'])
+					
+					if item['type'] == 'storage':
+						for _item in item['items']:
+							if _item.has_key('planted_by'):
+								_item['planted_by'] = functions.get_alife_by_id(_item['planted_by'])
 	
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
@@ -211,9 +248,9 @@ class LevelGen:
 				if not y1: continue
 				_break = False
 				for x2 in range(size[0]):
-					if x1+x2>self.size[0]: _break=True;break
+					if x1+x2>=self.size[0]: _break=True;break
 					for y2 in range(size[1]):
-						if y1+y2>self.size[1]: _break=True;break
+						if y1+y2>=self.size[1]: _break=True;break
 						if (x1+x2,y1+y2) in self.real_estate:
 							_break = True
 							break
@@ -773,7 +810,7 @@ class LevelGen:
 					self.map[x][y] = random.choice([5,9])
 				self.walking_space.append((x,y))
 		
-		self.walk(where=self.walking_space,types=[6,7,8])
+		self.walk(where=self.walking_space,types=[6,7])
 		
 		self.decompose_ext(3,find=8,to=8)
 		self.decompose_ext(3,find=8,to=7)
@@ -781,7 +818,7 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','storage']:
+		for _room_type in ['home','storage','kitchen']:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False
@@ -860,6 +897,8 @@ class LevelGen:
 			_needs = [18]
 		elif room['type'] == 'storage':
 			_needs = [18,17,17,14,14,23,21,21,21]
+		elif room['type'] == 'kitchen':
+			_needs = [18]
 		
 		#We like putting things in corners...
 		_possible = []
@@ -877,12 +916,7 @@ class LevelGen:
 		
 		for need in _needs:
 			_stored = False
-			#for _storage in self.get_all_items_of_type('storage'):
-			#	if _storage['pos'] in room['walking_space']:
-			#		_storage['items'].append(self.add_item(need,_pos,no_place=True))
-			#		_stored = True
-			#		break
-			for _storage in self.get_all_items_in_building_of_type('storage','storage'):
+			for _storage in self.get_all_items_in_building_of_type(room['type'],'storage'):
 				_storage['items'].append(self.add_item(need,_pos,no_place=True))
 				_stored = True
 				break

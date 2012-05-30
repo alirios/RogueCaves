@@ -1,4 +1,4 @@
-import levelgen, var
+import levelgen, life as alife, var
 import logging, random, time, json, os
 
 class World:
@@ -26,6 +26,7 @@ class World:
 		_stime = time.time()
 		_exits = None
 		
+		logging.debug('[LevelGen] Starting')
 		for level in self.levels:
 			_ltime = time.time()
 			
@@ -37,25 +38,25 @@ class World:
 				_entrances=_exits[:]
 				_exits=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))] 
 			
-			logging.debug('DEPTH: %s' % str(level['z']))
+			#logging.debug('DEPTH: %s' % str(level['z']))
 			if level['type']=='cave':
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*5),size=self.size,diagtunnels=random.randint(0,1),outside=False)
 				level['level'].z = level['z']
 				_ctime = time.time()
 				level['level'].generate_cave(entrances=_entrances,exits=_exits)
-				logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))
+				#logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))
 				
 				_dtime = time.time()
 				level['level'].decompose(self.depth-abs(level['z']),edgesonly=False)
-				logging.debug('\tDecompose setting %s took %s' % (self.depth-abs(level['z']),time.time()-_ctime))
+				#logging.debug('\tDecompose setting %s took %s' % (self.depth-abs(level['z']),time.time()-_ctime))
 				
 				_wtime = time.time()
 				_w = level['level'].walk(where=level['level'].walls,walkers=-level['z'],types=[10,11],intensity=(10,12))
-				logging.debug('\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime))
+				#logging.debug('\tWalkers: %s, took %s' % (-level['z'],time.time()-_wtime))
 				
 				_rtime = time.time()
 				level['level'].generate_cave_rooms()
-				logging.debug('\tRooms: %s, took %s' % (len(level['level'].rooms),time.time()-_rtime))
+				#logging.debug('\tRooms: %s, took %s' % (len(level['level'].rooms),time.time()-_rtime))
 				
 				for pos in _w:
 					if level['level'].map[pos[0]][pos[1]] == 11:
@@ -65,9 +66,10 @@ class World:
 			else:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(exits=_exits)
-			logging.debug('\tTotal: %s' % (time.time()-_ltime))
+				level['level'].z = level['z']
+			#logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
-		logging.debug('Worldgen took: %s' % (time.time()-_stime))
+		logging.debug('[LevelGen] Took: %s' % (time.time()-_stime))
 	
 	def save(self):
 		logging.debug('[World.save] Gathering ALife strings...')
@@ -83,8 +85,40 @@ class World:
 		logging.debug('[World.save] Offloading strings to disk...')
 		
 		_save_file = open(os.path.join('data','test01.sav'),'w')
-		_save_file.write(json.dumps({'alife':_alife}))
-		_save_file.write(json.dumps({'levels':_levels}))
+		_save_file.write(json.dumps({'alife':_alife})+'\n')
+		_save_file.write(json.dumps({'levels':_levels})+'\n')
 		_save_file.close()
 		
-		logging.debug('[World.save] Done')
+		logging.debug('[World.save] Done!')
+	
+	def load(self):
+		logging.debug('[World.load] Reading save file...')
+		_load_file = open(os.path.join('data','test01.sav'),'r')
+		
+		logging.debug('[World.load] Gathering ALife strings...')
+		_alife = json.loads(_load_file.readline())
+		logging.debug('[World.load] Gathering level strings...')
+		_levels = json.loads(_load_file.readline())
+		
+		for level in _levels['levels']:
+			_level = levelgen.LevelGen()
+			_level.load(level)
+			
+			for entry in self.levels:
+				if entry['z'] == level['z']:
+					entry['level'] = _level
+		
+		for life in _alife['alife']:
+			_alife = alife.life()
+			
+			for entry in life:
+				if isinstance(life[entry],unicode):
+					life[entry] = str(life[entry])
+			
+			_alife.load(life)
+		
+		for entry in self.levels:
+			entry['level'].finalize()
+		
+		_load_file.close()
+		
