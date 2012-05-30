@@ -31,6 +31,7 @@ class life:
 		self.defe = 1
 		
 		self.weapon = None
+		self.owned_land = []
 		
 		self.thirst = 0
 		self.thirst_timer = var.thirst_timer_max
@@ -108,6 +109,19 @@ class life:
 		functions.remove_menu_item(item)
 		self.level.remove_item_at(item['item'],item['item']['pos'])
 		self.add_item(item['item'])
+
+	def buy_item_from_shop_alife(self,item,where):
+		"""Helper function for ALife. Buy 'item' from 'where'"""
+		##TODO: We aren't adding the original object to the buyer's item array
+		for _item in self.level.get_all_items_in_building(where):
+			if _item['tile'] == item:
+				self.level.remove_item_from_building(_item,where)
+				_i = self.add_item_raw(item)
+				logging.debug('[ALife.%s] Bought %s from %s' %
+					(self.name,_i['name'],where))
+				return True
+		
+		return False
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -125,7 +139,14 @@ class life:
 		"""Helper function for ALife. Sells 'item' to 'who'"""
 		self.items.remove(item)
 		item['traded'] = True
+		
+		for price in range(item['price']):
+			self.add_item_raw(20)
+		
 		who.add_item(item)
+		
+		logging.debug('[ALife.%s] Sold %s to %s' %
+			(self.name,item['name'],who.name))
 	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
@@ -141,7 +162,8 @@ class life:
 			return
 	
 	def place_item(self,item,pos):
-		_pos = pos#(self.pos[0]+pos[0],self.pos[1]+pos[1])
+		if self.player: _pos = (self.pos[0]+pos[0],self.pos[1]+pos[1])
+		else: _pos = pos
 		if 0>_pos[0] or _pos[0]>=self.level.size[0]: return
 		if 0>_pos[1] or _pos[1]>=self.level.size[1]: return
 		if len(self.level.items[_pos[0]][_pos[1]]): return
@@ -170,6 +192,8 @@ class life:
 						self.items.remove(item)
 						item['pos'] = pos
 						_item['items'].append(item)
+						logging.debug('[ALife.%s] Put %s in chest at %s,%s' %
+							(self.name,item['name'],pos[0],pos[1]))
 						break
 				break
 	
@@ -256,6 +280,21 @@ class life:
 			_ret+=ore['price']
 		
 		return _ret
+	
+	def get_owned_land(self,label):
+		for entry in self.owned_land:
+			if entry['label'] == label:
+				return entry
+		
+		return False
+	
+	def claim_real_estate(self,pos,size,label):
+		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
+		self.owned_land.append({'where':pos,'size':size,'label':label})
+		self.level.claim_real_estate((pos[0],pos[1]),(size[0],size[1]))
+		
+		logging.info('[ALife.%s.Land] Claimed %s,%s with size %s,%s as %s'
+			% (self.name,pos[0],pos[1],size[0],size[1],label))
 	
 	def say(self,what):
 		"""Sends a string prefixed with the ALife's name to the log."""
@@ -684,9 +723,38 @@ class life:
 		"""Go to location and call function 'callback' with argument 'kargv'"""
 		_there = self.go_to(pos)
 		
-		if _there: callback(kargv['first'],kargv['second'])
+		if _there: return callback(kargv['first'],kargv['second'])
+		
+		return True
+	
+	def go_to_building_and_buy(self,item,building):
+		"""Go to 'building' and buy 'item'"""
+		_building_owner = self.level.get_room(building)['owner']
+		if not self.in_building(pos=self.path_dest,name=building):
+			_pos = random.choice(self.level.get_room(building)['walking_space'])
+		else:
+			_pos = tuple(self.pos)
+		
+		return self.go_to_and_do(_pos,\
+			self.buy_item_from_shop_alife,\
+			first=item,\
+			second=building)
+	
+	def go_to_building_and_sell(self,item,building):
+		"""Go to 'building' and sell 'item'"""
+		_building_owner = self.level.get_room(building)['owner']
+		if not self.in_building(pos=self.path_dest,name=building):
+			_pos = random.choice(self.level.get_room(building)['walking_space'])
+		else:
+			_pos = tuple(self.pos)
+		
+		return self.go_to_and_do(_pos,\
+			self.sell_item_alife,\
+			first=item,\
+			second=_building_owner)
 	
 	def pick_up_item_at(self,pos,want):
+		"""Go to 'pos' and pick up item type 'want'"""
 		if not want: want=item['type']
 		
 		if tuple(self.pos) == pos:
@@ -754,8 +822,11 @@ class life:
 		#Each iteration we will scan for what tiles in 'where' are already planted
 		#Until the array returned is empty, we will travel to the nearest tile and
 		#plant there.
-		if not self.task['where']:
-			random.seed()
+		_land = self.get_owned_land('farm')
+		
+		if _land:#self.task['where']:
+			where = (_land['where'][0],_land['where'][1],_land['size'][0],_land['size'][1])
+		else:
 			_res = self.level.get_real_estate((3,3))
 			
 			_lowest = {'entry':None,'dist':100}
@@ -769,8 +840,8 @@ class life:
 			where = (_lowest['entry'][0],_lowest['entry'][1],3,3)
 			self.task['where'] = where
 			
-			self.level.claim_real_estate((where[0],where[1]),(where[2],where[3]))
-		
+			self.claim_real_estate((where[0],where[1]),(where[2],where[3]),'farm')
+			
 		_open = []
 		
 		for x in range(where[2]):
@@ -801,7 +872,7 @@ class life:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
 				elif _sell:
 					##TODO: _sell is a bit misleading
-					#_sell actually refers to items that are harvested
+					#_sell actually refers to items that are harvested.
 					#they can be sold, but first the ALife must consider
 					#whether it needs them or not to feed themselves/others
 					#We do that check now.
@@ -812,15 +883,7 @@ class life:
 							_food.append(item)
 					
 					if _food:
-						_building_owner = self.level.get_room('storage')['owner']
-						if not self.in_building(pos=self.path_dest,name='storage'):
-							_pos = random.choice(self.level.get_room('storage')['walking_space'])
-						else:
-							_pos = tuple(self.pos)
-						self.go_to_and_do(_pos,\
-							self.sell_item_alife,\
-							first=_sell[0],\
-							second=_building_owner)
+						self.go_to_building_and_sell(_sell[0],'storage')
 					else:
 						_storage = self.level.get_all_items_in_building_of_type('home','storage')
 						
@@ -831,8 +894,16 @@ class life:
 								second=_storage[0]['pos'])
 						
 				else:
-					self.guard_building('home')
-					self.task['delay'] = 20
+					if self.get_money() and\
+						len(self.level.get_all_items_in_building_of_type('storage','seed')):
+						if self.go_to_building_and_buy(21,'storage'):
+							pass
+						else:
+							self.guard_building('home')
+							self.task['delay'] = 20
+					else:
+						self.guard_building('home')
+						self.task['delay'] = 20
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
@@ -1254,4 +1325,3 @@ class god:
 				functions.log('You feel that %s is happy with your actions lately.' % self.get_name())
 			elif by.alignment<=-1:
 				functions.log('You feel that %s is not happy with your actions lately!' % self.get_name())
-		

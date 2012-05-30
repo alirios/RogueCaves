@@ -176,6 +176,23 @@ class LevelGen:
 		
 		return _ret
 	
+	def remove_item_from_building(self,item,building):
+		"""Removes 'item' from 'building'"""
+		for room in self.rooms:
+			if room['type'].lower() == building.lower():
+				for pos in room['walking_space']:
+					for _item in self.items[pos[0]][pos[1]]:
+						if _item['type'] == 'storage':
+							for __item in _item['items']:
+								if __item == item:
+									_item['items'].remove(__item)
+									return True
+						if _item == item:
+							self.items[pos[0]][pos[1]].remove(_item)
+							return True
+		
+		return False
+	
 	def get_all_solid_items(self):
 		_ret = []
 		for y in range(self.size[1]):
@@ -188,30 +205,15 @@ class LevelGen:
 	
 	def get_real_estate(self,size):
 		_ret = []
-		for y1 in range(self.size[1]):
-			for x1 in range(self.size[0]):
+		for x1 in range(self.size[0]):
+			if not x1: continue
+			for y1 in range(self.size[1]):
+				if not y1: continue
 				_break = False
 				for x2 in range(size[0]):
+					if x1+x2>self.size[0]: _break=True;break
 					for y2 in range(size[1]):
-						if (x1+x2,y1+y2) in self.real_estate:
-							_break = True
-							break
-					
-					if _break: break
-					else:
-						_ret.append((x1,y1))
-				
-				if _break: break
-		
-		return _ret
-	
-	def get_real_estate_near(self,pos,size):
-		_ret = []
-		for y1 in range(pos[1],self.size[1]):
-			for x1 in range(pos[0],self.size[0]):
-				_break = False
-				for x2 in range(-size[0],size[0]):
-					for y2 in range(-size[1],size[1]):
+						if y1+y2>self.size[1]: _break=True;break
 						if (x1+x2,y1+y2) in self.real_estate:
 							_break = True
 							break
@@ -225,8 +227,6 @@ class LevelGen:
 		return _ret
 	
 	def claim_real_estate(self,pos,size):
-		#for x1 in range(self.size[0]):
-		#	for y1 in range(self.size[1]):
 		for x1 in range(size[0]):
 			for y1 in range(size[1]):
 				self.real_estate.append((pos[0]+x1,pos[1]+y1))
@@ -859,7 +859,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [18]
 		elif room['type'] == 'storage':
-			_needs = [18,17,17,14,14,23]
+			_needs = [18,17,17,14,14,23,21,21,21]
 		
 		#We like putting things in corners...
 		_possible = []

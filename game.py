@@ -14,7 +14,8 @@ if not __release__: __version__ = time.strftime('%m.%d.%YA')
 else: __version__ = 'Release %s' % __release__
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+if '-debug' in sys.argv: logger.setLevel(logging.DEBUG)
+else: logger.setLevel(logging.INFO)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 console_formatter = logging.Formatter('%(message)s')
 
@@ -67,10 +68,10 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
 				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
 			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
-			'21':{'name':'wheat (seed)','solid':False,'type':'seed','tile':21,'price':2,\
+			'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
 				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':3,'image_index':0,\
 				'images':['i','I','Y'],'makes':22},
-			'22':{'name':'wheat','solid':False,'type':'food','tile':22,'price':4},
+			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4},
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
 				'status':None,'rank':1,'sharp':True,'tile':23,'price':9}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
@@ -159,7 +160,6 @@ _mnames = open(os.path.join('data','names_male.txt'),'r')
 for line in _mnames.readlines():
 	var.names_male.append(line)
 _mnames.close()
-
 
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
@@ -297,7 +297,7 @@ def draw_screen(refresh=False):
 			
 			if var.player.level.items[x][y]:
 				_item = var.player.level.items[x][y][0]
-				_tile = tile_map[str(_item['tile'])]
+				_tile = tile_map[str(_item['tile'])].copy()
 				
 				if _item.has_key('images'):
 					_tile['icon'] = _item['images'][_item['image_index']]
@@ -438,15 +438,17 @@ def tick():
 			if len(var.tick_history)>10: var.tick_history.pop()
 		
 		var.gametime = time.time()
-		for level in var.world.levels:
-			level['level'].tick()
+		
+		if not var.in_menu:
+			for level in var.world.levels:
+				level['level'].tick()
 	
 	if var.in_menu:
 		if var.menu_index<0: var.menu_index = len(var.in_menu)-1
 		if var.menu_index>len(var.in_menu)-1: var.menu_index = 0
 		
 	else:
-		if var.player.speed:
+		if var.player.speed or var.server:
 			var.player.walk(None)
 					
 			for life in var.life:
@@ -588,6 +590,9 @@ def get_input():
 				var.max_fps = 20
 			elif event.key == K_x:
 				var.max_fps = 60
+			elif event.key == K_c:
+				for pos in var.player.level.real_estate:
+					var.view.setbrightness(0, region=(pos[0],pos[1],1,1))
 		elif event.type == MOUSEMOTION:
 			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
 		elif event.type == MOUSEBUTTONDOWN:
