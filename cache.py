@@ -10,7 +10,6 @@ class cache:
 		for __path in self.path_cache:
 			if __path['start'] == tuple(start) and __path['end'] == tuple(end)\
 				and __path['z']==z:
-				logging.debug('Path already exists in cache.')
 				return
 		
 		if path:

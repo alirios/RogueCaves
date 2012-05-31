@@ -41,7 +41,13 @@ var.timer = 0
 var.ticks = 0
 var.id = 0
 var.fps = 0
-var.server_tick_rate = 60
+
+if '-tickrate' in sys.argv:
+	try: var.server_tick_rate = int(sys.argv[sys.argv.index('-tickrate')+1])
+	except: var.server_tick_rate = 60
+else:
+	var.server_tick_rate = 60
+	
 var.time = 0
 var.view_dist = 11
 var.thirst_timer_max = 75
@@ -70,11 +76,12 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
 			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
 			'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
-				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':3,'image_index':0,\
+				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':2,'image_index':0,\
 				'images':['i','I','Y'],'makes':22},
 			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4},
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
-				'status':None,'rank':1,'sharp':True,'tile':23,'price':9}}
+				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
+			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -98,7 +105,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'20':{'icon':'b','color':['gray','brown']},
 	'21':{'icon':'i','color':['sand',None]},
 	'22':{'icon':'Y','color':['brown',None]},
-	'23':{'icon':'L','color':['silver',None]}}
+	'23':{'icon':'L','color':['silver',None]},
+	'24':{'icon':'#','color':['gray','darkergray']}}
 
 if not var.server:
 	#Colors...
@@ -437,7 +445,7 @@ def tick():
 			if not len(var.tick_history):
 				var.tick_history.append(var.ticks)
 			else:
-				logging.debug('Ticks this frame: %s' % str(var.ticks))
+				#logging.debug('Ticks this frame: %s' % str(var.ticks))
 				var.tick_history.insert(0,var.ticks)
 			
 			var.ticks = 0
@@ -507,7 +515,7 @@ def get_input():
 				#var.menu.fill('black','black')
 				functions.destroy_menu(who=var.player)
 			else:
-				var.world.save()
+				#var.world.save()
 				pygame.quit()
 				sys.exit()
 		elif event.type == KEYDOWN:
@@ -540,7 +548,7 @@ def get_input():
 				var.player.place_item(21,(0,1))
 			elif event.key == K_c:
 				for pos in var.player.level.real_estate:
-					var.view.tint(r=255,region=(pos[0],pos[1],1,1))
+					var.view.tint(b=255,region=(pos[0],pos[1],1,1))
 			elif event.key == K_b:
 				if var.player.in_building(name='storage') and not var.in_menu:
 					_building_owner = var.player.level.get_room('storage')['owner']

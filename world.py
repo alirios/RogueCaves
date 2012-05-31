@@ -109,13 +109,20 @@ class World:
 					entry['level'] = _level
 		
 		for life in _alife['alife']:
-			_alife = alife.life()
+			if life['race'] == 'human':
+				_alife = alife.human()
+			else:
+				logging.error('[World.load] Can\'t load: %s' % life['race'])
 			
 			for entry in life:
 				if isinstance(life[entry],unicode):
 					life[entry] = str(life[entry])
 			
 			_alife.load(life)
+		
+		logging.debug('[World.load] Finalizing ALife...')
+		for life in var.life:
+			life.finalize()
 		
 		for entry in self.levels:
 			entry['level'].finalize()

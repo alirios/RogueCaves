@@ -60,6 +60,9 @@ class life:
 		_keys['skill_level'] = self.skill_level
 		_keys['race'] = self.race
 		_keys['faction'] = self.faction
+		_keys['task'] = self.task
+		_keys['events'] = self.events
+		_keys['claims'] = self.claims
 		
 		_keys['seen'] = []
 		for seen in self.seen:
@@ -118,13 +121,10 @@ class life:
 		self.skill_level = keys['skill_level']
 		self.race = keys['race']
 		self.faction = keys['faction']
-		
-		#_keys['seen'] = []
-		#for seen in self.seen:
-		#	_s = seen.copy()
-		#	_s['who'] = _s['who'].id
-		#	_keys['seen'].append(_s)
-		
+		self.task = keys['task']
+		self.events = keys['events']
+		self.claims = keys['claims']
+		self.seen = keys['seen']
 		self.path = keys['path']
 		self.path_type = keys['path_type']
 		self.path_dest = keys['path_dest']
@@ -142,6 +142,10 @@ class life:
 		self.hungry_at = keys['hungry_at']
 		self.in_danger = keys['in_danger']
 		self.items = keys['items']
+	
+	def finalize(self):
+		for seen in self.seen:
+			seen['who'] = functions.get_alife_by_id(seen['who'])
 	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
@@ -238,6 +242,13 @@ class life:
 			_item['pos'] = _pos
 			self.level.items[_pos[0]][_pos[1]].append(_item)
 			self.items.remove(_item)
+	
+	def flag_item(self,item,flag):
+		item[flag] = True
+		logging.debug('[ALife.%s] Flagged %s at %s with \'%s\'' %
+			(self.name,item['name'],item['pos'],flag))
+		
+		return True
 	
 	def put_item_of_type(self,type,pos):
 		"""Dumps a single item of 'type' in a container at 'pos'"""
@@ -927,7 +938,7 @@ class life:
 						_get.append(crop)
 				
 				for crop in _crops_to_sell:
-					if crop['type']=='food' and crop['planted_by']==self:
+					if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('cook'):
 						_sell.append(crop)
 				
 				if _get:
@@ -938,13 +949,9 @@ class life:
 					#they can be sold, but first the ALife must consider
 					#whether it needs them or not to feed themselves/others
 					#We do that check now.
-					_food = []
+					_food = self.level.get_all_items_in_building_of_type('home','food')
 					
-					for item in self.level.get_all_items_in_building('home'):
-						if item['type'] == 'food':
-							_food.append(item)
-					
-					if _food:
+					if len(_food)>3:
 						self.go_to_building_and_sell(_sell[0],'storage')
 					else:
 						_storage = self.level.get_all_items_in_building_of_type('home','storage')
@@ -961,16 +968,59 @@ class life:
 						if self.go_to_building_and_buy(21,'storage'):
 							pass
 						else:
+							if self.level.get_all_items_in_building_of_type('home','food'):
+								self.cook()
+								self.task['delay'] = 5
+							else:
+								self.guard_building('home')
+								self.task['delay'] = 20
+					else:
+						if self.level.get_all_items_in_building_of_type('home','food'):
+							self.cook()
+							self.task['delay'] = 5
+						else:
 							self.guard_building('home')
 							self.task['delay'] = 20
-					else:
-						self.guard_building('home')
-						self.task['delay'] = 20
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
 		elif self.task_delay>0:
 			self.task_delay-=1
+	
+	def cook(self):
+		_stoves = self.level.get_all_items_in_building_of_type('home','stove')
+		_has_food = self.get_all_items_of_type('food')
+		
+		if not _stoves: return False
+		
+		_stove = None
+		for stove in _stoves:
+			 if stove['cooking']: continue
+			 _stove = stove
+			 break
+		
+		if not _stove: return False
+		
+		if _has_food:
+			_food = _has_food[0]
+		else:
+			_get_food = self.level.get_all_items_in_building_of_type('home','food')[0]
+			if self.go_to_and_do(_get_food['pos'],\
+					self.flag_item,
+					first=_get_food,
+					second='cook'):
+			
+				self.pick_up_item_at(_get_food['pos'],'food')
+				return False
+			else:
+				return False
+		
+		if self.go_to(_stove['pos']):
+			self.items.remove(_food)
+			_stove['cooking'] = _food
+			logging.debug('[ALife.%s] Put %s in stove at %s' %
+				(self.name,_food['name'],_stove['pos']))
+			return True		
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1198,7 +1248,6 @@ class human(life):
 		if self.highest['who']:
 			if not self.married:
 				pass
-				#self.add_event('run_shop',50,where='storage',delay=20)
 		
 		if not self.mode['task']:# and not self.task in ['attacking','flee']:
 			#elif self.highest['who'] and self.married == self.highest['who']:
@@ -1270,6 +1319,8 @@ class human(life):
 				print 'Running away'
 			elif self.task['what'] == 'farm':
 				self.farm(self.task['where'])
+			elif self.task['what'] == 'cook':
+				self.farm()
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:

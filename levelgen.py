@@ -125,7 +125,7 @@ class LevelGen:
 	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)].copy()
 		
-		if item == 18: _item['items'] = []
+		if item in [18]: _item['items'] = []
 		
 		_item['pos'] = pos
 		
@@ -256,10 +256,9 @@ class LevelGen:
 							break
 					
 					if _break: break
-					else:
-						_ret.append((x1,y1))
 				
 				if _break: break
+				else: _ret.append((x1,y1))
 		
 		return _ret
 	
@@ -891,10 +890,11 @@ class LevelGen:
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
+			self.claim_real_estate(pos,(1,1))
 	
 	def generate_building(self,room):
 		if room['type'] == 'home':
-			_needs = [18]
+			_needs = [24,18]
 		elif room['type'] == 'storage':
 			_needs = [18,17,17,14,14,23,21,21,21]
 		elif room['type'] == 'kitchen':

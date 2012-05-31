@@ -28,6 +28,16 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
+Current Version: 05.31.2012A
+----------------------------
+Changed
+-------
+* Fixed levelgen.get_real_estate() returning duplicate entries
+* Added stove
+* Added cooking
+* life.flag_item()
+* life.cook()
+
 Current Version: 05.30.2012A
 ----------------------------
 Changed
