@@ -33,6 +33,7 @@ Current Version: 06.01.2012A
 Changed
 -------
 * ALife no longer buys items remotely
+* ALife can cook
 
 Previous Version: 05.31.2012A
 ----------------------------

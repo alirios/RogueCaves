@@ -341,9 +341,7 @@ class life:
 		_food = self.level.get_all_items_in_building_of_type(where,'food')
 		_food.extend(self.get_all_items_of_type('food'))
 		
-		for item in _food:
-			if not item.has_key('cooked'):
-				_ret.append(item)
+		_ret.extend(_food)
 		
 		return _ret
 	
@@ -1010,16 +1008,12 @@ class life:
 		_stoves = self.level.get_all_items_in_building_of_type('home','stove')
 		_has_food = self.get_all_items_of_type('food')
 		
-		for item in _has_food:
-			if item.has_key('cooked'):
-				_has_food.remove(item)
-		
 		if not _stoves: return False
 		
 		_stove = None
 		for stove in _stoves:
 			if stove['cooking']:
-				if not stove['cooking']['cook_time']:
+				if stove['cooking']['type'] == 'cooked food':
 					if self.go_to(stove['pos']):
 						self.add_item(stove['cooking'])
 						logging.debug('[ALife.%s] Removed %s from stove at %s' %
@@ -1040,10 +1034,6 @@ class life:
 		else:
 			_get_food = self.level.get_all_items_in_building_of_type('home','food')
 			
-			for item in _get_food:
-				if item.has_key('cooked'):
-					_get_food.remove(item)
-			
 			if not _get_food: return False
 			else: _get_food = _get_food[0]
 			
@@ -1060,7 +1050,6 @@ class life:
 		if self.go_to(_stove['pos']):
 			self.items.remove(_food)
 			_stove['cooking'] = _food
-			print _food
 			logging.debug('[ALife.%s] Put %s in stove at %s' %
 				(self.name,_food['name'],_stove['pos']))
 			return True		
