@@ -78,7 +78,7 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
 				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':2,'image_index':0,\
 				'images':['i','I','Y'],'makes':22},
-			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4},
+			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10},
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
 				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
 			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None}}

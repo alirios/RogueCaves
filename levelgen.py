@@ -152,16 +152,27 @@ class LevelGen:
 		return _ret		
 	
 	def get_all_items_of_type(self,type):
+		if isinstance(type,list): _list = True
+		else: _list = False
+		
 		_ret = []
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
 					if item['type'] == 'storage':
 						for _item in item['items']:
-							if _item['type'] == type:
-								_ret.append(_item)
-					if item['type'] == type:
-						_ret.append(item)
+							if _list:
+								if _item['type'] in type:
+									_ret.append(_item)
+							else:
+								if _item['type'] == type:
+									_ret.append(_item)
+					if _list:
+						if item['type'] in type:
+							_ret.append(item)
+					else:
+						if item['type'] == type:
+							_ret.append(item)
 		
 		return _ret
 	
@@ -349,18 +360,24 @@ class LevelGen:
 			i+=1
 	
 	def tick(self):
-		for item in self.get_all_items_of_type('seed'):
-			if item.has_key('planted_by') and item['growth']==item['growth_max']:
-				self.items[item['pos'][0]][item['pos'][1]].remove(item)
-				_i = self.add_item(item['makes'],item['pos'])
-				#if item.has_key('planted_by'):
-				_i['planted_by'] = item['planted_by']
-			
-			if item['growth_time']>=item['growth_time_max']:
-				item['growth']+=1
-				item['image_index']+=1
-				item['growth_time']=0
-			else: item['growth_time']+=1
+		for item in self.get_all_items_of_type(['seed','stove']):
+			if item['type'] == 'seed':
+				if item.has_key('planted_by') and item['growth']==item['growth_max']:
+					self.items[item['pos'][0]][item['pos'][1]].remove(item)
+					_i = self.add_item(item['makes'],item['pos'])
+					_i['planted_by'] = item['planted_by']
+				
+				if item['growth_time']>=item['growth_time_max']:
+					item['growth']+=1
+					item['image_index']+=1
+					item['growth_time']=0
+				else: item['growth_time']+=1
+			elif item['type'] == 'stove':
+				if item['cooking']:
+					if item['cooking']['cook_time']: item['cooking']['cook_time']-=1
+					else:
+						print 'DING FRIES ARE DONE'
+						item['cooking']['cooked'] = True
 	
 	def tick_lights(self):
 		for _l in self.lights:

@@ -177,6 +177,7 @@ class life:
 	def buy_item_from_shop_alife(self,item,where):
 		"""Helper function for ALife. Buy 'item' from 'where'"""
 		##TODO: We aren't adding the original object to the buyer's item array
+
 		for _item in self.level.get_all_items_in_building(where):
 			if _item['tile'] == item:
 				self.level.remove_item_from_building(_item,where)
@@ -791,6 +792,7 @@ class life:
 			return False
 		
 		self.find_path(pos)
+		return False
 	
 	def go_to_and_do(self,pos,callback,**kargv):
 		"""Go to location and call function 'callback' with argument 'kargv'"""
@@ -806,7 +808,10 @@ class life:
 		if not self.in_building(pos=self.path_dest,name=building):
 			_pos = random.choice(self.level.get_room(building)['walking_space'])
 		else:
-			_pos = tuple(self.pos)
+			if self.in_building(name=building):
+				_pos = tuple(self.pos)
+			else:
+				_pos = self.path_dest
 		
 		return self.go_to_and_do(_pos,\
 			self.buy_item_from_shop_alife,\
@@ -819,7 +824,10 @@ class life:
 		if not self.in_building(pos=self.path_dest,name=building):
 			_pos = random.choice(self.level.get_room(building)['walking_space'])
 		else:
-			_pos = tuple(self.pos)
+			if self.in_building(name=building):
+				_pos = tuple(self.pos)
+			else:
+				_pos = self.path_dest
 		
 		return self.go_to_and_do(_pos,\
 			self.sell_item_alife,\

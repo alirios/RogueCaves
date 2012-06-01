@@ -28,7 +28,13 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 05.31.2012A
+Current Version: 06.01.2012A
+----------------------------
+Changed
+-------
+* ALife no longer buys items remotely
+
+Previous Version: 05.31.2012A
 ----------------------------
 Changed
 -------
@@ -38,14 +44,14 @@ Changed
 * life.flag_item()
 * life.cook()
 
-Current Version: 05.30.2012A
+Previous Version: 05.30.2012A
 ----------------------------
 Changed
 -------
 * Saving/loading
 * Level no longer ticks every second, but instead every 20 frames
 
-Current Version: 05.29.2012A
+Previous Version: 05.29.2012A
 ----------------------------
 Changed
 -------
@@ -56,14 +62,14 @@ Changed
 * Fixed life.get_money()
 * Farmers now buy seed when they run out
 
-Current Version: 05.28.2012A
+Previous Version: 05.28.2012A
 ----------------------------
 Changed
 -------
 * levelgen.claim_real_estate() no longer the worst function I have ever written
 * Pressing 'c' now shows real_estate on the map
 
-Current Version: 05.27.2012A
+Previous Version: 05.27.2012A
 ----------------------------
 Changed
 -------
