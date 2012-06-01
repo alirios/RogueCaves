@@ -376,7 +376,6 @@ class LevelGen:
 				if item['cooking']:
 					if item['cooking']['cook_time']: item['cooking']['cook_time']-=1
 					else:
-						print 'DING FRIES ARE DONE'
 						item['cooking']['cooked'] = True
 	
 	def tick_lights(self):

@@ -78,10 +78,12 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
 				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':2,'image_index':0,\
 				'images':['i','I','Y'],'makes':22},
-			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10},
+			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10,\
+				'makes':25},
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
 				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
-			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None}}
+			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
+			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -106,7 +108,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'21':{'icon':'i','color':['sand',None]},
 	'22':{'icon':'Y','color':['brown',None]},
 	'23':{'icon':'L','color':['silver',None]},
-	'24':{'icon':'#','color':['gray','darkergray']}}
+	'24':{'icon':'#','color':['gray','darkergray']},
+	'25':{'icon':'i','color':['brown',None]}}
 
 if not var.server:
 	#Colors...
