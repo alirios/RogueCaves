@@ -50,8 +50,6 @@ else:
 	
 var.time = 0
 var.view_dist = 11
-var.thirst_timer_max = 75
-var.hunger_timer_max = 100
 var.life = []
 var.history = []
 var.skill_mod = 6
@@ -83,7 +81,8 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
 				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
 			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
-			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8}}
+			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8},
+			'26':{'name':'single bed','solid':False,'type':'bed','tile':26,'price':35}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -109,7 +108,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'22':{'icon':'Y','color':['brown',None]},
 	'23':{'icon':'L','color':['silver',None]},
 	'24':{'icon':'#','color':['gray','darkergray']},
-	'25':{'icon':'i','color':['brown',None]}}
+	'25':{'icon':'i','color':['brown',None]},
+	'26':{'icon':'#','color':['white','darkgray']}}
 
 if not var.server:
 	#Colors...
@@ -233,15 +233,16 @@ else:
 	for i in range(1):
 		test = life.human()
 		test.name = 'Farmer'
-		test.claims.append('home')
+		#test.claims.append('home')
 		test.z = 1
 		test.speed = 1
 		test.speed_max = 1
 		test.level = var.world.get_level(test.z)
+		test.claim_building('home','home')
 		test.icon['color'][0] = 'red'
 		for i in range(3):
 			test.add_item_raw(21)
-		test.add_event('farm',50,where=None,delay=5)
+		test.add_event('farm',25,where=None,delay=5)
 		test.pos = list(test.level.get_room('home')['door'])
 
 #for i in range(2):

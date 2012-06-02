@@ -875,6 +875,7 @@ class LevelGen:
 					
 					#Place the door
 					__walls = _room_walls[:]
+					_doors = []
 					while 1:
 						__pos = __walls.pop(random.randint(0,len(__walls)-1))
 						
@@ -886,14 +887,26 @@ class LevelGen:
 						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16: _scount += 1
 						
-						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-							____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
-							if not ____pos in self.real_estate:
-								self.real_estate.append(____pos)
-						
 						if _ecount>2: _found = False
 						if _scount<2: _found = False
-						if _found: break
+						if _found:
+							_doors.append(__pos)
+							break
+					
+					_lowest = {'pos':None,'dist':9001}
+					for door in _doors:
+						_dist = functions.distance(door,(30,30))
+						
+						if _dist<_lowest['dist']:
+							_lowest['dist'] = _dist
+							_lowest['pos'] = door
+					
+					__pos = _lowest['pos']
+					
+					for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+						____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
+						if not ____pos in self.real_estate:
+							self.real_estate.append(____pos)
 					
 					_room_walls.remove(__pos)
 						
@@ -913,7 +926,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [24,18]
 		elif room['type'] == 'storage':
-			_needs = [18,17,17,14,14,23,21,21,21]
+			_needs = [18,21,21,21]
 		elif room['type'] == 'kitchen':
 			_needs = [18]
 		

@@ -28,6 +28,14 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
+Current Version: 06.02.2012A
+----------------------------
+Changed
+-------
+* Potential doors no longer ask for real estate
+* life.claim_building()
+* life.get_claimed()
+
 Current Version: 06.01.2012A
 ----------------------------
 Changed

@@ -34,11 +34,17 @@ class life:
 		self.owned_land = []
 		
 		self.thirst = 0
-		self.thirst_timer = var.thirst_timer_max
+		self.thirst_timer_max = 100
+		self.thirst_timer = self.thirst_timer_max
 		self.thirsty_at = 50
 		self.hunger = 0
-		self.hunger_timer = var.hunger_timer_max
+		self.hunger_timer_max = 75
+		self.hunger_timer = self.hunger_timer_max
 		self.hungry_at = 50
+		self.fatigue = 0
+		self.fatigue_timer_max = 100
+		self.fatigue_timer = self.fatigue_timer_max
+		self.fatigued_at = 15
 		self.items = []
 		
 		var.life.append(self)
@@ -81,10 +87,16 @@ class life:
 		##TODO: Save weapon
 		_keys['thirst'] = self.thirst
 		_keys['thirst_timer'] = self.thirst_timer
+		_keys['thirst_timer_max'] = self.thirst_timer_max
 		_keys['thirsty_at'] = self.thirsty_at
 		_keys['hunger'] = self.hunger
 		_keys['hunger_timer'] = self.hunger_timer
+		_keys['hunger_timer_max'] = self.hunger_timer_max
 		_keys['hungry_at'] = self.hungry_at
+		_keys['fatigue'] = self.fatigue
+		_keys['fatigue_timer'] = self.fatigue_timer
+		_keys['fatigue_timer_max'] = self.fatigue_timer_max
+		_keys['fatigued_at'] = self.fatigued_at
 		_keys['in_danger'] = self.in_danger
 		
 		_items = copy.deepcopy(self.items)
@@ -136,9 +148,11 @@ class life:
 		##TODO: Save weapon
 		self.thirst = keys['thirst']
 		self.thirst_timer = keys['thirst_timer']
+		self.thirst_timer_max = keys['thirst_timer_max']
 		self.thirsty_at = keys['thirsty_at']
 		self.hunger = keys['hunger']
 		self.hunger_timer = keys['hunger_timer']
+		self.hunger_timer_max = keys['hunger_timer_max']
 		self.hungry_at = keys['hungry_at']
 		self.in_danger = keys['in_danger']
 		self.items = keys['items']
@@ -377,6 +391,20 @@ class life:
 		logging.debug('[ALife.%s.Land] Claimed %s,%s with size %s,%s as %s'
 			% (self.name,pos[0],pos[1],size[0],size[1],label))
 	
+	def claim_building(self,where,label):
+		self.claims.append({'where':where,'label':label})
+		self.level.get_room(where)['owner'] = self
+		
+		logging.debug('[ALife.%s.Land] Claimed %s as %s'
+			% (self.name,where,label))
+	
+	def get_claimed(self,label):
+		for claim in self.claims:
+			if claim['label'] == label:
+				return claim['where']
+		
+		return False
+	
 	def say(self,what):
 		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
@@ -559,14 +587,19 @@ class life:
 		"""Performs a single tick, incrementing various counters."""
 		self.hunger_timer -= 1
 		self.thirst_timer -= 1
+		self.fatigue_timer -= 1
 		
 		if self.hunger_timer <= 0:
-			self.hunger_timer = 100
+			self.hunger_timer = self.hunger_timer_max
 			self.hunger+=1
 		
 		if self.thirst_timer <= 0:
-			self.thirst_timer = 75
+			self.thirst_timer = self.thirst_timer_max
 			self.thirst+=1
+		
+		if self.fatigue_timer <= 0:
+			self.fatigue_timer = self.fatigue_timer_max
+			self.fatigue+=1
 		
 		if self.pos == self.last_pos or self.z<1: return
 		
@@ -860,12 +893,12 @@ class life:
 							item['items'].remove(_item)
 							self.add_item(_item)
 							logging.debug('[ALife.%s] %s removed from storage at %s' %
-								(self.name,want,pos))
+								(self.name,_item['type'],pos))
 							_found = True
 							break
 					
 					if _found: break
-						
+		
 		else:
 			self.go_to(pos)
 	
@@ -880,7 +913,7 @@ class life:
 			self.go_to(random.choice(_room['walking_space']))
 	
 	def run_shop(self,where):
-		if where in self.claims:
+		if self.get_claimed('work'):
 			_storage = self.level.get_all_items_in_building_of_type('storage','storage')
 			_dump = self.get_all_items_tagged('traded')
 			
@@ -901,8 +934,7 @@ class life:
 			self.guard_building(where)
 			#Ownership
 			if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
-				self.claims.append(where)
-				_room['owner'] = self
+				self.claim_building(where,'work')
 				functions.log('%s has claimed \'%s\'!' % (self.name,where))
 	
 	def farm(self,where):
@@ -921,7 +953,7 @@ class life:
 			
 			_lowest = {'entry':None,'dist':100}
 			for entry in _res:
-				_pos = self.level.get_room(self.claims[0])['walking_space'][0]
+				_pos = self.level.get_room(self.get_claimed('home'))['walking_space'][0]
 				_dist = functions.distance(tuple(_pos),entry)
 				if _dist<_lowest['dist']:
 					_lowest['dist'] = _dist
@@ -966,12 +998,14 @@ class life:
 					#they can be sold, but first the ALife must consider
 					#whether it needs them or not to feed themselves/others
 					#We do that check now.
-					_food = self.level.get_all_items_in_building_of_type('home','food')
+					_food = self.get_all_cookable_items(self.get_claimed('home'))
+					#items_in_building_of_type('home','food')
 					
-					if len(_food)>3:
+					if len(_food)>=2:
 						self.go_to_building_and_sell(_sell[0],'storage')
 					else:
-						_storage = self.level.get_all_items_in_building_of_type('home','storage')
+						_home = self.get_claimed('home')
+						_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
 						
 						if len(_storage):						
 							self.go_to_and_do(_storage[0]['pos'],\
@@ -985,19 +1019,19 @@ class life:
 						if self.go_to_building_and_buy(21,'storage'):
 							pass
 						else:
-							if len(self.get_all_cookable_items('home')):
+							if len(self.get_all_cookable_items(self.get_claimed('home'))):
 								self.cook()
 								self.task['delay'] = 5
-							else:
-								self.guard_building('home')
-								self.task['delay'] = 20
+							#else:
+							#	self.guard_building('home')
+							#	self.task['delay'] = 20
 					else:
-						if len(self.get_all_cookable_items('home')):
+						if len(self.get_all_cookable_items(self.get_claimed('home'))):
 							self.cook()
 							self.task['delay'] = 5
-						else:
-							self.guard_building('home')
-							self.task['delay'] = 20
+						#else:
+						#	self.guard_building('home')
+						#	self.task['delay'] = 20
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
@@ -1005,7 +1039,7 @@ class life:
 			self.task_delay-=1
 	
 	def cook(self):
-		_stoves = self.level.get_all_items_in_building_of_type('home','stove')
+		_stoves = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'stove')
 		_has_food = self.get_all_items_of_type('food')
 		
 		if not _stoves: return False
@@ -1032,7 +1066,7 @@ class life:
 		if len(_has_food):
 			_food = _has_food[0]
 		else:
-			_get_food = self.level.get_all_items_in_building_of_type('home','food')
+			_get_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'food')
 			
 			if not _get_food: return False
 			else: _get_food = _get_food[0]
@@ -1053,6 +1087,11 @@ class life:
 			logging.debug('[ALife.%s] Put %s in stove at %s' %
 				(self.name,_food['name'],_stove['pos']))
 			return True		
+	
+	def rest(self):
+		_beds = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'bed')
+		
+		print _beds
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1297,7 +1336,7 @@ class human(life):
 				
 				if _item:
 					self.hunger = 0
-					self.hunger_timer = var.hunger_timer_max
+					self.hunger_timer = self.hunger_timer_max
 					self.items.remove(_item[0])
 					self.remove_event(self.task['what'])
 					self.task = None
@@ -1306,7 +1345,7 @@ class human(life):
 					_items = []
 					
 					for claim in self.claims:
-						for item in self.level.get_all_items_in_building_of_type(claim,'food'):
+						for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
 							_items.append(item)
 					
 					if _items:
@@ -1353,6 +1392,8 @@ class human(life):
 				self.farm(self.task['where'])
 			elif self.task['what'] == 'cook':
 				self.farm()
+			#elif self.task['rest']:
+			#	self.rest()
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1360,6 +1401,9 @@ class human(life):
 		
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
+		
+		if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
+			self.add_event('rest',self.fatigue*2)
 		
 		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
 		
