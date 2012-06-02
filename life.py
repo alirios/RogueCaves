@@ -40,7 +40,7 @@ class life:
 		self.hunger = 0
 		self.hunger_timer_max = 75
 		self.hunger_timer = self.hunger_timer_max
-		self.hungry_at = 50
+		self.hungry_at = 75
 		self.fatigue = 0
 		self.fatigue_timer_max = 100
 		self.fatigue_timer = self.fatigue_timer_max
@@ -1156,7 +1156,6 @@ class human(life):
 		self.hp = 20
 		self.hp_max = 20
 		
-		self.hungry_at = 13
 		self.thirsty_at = -1
 		self.married = None
 		self.worth = None
@@ -1398,12 +1397,13 @@ class human(life):
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
+			print self.hungry_at
 		
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
 		
-		if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
-			self.add_event('rest',self.fatigue*2)
+		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
+		#	self.add_event('rest',self.fatigue*2)
 		
 		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
 		
