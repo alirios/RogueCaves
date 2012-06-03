@@ -1,21 +1,22 @@
 RogueCaves - readme
 ===================
 
-Current milestone: Athletic Alpaca
+Current Milestone: Athletic Alpaca
 ----------------------------------
 Todo
 ----
+* Accept unfinished A* paths
+* ALife should flee at some point during combat
+* Give tasks like farming a dynamic weight
+
+Future Milestone: Boring Badger
+-------------------------------
+Todo
+----
 * Extended cave generation (old bridges, rooms, etc).
-* Accept unfinished A* paths.
-* Audio.
-* Let game run headless.
-* Only let ALife clip if the two have active paths.
-* Combine generate_room() and generate_cave_rooms()
-* Add XP for weapons
-* ALife should flee at some point during combat.
 * Random quests
 * Tricky ALife
-* Helper functions to automatically sort incoming item lists
+* Audio
 
 Bugs
 ----
@@ -32,11 +33,17 @@ Current Version: 06.02.2012A
 ----------------------------
 Changed
 -------
+* ALife weighs decisions based on need
+* Added additional tasks for ALife to perform during downtime
+* Fixed error in life.get_event()
 * Potential doors no longer ask for real estate
+* life.get_all_items_of_type() now accepts lists
 * life.claim_building()
 * life.get_claimed()
+* life.get_all_growing_crops()
+* life.get_all_grown_crops()
 
-Current Version: 06.01.2012A
+Previous Version: 06.01.2012A
 ----------------------------
 Changed
 -------

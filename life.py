@@ -46,6 +46,7 @@ class life:
 		self.fatigue_timer = self.fatigue_timer_max
 		self.fatigued_at = 15
 		self.items = []
+		self.skills = []
 		
 		var.life.append(self)
 	
@@ -85,6 +86,7 @@ class life:
 		_keys['atk'] = self.atk
 		_keys['defe'] = self.defe
 		##TODO: Save weapon
+		_keys['task_delay'] = self.task_delay
 		_keys['thirst'] = self.thirst
 		_keys['thirst_timer'] = self.thirst_timer
 		_keys['thirst_timer_max'] = self.thirst_timer_max
@@ -106,6 +108,7 @@ class life:
 				item['planted_by'] = item['planted_by'].id
 		
 		_keys['items'] = _items
+		_keys['skills'] = self.skills
 		
 		return _keys
 	
@@ -146,6 +149,7 @@ class life:
 		self.atk = keys['atk']
 		self.defe = keys['defe']
 		##TODO: Save weapon
+		self.task_delay = keys['task_delay']
 		self.thirst = keys['thirst']
 		self.thirst_timer = keys['thirst_timer']
 		self.thirst_timer_max = keys['thirst_timer_max']
@@ -156,6 +160,7 @@ class life:
 		self.hungry_at = keys['hungry_at']
 		self.in_danger = keys['in_danger']
 		self.items = keys['items']
+		self.skills = keys['skills']
 	
 	def finalize(self):
 		for seen in self.seen:
@@ -333,10 +338,16 @@ class life:
 	def get_all_items_of_type(self,type):
 		"""Returns items of type 'type'"""
 		_ret = []
+		if isinstance(type,list): _list = True
+		else: _list = False
 		
 		for item in self.items:
-			if item['type'] == type:
-				_ret.append(item)
+			if _list:
+				if item['type'] in type:
+					_ret.append(item)
+			else:
+				if item['type'] == type:
+					_ret.append(item)
 		
 		return _ret
 	
@@ -356,6 +367,26 @@ class life:
 		_food.extend(self.get_all_items_of_type('food'))
 		
 		_ret.extend(_food)
+		
+		return _ret
+	
+	def get_all_growing_crops(self):
+		"""Returns all items still being grown by this ALife."""
+		_ret = []
+		
+		for crop in self.level.get_all_items_tagged('planted_by',ignore_storage=True):
+			if crop['type']=='seed' and crop['planted_by']==self:
+				_ret.append(crop)
+		
+		return _ret
+	
+	def get_all_grown_crops(self):
+		"""Returns all items grown by this ALife that have yet to been picked/traded."""
+		_ret = []
+		
+		for crop in self.level.get_all_items_tagged('planted_by',ignore_storage=True):
+			if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('traded'):
+				_ret.append(crop)
 		
 		return _ret
 	
@@ -382,6 +413,18 @@ class life:
 				return entry
 		
 		return False
+	
+	def get_open_stoves(self,where):
+		"""Returns all stoves in 'where' either done cooking or empty"""
+		_ret = []
+		_stoves = self.level.get_all_items_in_building_of_type(where,'stove')
+		
+		for stove in _stoves:
+			if stove['cooking'] and stove['cooking']['type'] == 'cooked food':
+				_ret.append(stove)
+			elif not stove['cooking']: _ret.append(stove)
+		
+		return _ret				
 	
 	def claim_real_estate(self,pos,size,label):
 		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
@@ -977,14 +1020,9 @@ class life:
 			self.task_delay = self.task['delay']
 			if not _open or not len(self.get_all_items_of_type('seed')):
 				self.task['delay'] = 5
-				_crops_to_get = self.level.get_all_items_tagged('planted_by',ignore_storage=True)
 				_crops_to_sell = self.get_all_items_tagged('planted_by')
-				_get = []
+				_get = self.get_all_grown_crops()
 				_sell = []
-				
-				for crop in _crops_to_get:
-					if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('traded'):
-						_get.append(crop)
 				
 				for crop in _crops_to_sell:
 					if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('cook'):
@@ -999,39 +1037,23 @@ class life:
 					#whether it needs them or not to feed themselves/others
 					#We do that check now.
 					_food = self.get_all_cookable_items(self.get_claimed('home'))
-					#items_in_building_of_type('home','food')
 					
-					if len(_food)>=2:
-						self.go_to_building_and_sell(_sell[0],'storage')
-					else:
-						_home = self.get_claimed('home')
-						_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-						
-						if len(_storage):						
-							self.go_to_and_do(_storage[0]['pos'],\
-								self.put_item_of_type,\
-								first=_sell[0]['type'],\
-								second=_storage[0]['pos'])
+					#if len(_food)>=2:
+					#	self.go_to_building_and_sell(_sell[0],'storage')
+					#else:
+					_home = self.get_claimed('home')
+					_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
+					
+					if len(_storage):				
+						self.go_to_and_do(_storage[0]['pos'],\
+							self.put_item_of_type,\
+							first=_sell[0]['type'],\
+							second=_storage[0]['pos'])
 						
 				else:
 					if self.get_money() and\
 						len(self.level.get_all_items_in_building_of_type('storage','seed')):
-						if self.go_to_building_and_buy(21,'storage'):
-							pass
-						else:
-							if len(self.get_all_cookable_items(self.get_claimed('home'))):
-								self.cook()
-								self.task['delay'] = 5
-							#else:
-							#	self.guard_building('home')
-							#	self.task['delay'] = 20
-					else:
-						if len(self.get_all_cookable_items(self.get_claimed('home'))):
-							self.cook()
-							self.task['delay'] = 5
-						#else:
-						#	self.guard_building('home')
-						#	self.task['delay'] = 20
+						self.go_to_building_and_buy(21,'storage')
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
@@ -1207,7 +1229,7 @@ class human(life):
 				event['score'] = score
 				return False
 		
-		logging.debug('[ALife.%s.Event] Added: %s' % (self.name,what))
+		logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
 		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay})
 		return True
 	
@@ -1217,6 +1239,7 @@ class human(life):
 			if event['score']>=_highest['score']:
 				_highest['what'] = event['what']
 				_highest['ret'] = event
+				_highest['score'] = event['score']
 		
 		if _highest['what']:
 			return _highest['ret']
@@ -1319,80 +1342,90 @@ class human(life):
 			if not self.married:
 				pass
 		
-		if not self.mode['task']:# and not self.task in ['attacking','flee']:
-			#elif self.highest['who'] and self.married == self.highest['who']:
-			#	#TODO: This one will happen too much...
-			#	self.follow(self.highest['who'])
-			#	self.task = 'following'
-			#else:
-			_event = self.get_event()
+		# and not self.task in ['attacking','flee']:
+		#elif self.highest['who'] and self.married == self.highest['who']:
+		#	#TODO: This one will happen too much...
+		#	self.follow(self.highest['who'])
+		#	self.task = 'following'
+		#else:
+		_event = self.get_event()
+		
+		if _event and not self.task==_event:
+			self.task = _event
+		
+		if self.task['what'] == 'food':
+			##TODO: Eventually sort this array by how good the food is
+			_item = self.get_all_items_of_type(['food','cooked food'])
 			
-			if _event and not self.task==_event:
-				self.task = _event
-			
-			if self.task['what'] == 'food':
-				_item = self.get_all_items_of_type('food')
+			if _item:
+				self.hunger = 0
+				self.hunger_timer = self.hunger_timer_max
+				self.items.remove(_item[0])
+				self.remove_event(self.task['what'])
+				self.task = None
+				self.say('That was good!')
+			else:
+				_items = []
 				
-				if _item:
-					self.hunger = 0
-					self.hunger_timer = self.hunger_timer_max
-					self.items.remove(_item[0])
+				for claim in self.claims:
+					for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
+						_items.append(item)
+				
+				if _items:
+					_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
+					self.pick_up_item_at(_item['pos'],'food')
+				
+		elif self.task['what'] == 'mine':
+			self.mine()
+		elif self.task['what'] == 'deliver':
+			if len(self.get_all_items_of_type('ore')):
+				_pos = None
+				_room = var.world.get_level(1).get_room('storage')
+				_chest = None
+				for pos in _room['walking_space']:
+					for item in var.world.get_level(1).items[pos[0]][pos[1]]:
+						if item['type']=='storage':
+							for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+								if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
+									_pos = (pos[0]+space[0],pos[1]+space[1])
+									_chest = item
+									break
+							break
+				
+				if tuple(self.pos) == _pos:
+					self.put_all_items_of_type('ore',_chest['pos'])
 					self.remove_event(self.task['what'])
 					self.task = None
-					self.say('That was good!')
-				else:
-					_items = []
-					
-					for claim in self.claims:
-						for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
-							_items.append(item)
-					
-					if _items:
-						_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
-						self.pick_up_item_at(_item['pos'],'food')
-					
-			elif self.task['what'] == 'mine':
-				self.mine()
-			elif self.task['what'] == 'deliver':
-				if len(self.get_all_items_of_type('ore')):
-					_pos = None
-					_room = var.world.get_level(1).get_room('storage')
-					_chest = None
-					for pos in _room['walking_space']:
-						for item in var.world.get_level(1).items[pos[0]][pos[1]]:
-							if item['type']=='storage':
-								for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-									if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
-										_pos = (pos[0]+space[0],pos[1]+space[1])
-										_chest = item
-										break
-								break
-					
-					if tuple(self.pos) == _pos:
-						self.put_all_items_of_type('ore',_chest['pos'])
-						self.remove_event(self.task['what'])
-						self.task = None
-						self.mine_dest = None
-					elif _pos:
-						self.go_to(_pos,z=1)
-			elif self.task['what'] == 'attack':
-				if self.task['who'].hp>0:
-					self.go_to(self.task['who'].pos,z=self.task['who'].z)
-				else:
-					if self.remove_event(self.task['what']):
-						self.task = None
-						self.say('Got em.')
-						self.lowest = {'who':None,'score':0}
-			elif self.task['what'] == 'run_shop':
-				self.run_shop(self.task['where'])
-			elif self.task['what'] == 'flee':
-				print 'Running away'
-			elif self.task['what'] == 'farm':
-				self.farm(self.task['where'])
-			elif self.task['what'] == 'cook':
-				self.farm()
-			#elif self.task['rest']:
-			#	self.rest()
+					self.mine_dest = None
+				elif _pos:
+					self.go_to(_pos,z=1)
+		elif self.task['what'] == 'attack':
+			if self.task['who'].hp>0:
+				self.go_to(self.task['who'].pos,z=self.task['who'].z)
+			else:
+				if self.remove_event(self.task['what']):
+					self.task = None
+					self.say('Got em.')
+					self.lowest = {'who':None,'score':0}
+		elif self.task['what'] == 'run_shop':
+			self.run_shop(self.task['where'])
+		elif self.task['what'] == 'flee':
+			print 'Running away'
+		elif self.task['what'] == 'farm':
+			self.farm(self.task['where'])
+		elif self.task['what'] == 'cook':
+			self.cook()
+		elif self.task['what'] == 'rest':
+			self.rest()
+		elif self.task['what'] == 'stay_home':
+			if not self.task_delay:
+				self.guard_building(self.get_claimed('home'))
+				self.task_delay = self.task['delay']
+			elif self.task_delay>0:
+				self.task_delay-=1
+		elif self.task['what'] == 'trade':
+			self.trade_items
+		
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1401,6 +1434,33 @@ class human(life):
 		
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
+		
+		if 'farm' in self.skills:
+			_farm_score = 0
+			_cook_score = 0
+			_sell_score = 0
+			_farm_score-=len(self.get_all_items_of_type(['food','cooked_food'])*2)
+			
+			##TODO: Calculate how much food this ALife needs for himself and family
+			#if len(_food)<10:
+			_farm_score+=len(self.get_all_items_of_type('seed'))*15
+			
+			if self.get_open_stoves(self.get_claimed('home')):
+				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
+			_farm_score+=len(self.get_all_grown_crops())*20
+			#_farm_score+=len(self.get_all_growing_crops())*5
+			
+			##TODO: Find out how much money is needed to buy more seed
+			_trade_score += len(self.get_all_items_of_type(['food','cooked food']))*15
+			_trade_what = ['food','cooked food']
+			_sell_score -= self.get_money()*2
+			
+			print _farm_score,_cook_score,_trade_score
+			
+			self.add_event('farm',_farm_score,delay=5)
+			self.add_event('cook',_cook_score,delay=5)
+			self.add_event('stay_home',self.fatigue,delay=15)
+			self.add_event('trade',_sell,delay=5)
 		
 		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
 		#	self.add_event('rest',self.fatigue*2)

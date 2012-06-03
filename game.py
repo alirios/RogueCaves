@@ -242,7 +242,8 @@ else:
 		test.icon['color'][0] = 'red'
 		for i in range(3):
 			test.add_item_raw(21)
-		test.add_event('farm',25,where=None,delay=5)
+		#test.add_event('farm',50,where=None,delay=5)
+		test.skills = ['farm']
 		test.pos = list(test.level.get_room('home')['door'])
 
 #for i in range(2):

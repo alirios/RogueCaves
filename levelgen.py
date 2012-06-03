@@ -377,7 +377,7 @@ class LevelGen:
 					if item['cooking']['type']=='food' and\
 						item['cooking']['cook_time']: item['cooking']['cook_time']-=1
 					else:
-						item['cooking'] = self.add_item(item['cooking']['makes'],item['pos'])
+						item['cooking'] = self.add_item(item['cooking']['makes'],item['pos'],no_place=True)
 	
 	def tick_lights(self):
 		for _l in self.lights:
