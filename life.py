@@ -1452,7 +1452,6 @@ class human(life):
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
-			print self.hungry_at
 		
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
