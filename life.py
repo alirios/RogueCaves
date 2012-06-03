@@ -335,13 +335,22 @@ class life:
 		
 		return _ret
 	
-	def get_all_items_of_type(self,type):
+	def get_all_items_of_type(self,type,check_storage=False):
 		"""Returns items of type 'type'"""
 		_ret = []
 		if isinstance(type,list): _list = True
 		else: _list = False
 		
 		for item in self.items:
+			if item['type'] == 'storage' and check_storage:
+				for _item in item['items']:
+					if _list:
+						if _item['type'] in type:
+							_ret.append(_item)
+					else:
+						if _item['type'] == type:
+							_ret.append(_item)
+					
 			if _list:
 				if item['type'] in type:
 					_ret.append(item)
@@ -424,7 +433,18 @@ class life:
 				_ret.append(stove)
 			elif not stove['cooking']: _ret.append(stove)
 		
-		return _ret				
+		return _ret
+
+	def get_done_stoves(self,where):
+		"""Returns all stoves in 'where' done cooking"""
+		_ret = []
+		_stoves = self.level.get_all_items_in_building_of_type(where,'stove')
+		
+		for stove in _stoves:
+			if stove['cooking'] and stove['cooking']['type'] == 'cooked food':
+				_ret.append(stove)
+		
+		return _ret
 	
 	def claim_real_estate(self,pos,size,label):
 		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
@@ -1022,34 +1042,14 @@ class life:
 				self.task['delay'] = 5
 				_crops_to_sell = self.get_all_items_tagged('planted_by')
 				_get = self.get_all_grown_crops()
-				_sell = []
-				
-				for crop in _crops_to_sell:
-					if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('cook'):
-						_sell.append(crop)
+				#_sell = []
+				#
+				#for crop in _crops_to_sell:
+				#	if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('cook'):
+				#		_sell.append(crop)
 				
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
-				elif _sell:
-					##TODO: _sell is a bit misleading
-					#_sell actually refers to items that are harvested.
-					#they can be sold, but first the ALife must consider
-					#whether it needs them or not to feed themselves/others
-					#We do that check now.
-					_food = self.get_all_cookable_items(self.get_claimed('home'))
-					
-					#if len(_food)>=2:
-					#	self.go_to_building_and_sell(_sell[0],'storage')
-					#else:
-					_home = self.get_claimed('home')
-					_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-					
-					if len(_storage):				
-						self.go_to_and_do(_storage[0]['pos'],\
-							self.put_item_of_type,\
-							first=_sell[0]['type'],\
-							second=_storage[0]['pos'])
-						
 				else:
 					if self.get_money() and\
 						len(self.level.get_all_items_in_building_of_type('storage','seed')):
@@ -1114,6 +1114,27 @@ class life:
 		_beds = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'bed')
 		
 		print _beds
+	
+	def sell_items(self,what):
+		##TODO: Sort these eventually...
+		#_food = self.get_all_cookable_items(self.get_claimed('home'))
+		_has_food = self.get_all_items_of_type(what)
+		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
+		
+		if _has_food:
+			self.go_to_building_and_sell(_has_food[0],'storage')
+		elif _stored_food:
+			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
+	
+	def store_items(self,what):
+		_home = self.get_claimed('home')
+		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
+		
+		if len(_storage):				
+			self.go_to_and_do(_storage[0]['pos'],\
+				self.put_item_of_type,\
+				first=_sell[0]['type'],\
+				second=_storage[0]['pos'])
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1221,7 +1242,7 @@ class human(life):
 			
 		return _name
 	
-	def add_event(self,what,score,who=None,where=None,delay=0):
+	def add_event(self,what,score,who=None,where=None,items=[],delay=0):
 		for event in self.events:
 			if event['what'] == what and event['who'] == who:
 				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
@@ -1230,7 +1251,8 @@ class human(life):
 				return False
 		
 		logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
-		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay})
+		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay,\
+			'items':items})
 		return True
 	
 	def get_event(self):
@@ -1423,8 +1445,8 @@ class human(life):
 				self.task_delay = self.task['delay']
 			elif self.task_delay>0:
 				self.task_delay-=1
-		elif self.task['what'] == 'trade':
-			self.trade_items
+		elif self.task['what'] == 'sell':
+			self.sell_items(self.task['items'])
 		
 		
 		#Take care of needs here
@@ -1447,20 +1469,21 @@ class human(life):
 			
 			if self.get_open_stoves(self.get_claimed('home')):
 				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
+				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			_farm_score+=len(self.get_all_grown_crops())*20
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
-			_trade_score += len(self.get_all_items_of_type(['food','cooked food']))*15
-			_trade_what = ['food','cooked food']
+			_sell_score = len(self.get_all_items_of_type(['food','cooked food']))*10
+			_sell_what = ['food','cooked food']
 			_sell_score -= self.get_money()*2
 			
-			print _farm_score,_cook_score,_trade_score
+			#print _farm_score,_cook_score,_sell_score
 			
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
 			self.add_event('stay_home',self.fatigue,delay=15)
-			self.add_event('trade',_sell,delay=5)
+			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
 		
 		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
 		#	self.add_event('rest',self.fatigue*2)

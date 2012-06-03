@@ -210,6 +210,8 @@ class LevelGen:
 	def get_all_items_in_building_of_type(self,building,type):
 		"""Returns all items in 'building' of 'type'"""
 		_ret = []
+		if isinstance(type,list): _list = True
+		else: _list = False
 		
 		for room in self.rooms:
 			if room['type'].lower() == building.lower():
@@ -217,10 +219,18 @@ class LevelGen:
 					for item in self.items[pos[0]][pos[1]]:
 						if item['type'] == 'storage':
 							for _item in item['items']:
-								if _item['type'] == type:
-									_ret.append(_item)
-						if item['type'] == type:
-							_ret.append(item)
+								if _list:
+									if _item['type'] in type:
+										_ret.append(_item)
+								else:
+									if _item['type'] == type:
+										_ret.append(_item)
+						if _list:
+							if item['type'] in type:
+								_ret.append(item)
+						else:
+							if item['type'] == type:
+								_ret.append(item)
 		
 		return _ret
 	
@@ -883,9 +893,17 @@ class LevelGen:
 						_ecount = 0
 						_scount = 0
 						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 15: _ecount += 1
+							_x = __pos[0]+___pos[0]
+							_y = __pos[1]+___pos[1]
+							if _x<0 or _x>=self.size[0]: continue
+							if _y<0 or _y>=self.size[1]: continue
+							if self.map[_x][_y] == 15: _ecount += 1
 						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-							if self.map[__pos[0]+___pos[0]][__pos[1]+___pos[1]] == 16: _scount += 1
+							_x = __pos[0]+___pos[0]
+							_y = __pos[1]+___pos[1]
+							if _x<0 or _x>=self.size[0]: continue
+							if _y<0 or _y>=self.size[1]: continue
+							if self.map[_x][_y] == 16: _scount += 1
 						
 						if _ecount>2: _found = False
 						if _scount<2: _found = False

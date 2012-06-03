@@ -628,7 +628,8 @@ def get_input():
 						print 'Path type: %s' % life.path_type
 						print 'Position: %s' % str(life.pos)
 						print 'Inventory: '
-						print life.items
+						for item in life.items:
+							print item
 			
 			for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
 				if item['pos'] == var.mouse_pos:

@@ -29,7 +29,14 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 06.02.2012A
+Current Version: 06.03.2012A
+----------------------------
+Changed
+-------
+* life.get_open_stoves()
+* life.get_done_stoves()
+
+Previous Version: 06.02.2012A
 ----------------------------
 Changed
 -------
