@@ -295,6 +295,22 @@ class LevelGen:
 		
 		return _ret
 	
+	def get_open_space_around(self,pos,dist=5):
+		"""Returns all open spaces around 'pos' in range 'dist'"""
+		_ret = []
+		
+		for x1 in range(-dist,dist):
+			x = pos[0]+x1
+			if x<0 or x>=self.size[0]: continue
+			for y1 in range(-dist,dist):
+				y = pos[1]+y1
+				if y<0 or y>=self.size[1]: continue
+				
+				if self.map[x][y] in var.solid: continue
+				_ret.append((x,y))
+		
+		return _ret
+	
 	def get_real_estate(self,size):
 		_ret = []
 		for x1 in range(self.size[0]):

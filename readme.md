@@ -33,14 +33,17 @@ Current Version: 06.03.2012A
 ----------------------------
 Changed
 -------
+* Added dog
 * ALife now find and claim buildings on their own
 * Restructured the way buildings are handled
+* levelgen.get_open_space_around()
 * levelgen.get_open_buildings_with_items()
 * levelgen.get_open_buildings_of_type()
 * levelgen.get_all_buildings_of_type()
 * life.get_open_stoves()
 * life.get_done_stoves()
 * life.get_nearest_store()
+* life.follow_person()
 
 Previous Version: 06.02.2012A
 ----------------------------

@@ -228,8 +228,19 @@ else:
 		test.icon['color'][0] = 'blue'
 		test.skills = ['trade']
 		test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
+	
+	for i in range(1):
+		test = life.dog()
+		test.name = 'Fido'
+		test.z = 1
+		test.speed = 2
+		test.speed_max = 2
+		test.level = var.world.get_level(test.z)
+		#test.skills = ['trade']
+		test.add_event('follow',50,who=var.player,delay=20)
+		test.pos = [2,2]
 		
-	for i in range(3):
+	for i in range(0):
 		test = life.human()
 		test.z = 1
 		test.speed = 1

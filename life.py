@@ -483,10 +483,11 @@ class life:
 		
 		return False
 	
-	def say(self,what):
+	def say(self,what,action=False):
 		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
-			functions.log('%s: %s' % (self.name,what))
+			if action: functions.log('%s %s' % (self.name,what))
+			else: functions.log('%s: %s' % (self.name,what))
 	
 	def attack(self,who):
 		"""Performs attack on object 'who'"""
@@ -761,7 +762,7 @@ class life:
 				self.path_dest = None
 		
 		_tile = self.level.map[_pos[0]][_pos[1]]
-		if _tile in var.blocking or _tile in var.solid:			
+		if _tile in var.blocking or _tile in var.solid:	
 			self.pos = self.pos[:]
 			return
 		
@@ -989,6 +990,30 @@ class life:
 			pass
 		else:
 			self.go_to(random.choice(_room['walking_space']))
+	
+	def follow_person(self,who):
+		if functions.distance(self.pos,who.pos)>=6:
+			if self.path_dest:
+				if functions.distance(self.path_dest,who.pos)>=6:
+					self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
+			else:
+				self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
+		else:
+			if self.task_delay:
+				self.task_delay -= 1
+			else:
+				self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
+				self.task_delay = self.task['delay']
+			
+			#print self.level.get_open_space_around(who.pos)
+			
+		#print self.pos,self.path
+		
+		
+		#print 'follow!'
+		#else:
+		#	if not self.task_delay:
+		#		self.task_delay = self.task['delay']
 	
 	def run_shop(self,where):
 		if self.get_claimed('work'):
@@ -1377,7 +1402,7 @@ class human(life):
 		
 		# and not self.task in ['attacking','flee']:
 		#elif self.highest['who'] and self.married == self.highest['who']:
-		#	#TODO: This one will happen too much...
+		#	##TODO: This one will happen too much...
 		#	self.follow(self.highest['who'])
 		#	self.task = 'following'
 		#else:
@@ -1458,6 +1483,9 @@ class human(life):
 					self.task_delay-=1
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
+		elif self.task['what'] == 'follow':
+			self.follow_person(self.task['who'])
+			
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1535,8 +1563,26 @@ class crazy_miner(human):
 		self.faction = 'evil'
 	
 	def on_enemy_spotted(self):
-		human.on_enemy_spotted(self)
 		self.say('I see yah, you crazy bastard!')
+
+class dog(human):
+	def __init__(self):
+		human.__init__(self)
+		
+		self.race = 'dog'
+		self.faction = 'good'
+		
+		self.icon['icon'] = 'd'
+		self.icon['color'][0] = 'brown'
+	
+	def on_enemy_spotted(self):
+		human.on_enemy_spotted(self)
+		self.say('woofs!',action=True)
+	
+		#def think(self):
+		#self.add_event('follow',50,who=var.player,delay=5)
+		#human.think(self)
+		#print self.path
 
 class zombie(life):
 	def __init__(self,player=False):
