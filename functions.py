@@ -8,6 +8,10 @@ def log(text):
 def distance(pos1,pos2):
 	return abs(pos1[0]-pos2[0])+abs(pos1[1]-pos2[1])
 
+def get_id():
+	var.id-=1
+	return var.id
+
 def get_name_by_gender(gender):
 	if gender == 'male':
 		return random.choice(var.names_male).strip()
@@ -66,10 +70,6 @@ def sort_item_array_by_distance(items,pos):
 		_ret.append(item['item'])
 	
 	return _ret
-
-def get_id():
-	var.id-=1
-	return var.id
 
 def item_list_to_menu(list):
 	_ret = []

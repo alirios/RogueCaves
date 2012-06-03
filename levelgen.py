@@ -214,7 +214,7 @@ class LevelGen:
 		else: _list = False
 		
 		for room in self.rooms:
-			if room['type'].lower() == building.lower():
+			if room['name'].lower() == building.lower():
 				for pos in room['walking_space']:
 					for item in self.items[pos[0]][pos[1]]:
 						if item['type'] == 'storage':
@@ -258,6 +258,37 @@ class LevelGen:
 				for item in self.items[x][y]:
 					if item['solid']:
 						_ret.append(item)
+		
+		return _ret
+	
+	def get_open_buildings_of_type(self,type):
+		_ret = []
+		
+		for room in self.rooms:
+			if room['type'] == type: _ret.append(room)
+		
+		return _ret
+	
+	def get_open_buildings_with_items(self,items):
+		_ret = []
+		
+		for room in self.rooms:
+			_needs = items[:]
+			for pos in room['walking_space']:
+				for item in self.items[pos[0]][pos[1]]:
+					if item['type'] in _needs:
+						_needs.remove(item['type'])
+			
+			if not _needs: _ret.append(room)
+		
+		return _ret
+	
+	def get_all_buildings_of_type(self,type):
+		_ret = []
+		
+		for room in self.rooms:
+			if room['type'].lower() == type.lower():
+				_ret.append(room)
 		
 		return _ret
 	
@@ -313,18 +344,18 @@ class LevelGen:
 					if _item == item:
 						self.items[x][y].remove(item)						
 	
-	def get_room(self,type):
+	def get_room(self,name):
 		for room in self.rooms:
-			if room['type'].lower() == type.lower():
+			if room['name'].lower() == name.lower():
 				return room
 		
 		return False
 	
-	def get_room_items(self,type):
+	def get_room_items(self,name):
 		_ret = []
 		
 		for room in self.rooms:
-			if room['type'].lower() == type.lower():
+			if room['name'].lower() == name.lower():
 				for pos in room['walking_space']:
 					for item in self.items[pos[0]][pos[1]]:
 						if item['type'] == 'storage':
@@ -844,7 +875,7 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','storage','kitchen']:
+		for _room_type in ['home','store','kitchen']:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False
@@ -943,10 +974,12 @@ class LevelGen:
 	def generate_building(self,room):
 		if room['type'] == 'home':
 			_needs = [24,18]
-		elif room['type'] == 'storage':
+		elif room['type'] == 'store':
 			_needs = [18,21,21,21]
 		elif room['type'] == 'kitchen':
 			_needs = [18]
+		
+		room['name'] += str(functions.get_id())
 		
 		#We like putting things in corners...
 		_possible = []
@@ -964,7 +997,7 @@ class LevelGen:
 		
 		for need in _needs:
 			_stored = False
-			for _storage in self.get_all_items_in_building_of_type(room['type'],'storage'):
+			for _storage in self.get_all_items_in_building_of_type(room['name'],'storage'):
 				_storage['items'].append(self.add_item(need,_pos,no_place=True))
 				_stored = True
 				break

@@ -202,7 +202,7 @@ else:
 	var.player.speed = 1
 	var.player.speed_max = 1
 	var.player.level = var.world.get_level(var.player.z)
-	var.player.pos = list(var.player.level.get_room('storage')['door'])
+	var.player.pos = list(var.player.level.get_open_buildings_of_type('store')[0]['door'])
 	var.player.god = var.ivan
 
 	for i in range(9):
@@ -226,25 +226,23 @@ else:
 		test.speed_max = 3
 		test.level = var.world.get_level(test.z)
 		test.icon['color'][0] = 'blue'
-		#test.mode = {'task':'mine','who':None}
-		test.add_event('run_shop',50,where='storage',delay=20)
-		test.pos = list(test.level.get_room('storage')['door'])
+		test.skills = ['trade']
+		test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
 		
 	for i in range(1):
 		test = life.human()
 		test.name = 'Farmer'
-		#test.claims.append('home')
 		test.z = 1
 		test.speed = 1
 		test.speed_max = 1
 		test.level = var.world.get_level(test.z)
-		test.claim_building('home','home')
+		_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
+		test.claim_building(_building,'home')
 		test.icon['color'][0] = 'red'
 		for i in range(3):
 			test.add_item_raw(21)
-		#test.add_event('farm',50,where=None,delay=5)
 		test.skills = ['farm']
-		test.pos = list(test.level.get_room('home')['door'])
+		test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
 #for i in range(2):
 #	test = life.human()

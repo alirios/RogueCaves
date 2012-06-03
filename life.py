@@ -407,6 +407,20 @@ class life:
 		
 		return False
 	
+	def get_nearest_store(self):
+		"""Returns nearest store to this ALife"""
+		_lowest = {'name':None,'dist':9001}
+		
+		for building in self.level.get_all_buildings_of_type('store'):
+			if not building['owner']: continue
+			_dist = functions.distance(self.pos,building['door'])
+			
+			if _dist < _lowest['dist']:
+				_lowest['name'] = building['name']
+				_lowest['dist'] = _dist
+		
+		return _lowest['name']
+	
 	def get_money(self):
 		"""Returns amount of money the ALife has."""
 		_ret = 0
@@ -461,9 +475,10 @@ class life:
 		logging.debug('[ALife.%s.Land] Claimed %s as %s'
 			% (self.name,where,label))
 	
-	def get_claimed(self,label):
+	def get_claimed(self,label,return_building=False):
 		for claim in self.claims:
 			if claim['label'] == label:
+				if return_building: return self.level.get_room(claim['where'])
 				return claim['where']
 		
 		return False
@@ -977,7 +992,7 @@ class life:
 	
 	def run_shop(self,where):
 		if self.get_claimed('work'):
-			_storage = self.level.get_all_items_in_building_of_type('storage','storage')
+			_storage = self.level.get_all_items_in_building_of_type(where,'storage')
 			_dump = self.get_all_items_tagged('traded')
 			
 			if _dump and _storage:
@@ -993,7 +1008,7 @@ class life:
 				elif self.task_delay>0:
 					self.task_delay-=1
 		else:
-			_room = var.world.get_level(1).get_room(where)
+			_room = self.level.get_room(where)
 			self.guard_building(where)
 			#Ownership
 			if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
@@ -1016,7 +1031,7 @@ class life:
 			
 			_lowest = {'entry':None,'dist':100}
 			for entry in _res:
-				_pos = self.level.get_room(self.get_claimed('home'))['walking_space'][0]
+				_pos = self.get_claimed('home',return_building=True)['walking_space'][0]
 				_dist = functions.distance(tuple(_pos),entry)
 				if _dist<_lowest['dist']:
 					_lowest['dist'] = _dist
@@ -1042,18 +1057,14 @@ class life:
 				self.task['delay'] = 5
 				_crops_to_sell = self.get_all_items_tagged('planted_by')
 				_get = self.get_all_grown_crops()
-				#_sell = []
-				#
-				#for crop in _crops_to_sell:
-				#	if crop['type']=='food' and crop['planted_by']==self and not crop.has_key('cook'):
-				#		_sell.append(crop)
 				
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
-				else:
-					if self.get_money() and\
-						len(self.level.get_all_items_in_building_of_type('storage','seed')):
-						self.go_to_building_and_buy(21,'storage')
+				##TODO: Put this in a function
+				#else:
+				#	if self.get_money() and\
+				#		len(self.level.get_all_items_in_building_of_type('storage','seed')):
+				#		self.go_to_building_and_buy(21,'storage')
 			else:
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
@@ -1122,7 +1133,7 @@ class life:
 		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
 		
 		if _has_food:
-			self.go_to_building_and_sell(_has_food[0],'storage')
+			self.go_to_building_and_sell(_has_food[0],self.get_nearest_store())
 		elif _stored_food:
 			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
 	
@@ -1396,7 +1407,6 @@ class human(life):
 				if _items:
 					_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
 					self.pick_up_item_at(_item['pos'],'food')
-				
 		elif self.task['what'] == 'mine':
 			self.mine()
 		elif self.task['what'] == 'deliver':
@@ -1440,14 +1450,14 @@ class human(life):
 		elif self.task['what'] == 'rest':
 			self.rest()
 		elif self.task['what'] == 'stay_home':
-			if not self.task_delay:
-				self.guard_building(self.get_claimed('home'))
-				self.task_delay = self.task['delay']
-			elif self.task_delay>0:
-				self.task_delay-=1
+			if self.get_claimed('home'):
+				if not self.task_delay:
+					self.guard_building(self.get_claimed('home'))
+					self.task_delay = self.task['delay']
+				elif self.task_delay>0:
+					self.task_delay-=1
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
-		
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1456,14 +1466,14 @@ class human(life):
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
 		
+		#Consider skills
 		if 'farm' in self.skills:
 			_farm_score = 0
 			_cook_score = 0
 			_sell_score = 0
 			_farm_score-=len(self.get_all_items_of_type(['food','cooked_food'])*2)
 			
-			##TODO: Calculate how much food this ALife needs for himself and family
-			#if len(_food)<10:
+			##TODO: Calculate how much food this ALife needs
 			_farm_score+=len(self.get_all_items_of_type('seed'))*15
 			
 			if self.get_open_stoves(self.get_claimed('home')):
@@ -1476,18 +1486,27 @@ class human(life):
 			_sell_score = len(self.get_all_items_of_type(['food','cooked food']))*10
 			_sell_what = ['food','cooked food']
 			_sell_score -= self.get_money()*2
+			if not self.get_nearest_store(): _sell_score = -1
 			
 			#print _farm_score,_cook_score,_sell_score
 			
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
-			self.add_event('stay_home',self.fatigue,delay=15)
 			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
+		elif 'trade' in self.skills:
+			_trade_score = 50
+			
+			if self.get_claimed('work'):
+				self.add_event('run_shop',_trade_score,where=self.get_claimed('work'),delay=20)
+			else:
+				_building = self.level.get_open_buildings_of_type('store')[0]['name']
+				self.add_event('run_shop',_trade_score,where=_building,delay=20)
 		
 		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
 		#	self.add_event('rest',self.fatigue*2)
 		
 		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
+		self.add_event('stay_home',self.fatigue,delay=15)
 		
 		if self.path:
 			if tuple(self.pos) == tuple(self.path[0]):
