@@ -265,6 +265,7 @@ class LevelGen:
 		_ret = []
 		
 		for room in self.rooms:
+			if room['owner']: continue
 			if room['type'] == type: _ret.append(room)
 		
 		return _ret
@@ -273,6 +274,8 @@ class LevelGen:
 		_ret = []
 		
 		for room in self.rooms:
+			if room['owner']: continue
+			
 			_needs = items[:]
 			for pos in room['walking_space']:
 				for item in self.items[pos[0]][pos[1]]:
@@ -875,7 +878,7 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','store','kitchen']:
+		for _room_type in ['home','home','home','store','store','kitchen']:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False

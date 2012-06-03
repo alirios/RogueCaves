@@ -229,9 +229,8 @@ else:
 		test.skills = ['trade']
 		test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
 		
-	for i in range(1):
+	for i in range(3):
 		test = life.human()
-		test.name = 'Farmer'
 		test.z = 1
 		test.speed = 1
 		test.speed_max = 1
