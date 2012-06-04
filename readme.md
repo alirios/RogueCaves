@@ -7,7 +7,9 @@ Todo
 ----
 * Accept unfinished A* paths
 * ALife should flee at some point during combat
-* Give tasks like farming a dynamic weight
+* Need animal class
+* Need "tilling" task for farming
+* Relationships (would probably get rid of life.owner)
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -29,11 +31,14 @@ Bugs
 * Walls should be destroyable, either with a pickaxe or something else.
 * Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
-Current Version: 06.03.2012A
+Current Version: 06.04.2012A
 ----------------------------
 Changed
 -------
+* life.on_enemy/friendly_spotted() now accept an argument (who)
+* Moved life.on_enemy/friendly_spotted() call into initial ALife scoring
 * Fixed multiple shop owners trying to inhabit the same shop
+* life.sell_items()
 
 Previous Version: 06.03.2012A
 ----------------------------

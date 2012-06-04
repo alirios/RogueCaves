@@ -736,7 +736,6 @@ class life:
 					self.seen.append({'who':life,'los':_l,'in_los':True,'last_seen':life.pos[:]})
 			else:
 				if _temp and _temp['in_los']:
-					#print _temp['who'].name,'lost'
 					_temp['in_los'] = False
 		
 		return self.pos
@@ -1027,7 +1026,6 @@ class life:
 					self.put_all_items_tagged,\
 					first='traded',
 					second=_storage[0]['pos'])
-				#self.put_all_items_of_tag('traded')
 			else:
 				if not self.task_delay:
 					self.guard_building(where)
@@ -1167,12 +1165,17 @@ class life:
 	def store_items(self,what):
 		_home = self.get_claimed('home')
 		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-		
-		if len(_storage):				
-			self.go_to_and_do(_storage[0]['pos'],\
-				self.put_item_of_type,\
-				first=_sell[0]['type'],\
-				second=_storage[0]['pos'])
+		_in_storage  = self.get_all_items_of_type(what,check_storage=True)
+		_has = self.get_all_items_of_type(what)
+
+		if len(_storage):	
+			if _has:			
+				self.go_to_and_do(_storage[0]['pos'],\
+					self.put_item_of_type,\
+					first=_has[0]['type'],\
+					second=_storage[0]['pos'])
+			elif _in_storage:
+				self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1253,7 +1256,10 @@ class human(life):
 		
 		self.events = []
 	
-	def on_enemy_spotted(self):
+	def on_enemy_spotted(self,who):
+		pass
+	
+	def on_friendly_spotted(self,who):
 		pass
 	
 	def is_in_danger(self,who):
@@ -1368,14 +1374,23 @@ class human(life):
 				_score = self.judge(seen['who'])
 				
 				if _score < 0 and _score <= self.lowest['score']:
-					self.lowest['score'] = _score
 					self.lowest['who'] = seen['who']
+					
+					if _score < self.lowest['score']:
+						self.on_enemy_spotted(self.lowest['who'])
+					
+					self.lowest['score'] = _score
 					self.lowest['last_seen'] = seen['last_seen'][:]
 				
-				if _score >= 0 and _score >= self.highest['score']:
-					self.highest['score'] = _score
-					self.highest['who'] = seen['who']
-					self.highest['last_seen'] = seen['last_seen'][:]
+				if _score >= 0:
+					if _score >= self.highest['score']:
+						self.highest['who'] = seen['who']
+						
+						if _score > self.highest['score']:
+							self.on_friendly_spotted(self.highest['who'])
+						
+						self.highest['score'] = _score
+						self.highest['last_seen'] = seen['last_seen'][:]
 			
 			else:
 				if self.lowest['who'] == seen['who']:
@@ -1387,7 +1402,7 @@ class human(life):
 		if self.lowest['who']:
 			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
-					self.on_enemy_spotted()
+					#self.on_enemy_spotted(self.lowest['who'])
 					if self.lowest['who'].player:
 						self.lowest['who'].is_in_danger(self)
 			else:
@@ -1481,6 +1496,8 @@ class human(life):
 			self.sell_items(self.task['items'])
 		elif self.task['what'] == 'follow':
 			self.follow_person(self.task['who'])
+		elif self.task['what'] == 'store_items':
+			self.store_items(self.task['items'])
 			
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1494,28 +1511,36 @@ class human(life):
 			_farm_score = 0
 			_cook_score = 0
 			_sell_score = 0
+			_store_items_score = 0
 			_farm_score-=len(self.get_all_items_of_type(['food','cooked_food'])*2)
 			
 			##TODO: Calculate how much food this ALife needs
-			_farm_score+=len(self.get_all_items_of_type('seed'))*15
+			_farm_score+=len(self.get_all_items_of_type('seed'))*10
 			
 			if self.get_open_stoves(self.get_claimed('home')):
 				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
 				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
-			_farm_score+=len(self.get_all_grown_crops())*20
+			_farm_score+=len(self.get_all_grown_crops())*10
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
-			_sell_score = len(self.get_all_items_of_type(['food','cooked food']))*10
+			_sell_score = len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*10
 			_sell_what = ['food','cooked food']
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
-			#print _farm_score,_cook_score,_sell_score
+			#Store away extra food
+			_store_items_score += \
+				len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*5
+			_store_what = ['food','cooked food']
+			#_store_items_score += (self.get_money()/2)
+			
+			#print _farm_score,_cook_score,_sell_score,_store_items_score
 			
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
 			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
+			self.add_event('store_items',_store_items_score,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
 			_trade_score = 50
 			
@@ -1562,7 +1587,7 @@ class crazy_miner(human):
 		self.race = 'human'
 		self.faction = 'evil'
 	
-	def on_enemy_spotted(self):
+	def on_enemy_spotted(self,who):
 		self.say('I see yah, you crazy bastard!')
 
 class dog(human):
@@ -1575,9 +1600,15 @@ class dog(human):
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
 	
-	def on_enemy_spotted(self):
-		human.on_enemy_spotted(self)
+	def on_enemy_spotted(self,who):
+		human.on_enemy_spotted(self,who)
 		self.say('barks!',action=True)
+	
+	def on_friendly_spotted(self,who):
+		human.on_friendly_spotted(self,who)
+		
+		if self.owner == who:
+			self.say('Woof!')
 	
 	def judge(self,who):
 		_score = 0
@@ -1600,9 +1631,6 @@ class dog(human):
 	
 	def think(self):		
 		if self.highest['who']:
-			if self.task.has_key('who') and self.task['who']==self.highest['who']:
-				self.say('Woof!')
-			
 			self.add_event('follow',50,who=self.highest['who'],delay=15)
 		
 		return human.think(self)
