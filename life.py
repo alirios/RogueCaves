@@ -26,6 +26,7 @@ class life:
 		self.mine_dest = None
 		self.alignment = 0
 		self.god = None
+		self.owner = None
 		
 		self.atk = 1
 		self.defe = 1
@@ -47,6 +48,7 @@ class life:
 		self.fatigued_at = 15
 		self.items = []
 		self.skills = []
+		self.talents = []
 		
 		var.life.append(self)
 	
@@ -83,6 +85,10 @@ class life:
 		_keys['mine_dest'] = self.mine_dest
 		_keys['alignment'] = self.alignment
 		##TODO: Save god
+		if self.owner:
+			_keys['owner'] = self.owner.id
+		else:
+			_keys['owner'] = self.owner
 		_keys['atk'] = self.atk
 		_keys['defe'] = self.defe
 		##TODO: Save weapon
@@ -108,6 +114,7 @@ class life:
 				item['planted_by'] = item['planted_by'].id
 		
 		_keys['items'] = _items
+		_keys['talents'] = self.talents
 		_keys['skills'] = self.skills
 		
 		return _keys
@@ -146,6 +153,7 @@ class life:
 		self.mine_dest = keys['mine_dest']
 		self.alignment = keys['alignment']
 		##TODO: Save god
+		self.owner = keys['owner']
 		self.atk = keys['atk']
 		self.defe = keys['defe']
 		##TODO: Save weapon
@@ -160,11 +168,15 @@ class life:
 		self.hungry_at = keys['hungry_at']
 		self.in_danger = keys['in_danger']
 		self.items = keys['items']
+		self.talents = keys['talents']
 		self.skills = keys['skills']
 	
 	def finalize(self):
 		for seen in self.seen:
 			seen['who'] = functions.get_alife_by_id(seen['who'])
+		
+		if self.owner:
+			self.owner = functions.get_alife_by_id(self.owner)
 	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
@@ -682,16 +694,17 @@ class life:
 		
 		if self.pos == self.last_pos or self.z<1: return
 		
-		for room in self.level.rooms:
-			if room['owner'] == self: continue
-			if not room['owner'] or \
-				not tuple(room['owner'].pos) in room['walking_space']: continue
-			if tuple(self.pos) in room['walking_space']:
-				if not tuple(self.last_pos) in room['walking_space']:
-					room['owner'].say('Welcome to \'%s\'!' % room['name'])
-			elif tuple(self.last_pos) in room['walking_space']:
-				if not tuple(self.pos) in room['walking_space']:
-					room['owner'].say('Thanks for stopping by!')
+		if self.race == 'human':
+			for room in self.level.rooms:
+				if room['owner'] == self: continue
+				if not room['owner'] or \
+					not tuple(room['owner'].pos) in room['walking_space']: continue
+				if tuple(self.pos) in room['walking_space']:
+					if not tuple(self.last_pos) in room['walking_space']:
+						room['owner'].say('Welcome to \'%s\'!' % room['name'])
+				elif tuple(self.last_pos) in room['walking_space']:
+					if not tuple(self.pos) in room['walking_space']:
+						room['owner'].say('Thanks for stopping by!')
 	
 	def think(self):
 		"""Tracks whether ALife on the current level have been seen for the
@@ -994,8 +1007,7 @@ class life:
 	def follow_person(self,who):
 		if functions.distance(self.pos,who.pos)>=6:
 			if self.path_dest:
-				if functions.distance(self.path_dest,who.pos)>=6:
-					self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
+				self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
 			else:
 				self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
 		else:
@@ -1004,16 +1016,6 @@ class life:
 			else:
 				self.go_to(random.choice(self.level.get_open_space_around(who.pos,dist=3)))
 				self.task_delay = self.task['delay']
-			
-			#print self.level.get_open_space_around(who.pos)
-			
-		#print self.pos,self.path
-		
-		
-		#print 'follow!'
-		#else:
-		#	if not self.task_delay:
-		#		self.task_delay = self.task['delay']
 	
 	def run_shop(self,where):
 		if self.get_claimed('work'):
@@ -1400,12 +1402,6 @@ class human(life):
 			if not self.married:
 				pass
 		
-		# and not self.task in ['attacking','flee']:
-		#elif self.highest['who'] and self.married == self.highest['who']:
-		#	##TODO: This one will happen too much...
-		#	self.follow(self.highest['who'])
-		#	self.task = 'following'
-		#else:
 		_event = self.get_event()
 		
 		if _event and not self.task==_event:
@@ -1486,7 +1482,6 @@ class human(life):
 		elif self.task['what'] == 'follow':
 			self.follow_person(self.task['who'])
 			
-		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
@@ -1527,7 +1522,12 @@ class human(life):
 			if self.get_claimed('work'):
 				self.add_event('run_shop',_trade_score,where=self.get_claimed('work'),delay=20)
 			else:
-				_building = self.level.get_open_buildings_of_type('store')[0]['name']
+				if self.task.has_key('where') and\
+					not self.level.get_room(self.task['where'])['owner']==self:
+					self.remove_event('run_shop')
+					_building = self.level.get_open_buildings_of_type('store')[0]['name']
+				else:
+					_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				self.add_event('run_shop',_trade_score,where=_building,delay=20)
 		
 		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
@@ -1577,12 +1577,35 @@ class dog(human):
 	
 	def on_enemy_spotted(self):
 		human.on_enemy_spotted(self)
-		self.say('woofs!',action=True)
+		self.say('barks!',action=True)
 	
-		#def think(self):
-		#self.add_event('follow',50,who=var.player,delay=5)
-		#human.think(self)
-		#print self.path
+	def judge(self,who):
+		_score = 0
+		
+		if self.faction == who.faction:
+			if self.gender == who.gender: _score+=5
+				
+			if 'Animal Husbandry' in who.talents: _score+=15
+			if self.owner == who: _score+=50
+			
+			_score-=(self.fatigue*2)
+			
+			if _score<0: _score = 0
+				
+		else:
+			if who.weapon: _score+=who.weapon['damage']*2
+			_score *= -1
+		
+		return _score
+	
+	def think(self):		
+		if self.highest['who']:
+			if self.task.has_key('who') and self.task['who']==self.highest['who']:
+				self.say('Woof!')
+			
+			self.add_event('follow',50,who=self.highest['who'],delay=15)
+		
+		return human.think(self)
 
 class zombie(life):
 	def __init__(self,player=False):

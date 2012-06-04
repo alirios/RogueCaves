@@ -204,6 +204,7 @@ else:
 	var.player.level = var.world.get_level(var.player.z)
 	var.player.pos = list(var.player.level.get_open_buildings_of_type('store')[0]['door'])
 	var.player.god = var.ivan
+	var.player.talents.append('Animal Husbandry')
 
 	for i in range(9):
 		var.player.add_item_raw(21)
@@ -219,7 +220,7 @@ else:
 		_i = test.add_item_raw(19)
 		test.equip_item(_i)
 
-	for i in range(1):
+	for i in range(2):
 		test = life.human(male=False)
 		test.z = 1
 		test.speed = 3
@@ -233,14 +234,15 @@ else:
 		test = life.dog()
 		test.name = 'Fido'
 		test.z = 1
-		test.speed = 2
-		test.speed_max = 2
+		test.speed = 1
+		test.speed_max = 1
 		test.level = var.world.get_level(test.z)
 		#test.skills = ['trade']
-		test.add_event('follow',50,who=var.player,delay=20)
+		#test.add_event('follow',50,who=var.player,delay=20)
 		test.pos = [2,2]
+		test.owner = var.player
 		
-	for i in range(0):
+	for i in range(3):
 		test = life.human()
 		test.z = 1
 		test.speed = 1

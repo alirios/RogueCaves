@@ -33,6 +33,12 @@ Current Version: 06.03.2012A
 ----------------------------
 Changed
 -------
+* Fixed multiple shop owners trying to inhabit the same shop
+
+Previous Version: 06.03.2012A
+----------------------------
+Changed
+-------
 * Added dog
 * ALife now find and claim buildings on their own
 * Restructured the way buildings are handled
