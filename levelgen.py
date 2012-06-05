@@ -2,7 +2,7 @@ import functions, life, draw, var
 import logging, copy, math, random, time
 
 class LevelGen:
-	def __init__(self,size=(50,50),rooms=25,room_size=(4,6),diagtunnels=True,overlaprooms=False,outside=False):
+	def __init__(self,size=(50,50),rooms=25,room_size=(5,7),diagtunnels=True,overlaprooms=False,outside=False):
 		self.size 			= size
 		self.map 			= []
 		self.rooms 			= []
@@ -151,7 +151,7 @@ class LevelGen:
 		
 		return _ret		
 	
-	def get_all_items_of_type(self,type):
+	def get_all_items_of_type(self,type,check_storage=True):
 		if isinstance(type,list): _list = True
 		else: _list = False
 		
@@ -159,7 +159,7 @@ class LevelGen:
 		for y in range(self.size[1]):
 			for x in range(self.size[0]):
 				for item in self.items[x][y]:
-					if item['type'] == 'storage':
+					if item['type'] == 'storage' and check_storage:
 						for _item in item['items']:
 							if _list:
 								if _item['type'] in type:
@@ -994,7 +994,7 @@ class LevelGen:
 	
 	def generate_building(self,room):
 		if room['type'] == 'home':
-			_needs = [24,18]
+			_needs = [26,24,18]
 		elif room['type'] == 'store':
 			_needs = [18,21,21,21]
 		elif room['type'] == 'kitchen':

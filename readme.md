@@ -29,15 +29,21 @@ Bugs
 * Crash on line 179 of pathfinding.py.
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
-* Shop owner occasionally stops saying goodbye when you walk out the door. Requires restart.
 
 Current Version: 06.05.2012A
 ----------------------------
 Changed
 -------
+* ALife now name their homes
+* Shop owners now get tired and go home
+* life.on_wake()
+* life.on_sleep()
+* life.is_in_bed()
+* life.get_open_beds()
 * life.get_top_love_interests()
 * life.give_item_to()
 * life.build_relationship_with()
+* life.go_to_and_claim_building()
 
 Previous Version: 06.04.2012A
 ----------------------------

@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import logging, random, copy
+import logging, random, copy, sys
 
 class life:
 	def __init__(self,player=False):
@@ -222,11 +222,12 @@ class life:
 	
 	def give_item_to(self,item,who):
 		"""Gives item to ALife"""
+		print item
 		item['from'] = self
 		who.items.append(item)
 		self.items.remove(item)
 		
-		logging.debug('[ALife.%s] Gives %s to %s' %
+		logging.debug('[ALife.%s] Gave %s to %s' %
 			(self.name,item['name'],who.name))
 	
 	def sell_item(self,item,**kargv):
@@ -482,6 +483,39 @@ class life:
 		
 		return _ret
 	
+	def get_open_beds(self,where):
+		"""Returns all empty beds in 'where'"""
+		_ret = []
+		_beds = self.level.get_all_items_in_building_of_type(where,'bed')
+		
+		for bed in _beds:
+			if not bed['owner']:
+				_ret.append(bed)
+		
+		return _ret
+	
+	def is_in_bed(self):
+		"""Helper function. Is this ALife sleeping?"""
+		_beds = self.level.get_all_items_of_type('bed',check_storage=False)
+		
+		for bed in _beds:
+			if bed['owner'] == self:
+				return bed
+		
+		return False
+	
+	def on_enemy_spotted(self,who):
+		pass
+	
+	def on_friendly_spotted(self,who):
+		pass
+	
+	def on_wake(self):
+		pass
+	
+	def on_sleep(self):
+		pass
+	
 	def claim_real_estate(self,pos,size,label):
 		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
 		self.owned_land.append({'where':pos,'size':size,'label':label})
@@ -491,9 +525,18 @@ class life:
 			% (self.name,pos[0],pos[1],size[0],size[1],label))
 	
 	def claim_building(self,where,label):
-		self.claims.append({'where':where,'label':label})
-		self.level.get_room(where)['owner'] = self
+		_temp = {'where':where,'label':label}
+		_room = self.level.get_room(where)
+		_room['owner'] = self
 		
+		if label == 'home':
+			_room['name'] = '%s\'s house' % self.name
+		#elif label == 'work':
+		#	_room['name'] = '%s\'s shop' % self.name
+		
+		_temp['where'] = _room['name']
+		
+		self.claims.append(_temp)
 		logging.debug('[ALife.%s.Land] Claimed %s as %s'
 			% (self.name,where,label))
 	
@@ -700,7 +743,10 @@ class life:
 		
 		if self.fatigue_timer <= 0:
 			self.fatigue_timer = self.fatigue_timer_max
-			self.fatigue+=1
+			if self.is_in_bed():
+				self.fatigue-=1
+			else:
+				self.fatigue+=1
 		
 		if self.pos == self.last_pos or self.z<1: return
 		
@@ -899,8 +945,13 @@ class life:
 			if tuple(pos) in _blocking:
 				_blocking.remove(tuple(pos))
 			
-			self.path = pathfinding.astar(start=self.pos,end=pos,\
-				omap=self.level.map,size=self.level.size,blocking=_blocking).path
+			try:
+				self.path = pathfinding.astar(start=self.pos,end=pos,\
+					omap=self.level.map,size=self.level.size,blocking=_blocking).path
+			except KeyboardInterrupt:
+				logging.error('[ALife.%s.Pathing] Failed to travel from %s to %s' %
+					(self.name,self.pos,pos))
+				sys.exit()
 			
 			if not self.path:
 				self.path_dest = None
@@ -948,6 +999,18 @@ class life:
 		if _there: return callback(kargv['first'],kargv['second'])
 		
 		return True
+	
+	def go_to_and_claim_building(self,where,label):
+		"""Go to 'where' and claim as 'label'"""
+		_room = self.level.get_room(where)
+		
+		if self.go_to(_room['door']):
+			#if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
+			if _room['owner']:
+				pass
+			else:
+				self.claim_building(where,label)
+				functions.log('%s has claimed \'%s\'!' % (self.name,where))
 	
 	def go_to_building_and_buy(self,item,building):
 		"""Go to 'building' and buy 'item'"""
@@ -1047,12 +1110,7 @@ class life:
 				elif self.task_delay>0:
 					self.task_delay-=1
 		else:
-			_room = self.level.get_room(where)
-			self.guard_building(where)
-			#Ownership
-			if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
-				self.claim_building(where,'work')
-				functions.log('%s has claimed \'%s\'!' % (self.name,where))
+			self.go_to_and_claim_building(where,'work')
 	
 	def farm(self,where):
 		"""Instructs the ALife to farm a plot of land at 'where',
@@ -1160,10 +1218,13 @@ class life:
 				(self.name,_food['name'],_stove['pos']))
 			return True		
 	
-	def rest(self):
-		_beds = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'bed')
+	def rest(self,where):
+		##TODO: Double beds?
+		_beds = self.get_open_beds(where)
 		
-		print _beds
+		if self.go_to(_beds[0]['pos']):
+			_beds[0]['owner'] = self
+			self.on_sleep()
 	
 	def sell_items(self,what):
 		##TODO: Sort these eventually...
@@ -1197,6 +1258,9 @@ class life:
 		##TODO: Replace this with something besides food...
 		_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
 		_has = self.get_all_items_of_type(['food','cooked food'])
+		
+		for item in _has:
+			if item.has_key('from'): _has.remove(item)
 		
 		if _has:
 			self.go_to_and_do(who.pos,\
@@ -1284,11 +1348,11 @@ class human(life):
 		
 		self.events = []
 	
-	def on_enemy_spotted(self,who):
-		pass
+	def on_wake(self):
+		self.say('yawns.',action=True)
 	
-	def on_friendly_spotted(self,who):
-		pass
+	def on_sleep(self):
+		self.say('Zzz')
 	
 	def is_in_danger(self,who):
 		self.in_danger = True
@@ -1495,7 +1559,6 @@ class human(life):
 		if self.lowest['who']:
 			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 				if self.add_event('attack',100,who=self.lowest['who']):
-					#self.on_enemy_spotted(self.lowest['who'])
 					if self.lowest['who'].player:
 						self.lowest['who'].is_in_danger(self)
 			else:
@@ -1580,11 +1643,24 @@ class human(life):
 			self.rest()
 		elif self.task['what'] == 'stay_home':
 			if self.get_claimed('home'):
-				if not self.task_delay:
-					self.guard_building(self.get_claimed('home'))
-					self.task_delay = self.task['delay']
-				elif self.task_delay>0:
-					self.task_delay-=1
+				if not self.is_in_bed():
+					if self.get_open_beds(self.get_claimed('home')):
+						self.rest(self.get_claimed('home'))
+					else:
+						if not self.task_delay:
+							self.guard_building(self.get_claimed('home'))
+							self.task_delay = self.task['delay']
+						elif self.task_delay>0:
+							self.task_delay-=1
+				else:
+					print 'Sleeping!',self.fatigue*2
+			else:
+				if self.z==1:
+					if self.level.get_open_buildings_of_type('home'):
+						_building = self.level.get_open_buildings_of_type('home')[0]['name']
+						self.go_to_and_claim_building(_building,'home')
+					else:
+						print 'No h0mez'		
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
 		elif self.task['what'] == 'follow':
@@ -1638,7 +1714,7 @@ class human(life):
 			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
 			self.add_event('store_items',_store_items_score,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
-			_trade_score = 50
+			_trade_score = 25
 			
 			if self.get_claimed('work'):
 				self.add_event('run_shop',_trade_score,where=self.get_claimed('work'),delay=20)
@@ -1657,16 +1733,23 @@ class human(life):
 		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)
 		if _love_score>0: _love_score=0
 		
+		_love_score -= self.fatigue
+		
 		if self.get_top_love_interests() and not self.married:
 			_likes = self.get_top_love_interests()[0]
 			_love_score += _likes['score']
 			self.add_event('find_love',_love_score,who=_likes['who'],delay=20)
 		
-		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
-		#	self.add_event('rest',self.fatigue*2)
-		
-		#self.add_event('deliver',(len(self.get_all_items_of_type('ore'))*50))
-		self.add_event('stay_home',self.fatigue,delay=15)
+		_in_bed = self.is_in_bed()
+		if _in_bed:
+			self.add_event('stay_home',self.fatigue*2,delay=15)
+			
+			if not tuple(self.pos) == tuple(_in_bed['pos']):
+				_in_bed['owner'] = None
+				self.on_wake()
+			
+		else:
+			self.add_event('stay_home',self.fatigue,delay=15)
 		
 		if self.path:
 			if tuple(self.pos) == tuple(self.path[0]):

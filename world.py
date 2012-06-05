@@ -129,3 +129,8 @@ class World:
 		
 		_load_file.close()
 		
+	def get_stats(self):
+		logging.debug('[World.Stats] Gathering stats...')
+		_cache = var.cache.get_stats()
+		logging.debug('[World.Stats.Cache_Size] %s' % _cache['size'])
+		
