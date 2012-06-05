@@ -35,6 +35,7 @@ Current Version: 06.04.2012A
 ----------------------------
 Changed
 -------
+* Traders looking for a shop to claim no longer add and remove the task until they succeed
 * life.on_enemy/friendly_spotted() now accept an argument (who)
 * Moved life.on_enemy/friendly_spotted() call into initial ALife scoring
 * Fixed multiple shop owners trying to inhabit the same shop

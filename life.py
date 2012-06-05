@@ -32,6 +32,7 @@ class life:
 		self.defe = 1
 		
 		self.weapon = None
+		self.claims = []
 		self.owned_land = []
 		
 		self.thirst = 0
@@ -733,7 +734,11 @@ class life:
 					_temp['in_los'] = True
 					_temp['last_seen'] = life.pos[:]
 				else:
-					self.seen.append({'who':life,'los':_l,'in_los':True,'last_seen':life.pos[:]})
+					self.seen.append({'who':life,
+						'los':_l,
+						'in_los':True,
+						'last_seen':life.pos[:],
+						'score':0})
 			else:
 				if _temp and _temp['in_los']:
 					_temp['in_los'] = False
@@ -1249,7 +1254,6 @@ class human(life):
 		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
-		self.claims = []
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -1342,24 +1346,58 @@ class human(life):
 			self.go_to(_pos,z=self.z-1)
 
 	def judge(self,who):
+		#Don't waste time if they're dead
+		if not who.hp: return 0
+		
 		#This is so much easier...
 		_score = 0
-		_score = (who.hp+who.atk+who.defe)
 		
 		if self.faction == who.faction:
+			#Alright, so here goes...
+			#To score this in a way that makes sense, the best thing to do is
+			#maintain a certain amount of realism and practicality.
+			#There are a lot of variables that would be easy to toss in, but
+			#we'll stick to the basics for now.
+			
+			#Health plays a very, very small part in postive (same faction)
+			#judgement.
+			_score+=(who.hp/2)
+			
+			#We're assuming everyone is straight and has no attraction to the
+			#same gender. Add a small bonus here for now. Eventually we'll
+			#find a way to calculate how attractive someone is based on stats
+			#and replace the fixed value
 			if not self.gender == who.gender:
-				_score+=5
+				_score+=10
 		
-				if ['power'] in self.attracted_to:
-					if who.weapon: _score += who.weapon['damage']*2
-				if ['wealth'] in self.attracted_to:
-					##TODO: We should probably search for "apparent" money here
-					#based on the prices on the armor being worn, etc
-					_score+=(who.get_money()/4)
-				if ['strength'] in self.attracted_to:
-					_score+=who.atk*2
+			#Some people are more attracted to power. Power (for now) is the
+			#max damage a weapon can potentially do.
+			if 'power' in self.attracted_to:
+				if who.weapon: _score += who.weapon['damage']
+			
+			#Money can also be "attractive." Figure that in...
+			if 'wealth' in self.attracted_to:
+				##TODO: We should probably search for "apparent" money here
+				##based on the prices on the armor being worn, etc
+				_score+=(who.get_money()/4)
+			
+			#Strength is also a positive influence for some.
+			if 'strength' in self.attracted_to:
+				_score+=who.atk*2
+			elif self.gender == 'female':
+				#Females are naturally attracted to strength. Regardless of
+				#whether 'strength' is in attracted_to, they will get a small
+				#bonus from it.
+				_score+=who.atk
+			
+			#Status is also something to consider. A person with a lot of
+			#real estate is more likely to be higher up the ladder than others
+			if 'status' in self.attracted_to:
+				_score+=len(who.claims)*5
+				_score+=len(who.owned_land)*3
 				
 		else:
+			_score += who.hp+who.atk+who.defe
 			if who.weapon: _score+=who.weapon['damage']*2
 			_score *= -1
 		
@@ -1372,6 +1410,7 @@ class human(life):
 		for seen in self.seen:
 			if seen['in_los']:
 				_score = self.judge(seen['who'])
+				seen['score'] = _score
 				
 				if _score < 0 and _score <= self.lowest['score']:
 					self.lowest['who'] = seen['who']
@@ -1547,10 +1586,13 @@ class human(life):
 			if self.get_claimed('work'):
 				self.add_event('run_shop',_trade_score,where=self.get_claimed('work'),delay=20)
 			else:
-				if self.task.has_key('where') and\
-					not self.level.get_room(self.task['where'])['owner']==self:
-					self.remove_event('run_shop')
-					_building = self.level.get_open_buildings_of_type('store')[0]['name']
+				if self.task.has_key('where'):
+					_owner = self.level.get_room(self.task['where'])['owner']
+					if _owner and not _owner == self:
+						self.remove_event('run_shop')
+						_building = self.level.get_open_buildings_of_type('store')[0]['name']
+					else:
+						_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				else:
 					_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				self.add_event('run_shop',_trade_score,where=_building,delay=20)
