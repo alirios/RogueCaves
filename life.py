@@ -220,6 +220,15 @@ class life:
 		
 		return False
 	
+	def give_item_to(self,item,who):
+		"""Gives item to ALife"""
+		item['from'] = self
+		who.items.append(item)
+		self.items.remove(item)
+		
+		logging.debug('[ALife.%s] Gives %s to %s' %
+			(self.name,item['name'],who.name))
+	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
 		functions.remove_menu_item(item)
@@ -919,7 +928,7 @@ class life:
 		if z == None:
 			z = self.z
 		
-		if tuple(self.pos) == pos and z == self.z:
+		if tuple(self.pos) == tuple(pos) and z == self.z:
 			return True
 		
 		if not self.z == z:
@@ -1174,13 +1183,28 @@ class life:
 		_has = self.get_all_items_of_type(what)
 
 		if len(_storage):	
-			if _has:			
-				self.go_to_and_do(_storage[0]['pos'],\
-					self.put_item_of_type,\
-					first=_has[0]['type'],\
+			if _has:
+				self.go_to_and_do(_storage[0]['pos'],
+					self.put_item_of_type,
+					first=_has[0]['type'],
 					second=_storage[0]['pos'])
 			elif _in_storage:
 				self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
+	
+	def build_relationship_with(self,who):
+		"""Makes ALife attempt to form relationship with 'who'"""
+		#Decide what to give this person
+		##TODO: Replace this with something besides food...
+		_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
+		_has = self.get_all_items_of_type(['food','cooked food'])
+		
+		if _has:
+			self.go_to_and_do(who.pos,\
+				self.give_item_to,\
+				first=_has[0],\
+				second=who)
+		elif _in_storage:
+			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1344,6 +1368,31 @@ class human(life):
 			_pos = var.world.get_level(self.z-1).entrances[0]
 			
 			self.go_to(_pos,z=self.z-1)
+	
+	def get_top_love_interests(self):
+		"""Returns this ALife's top love interests."""
+		_ret = []
+		_t = []
+		
+		for item in self.seen:
+			_temp = {'score':item['score'],'item':item}
+			
+			if not len(_t): _t.append(_temp);continue
+			
+			_highest = 0
+			for _item in _t:
+				if _item['item'] == item: continue
+				if _temp['score'] < _item['score']:
+					if _t.index(_item) > _highest: _highest = _t.index(_item)
+			
+			_t.insert(_highest,_temp)
+		
+		for item in _t:
+			_who = item['item']['who']
+			if not _who.gender == self.gender and self.race == _who.race:
+				_ret.append({'who':_who,'score':item['score']})
+		
+		return _ret
 
 	def judge(self,who):
 		#Don't waste time if they're dead
@@ -1395,7 +1444,12 @@ class human(life):
 			if 'status' in self.attracted_to:
 				_score+=len(who.claims)*5
 				_score+=len(who.owned_land)*3
-				
+			
+			#If the ALife is married to this person, give them a huge bonus
+			##TODO: Could marriage be a negative thing?
+			if self.married == who:
+				_score+=50
+			
 		else:
 			_score += who.hp+who.atk+who.defe
 			if who.weapon: _score+=who.weapon['damage']*2
@@ -1537,6 +1591,8 @@ class human(life):
 			self.follow_person(self.task['who'])
 		elif self.task['what'] == 'store_items':
 			self.store_items(self.task['items'])
+		elif self.task['what'] == 'find_love':
+			self.build_relationship_with(self.task['who'])
 			
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1545,12 +1601,13 @@ class human(life):
 		if self.thirst >= self.thirsty_at and not self.thirsty_at == -1:
 			self.add_event('water',self.thirst)
 		
+		_farm_score = 0
+		_cook_score = 0
+		_sell_score = 0
+		_store_items_score = 0
+		
 		#Consider skills
 		if 'farm' in self.skills:
-			_farm_score = 0
-			_cook_score = 0
-			_sell_score = 0
-			_store_items_score = 0
 			_farm_score-=len(self.get_all_items_of_type(['food','cooked_food'])*2)
 			
 			##TODO: Calculate how much food this ALife needs
@@ -1559,7 +1616,7 @@ class human(life):
 			if self.get_open_stoves(self.get_claimed('home')):
 				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
 				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
-			_farm_score+=len(self.get_all_grown_crops())*10
+			_farm_score+=len(self.get_all_grown_crops())*15
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
@@ -1596,6 +1653,14 @@ class human(life):
 				else:
 					_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				self.add_event('run_shop',_trade_score,where=_building,delay=20)
+		
+		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)
+		if _love_score>0: _love_score=0
+		
+		if self.get_top_love_interests() and not self.married:
+			_likes = self.get_top_love_interests()[0]
+			_love_score += _likes['score']
+			self.add_event('find_love',_love_score,who=_likes['who'],delay=20)
 		
 		#if self.fatigue >= self.fatigued_at and not self.fatigued_at == -1:
 		#	self.add_event('rest',self.fatigue*2)
