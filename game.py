@@ -63,6 +63,7 @@ var.menu_index = 0
 var.menu_name = ''
 var.names_female = []
 var.names_male = []
+var.phrases = []
 var.input = {'up':False,
 	'down':False}
 var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
@@ -172,6 +173,12 @@ _mnames = open(os.path.join('data','names_male.txt'),'r')
 for line in _mnames.readlines():
 	var.names_male.append(line)
 _mnames.close()
+
+_phrases = open(os.path.join('data','phrases.txt'),'r')
+for line in _phrases.readlines():
+	_line = line.split(':')
+	var.phrases.append({'type':_line[0],'text':_line[1].strip()})
+_phrases.close()
 
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)

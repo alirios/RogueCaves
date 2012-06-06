@@ -35,6 +35,9 @@ Current Version: 06.06.2012A
 ----------------------------
 Changed
 -------
+* Added phrases.txt
+* functions.get_phrase()
+* life.say_phrase()
 * human.get_top_love_interests() is now life.get_top_love_interests()
 * ALife no longer wakes up and goes back to bed immediately
 * ALife no longer stands around after giving an item to someone

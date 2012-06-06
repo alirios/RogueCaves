@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import logging, random, copy, sys
+import logging, random, copy, sys, re
 
 class life:
 	def __init__(self,player=False):
@@ -237,10 +237,20 @@ class life:
 		logging.debug('[ALife.%s] Gave %s to %s' %
 			(self.name,item['name'],who.name))
 		
-		print who.get_top_love_interests()
-		if who.get_top_love_interests()[0]['who'] == self:
+		_people = [person['who'] for person in who.get_top_love_interests()]
+		#print who.get_top_love_interests(),_people
+		
+		if self in _people:
+			_index = _people.index(self)
 			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
 				(who.name,item['name'],self.name))
+			
+			who.say_phrase('thank_you',other=self)
+			
+			if _index == 0:
+				#who.say('')
+				pass
+			
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -602,10 +612,25 @@ class life:
 		return False
 	
 	def say(self,what,action=False):
+		if not what: return False
 		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
 			if action: functions.log('%s %s' % (self.name,what))
 			else: functions.log('%s: %s' % (self.name,what))
+	
+	def say_phrase(self,type,**kargv):
+		"""Retrieves a phrase and formats it accordingly"""
+		_phrase = functions.get_phrase(type)
+		_tags = [tag.strip('<>') for tag in re.findall('<[\d\w\s.]*>',_phrase)]
+		for tag in _tags:
+			_split = tag.split('.')
+			
+			if _split[0]=='other':
+				if _split[1]=='name': _phrase = _phrase.replace(tag,kargv['other'].name)
+		
+		#print repr(_phrase)
+		_phrase = _phrase.replace('<','').replace('>','')
+		self.say(_phrase)
 	
 	def attack(self,who):
 		"""Performs attack on object 'who'"""
@@ -1331,7 +1356,7 @@ class life:
 		elif _in_storage:
 			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 		else:
-			print self.can_build_relationship_with(who)
+			print self.can_build_relationship_with(who),'This happens in build_relationship_with'
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:

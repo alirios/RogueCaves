@@ -1,0 +1,3 @@
+thank_you:Thank you, <other.name>.
+receive_gift_positive:I really like <gift.type>!
+receive_gift_positive:I really enjoy <gift.type>!

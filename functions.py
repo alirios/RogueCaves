@@ -25,6 +25,11 @@ def get_alife_by_id(id):
 	print 'OH MAN NO ALIFE WITH ID %s' % id
 	return False
 
+def get_phrase(type):
+	_ret = [phrase['text'] for phrase in var.phrases if phrase['type']==type]
+	
+	return random.choice(_ret)
+
 def sort_array_by_distance(items,pos):
 	_ret = []
 	_t = []
