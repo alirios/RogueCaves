@@ -256,31 +256,6 @@ else:
 		test.skills = ['farm']
 		test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
-#for i in range(2):
-#	test = life.human()
-#	test.name = 'dude%s' % i
-#	test.z = 1
-#	test.speed = 2
-#	test.speed_max = 2
-#	test.level = var.world.get_level(test.z)
-#	#test.icon['color'][0] = 'white'
-#	#test.mode = {'task':'mine','who':None}
-#	test.add_event('follow',50)
-#	test.pos = list(test.level.walking_space[i])
-
-#for i in range(1,var.world.depth):
-#	for r in range(0,i*2):
-#		_temp = life.zombie()
-#		_temp.z = -i
-#		_temp.speed = var.world.depth-i
-#		_temp.speed_max = var.world.depth-i
-#		_temp.hp = i+3
-#		_temp.hp_max = i+3
-#		_temp.level = var.world.get_level(_temp.z)
-#		_p = random.choice(_temp.level.walking_space)
-#		_temp.pos = [_p[0],_p[1]]
-
-#_m.add_light((var.player.pos[0],var.player.pos[1]+1),(128,0,0),10,10)
 var.temp_fps = 0
 var.gametime = time.time()
 var.fpstime = time.time()

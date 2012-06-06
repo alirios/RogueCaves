@@ -35,7 +35,9 @@ Current Version: 06.06.2012A
 ----------------------------
 Changed
 -------
+* human.get_top_love_interests() is now life.get_top_love_interests()
 * ALife no longer wakes up and goes back to bed immediately
+* ALife no longer stands around after giving an item to someone
 
 Previous Version: 06.05.2012A
 ----------------------------

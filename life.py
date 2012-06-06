@@ -113,6 +113,8 @@ class life:
 			#_keys['items'] = self.items
 			if item.has_key('planted_by'):
 				item['planted_by'] = item['planted_by'].id
+			if item.has_key('from'):
+				item['from'] = item['from'].id
 		
 		_keys['items'] = _items
 		_keys['talents'] = self.talents
@@ -176,6 +178,12 @@ class life:
 		for seen in self.seen:
 			seen['who'] = functions.get_alife_by_id(seen['who'])
 		
+		for item in self.items:
+			if item.has_key('planted_by'):
+				item['planted_by'] = functions.get_alife_by_id(item['planted_by'].id)
+			if item.has_key('from'):
+				item['from'] = functions.get_alife_by_id(item['from'].id)
+		
 		if self.owner:
 			self.owner = functions.get_alife_by_id(self.owner)
 	
@@ -228,6 +236,11 @@ class life:
 		
 		logging.debug('[ALife.%s] Gave %s to %s' %
 			(self.name,item['name'],who.name))
+		
+		print who.get_top_love_interests()
+		if who.get_top_love_interests()[0]['who'] == self:
+			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
+				(who.name,item['name'],self.name))
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -434,6 +447,31 @@ class life:
 			for item in self.level.get_all_items_in_building(self.get_claimed('home')):
 				if item.has_key('from') and item['from']==who:
 					_ret.append(item)	
+		
+		return _ret
+	
+	def get_top_love_interests(self):
+		"""Returns this ALife's top love interests."""
+		_ret = []
+		_t = []
+		
+		for item in self.seen:
+			_temp = {'score':item['score'],'item':item}
+			
+			if not len(_t): _t.append(_temp);continue
+			
+			_highest = 0
+			for _item in _t:
+				if _item['item'] == item: continue
+				if _temp['score'] < _item['score']:
+					if _t.index(_item) > _highest: _highest = _t.index(_item)
+			
+			_t.insert(_highest,_temp)
+		
+		for item in _t:
+			_who = item['item']['who']
+			if not _who.gender == self.gender and self.race == _who.race:
+				_ret.append({'who':_who,'score':item['score']})
 		
 		return _ret
 	
@@ -808,6 +846,7 @@ class life:
 						'los':_l,
 						'in_los':True,
 						'last_seen':life.pos[:],
+						'likes':[],
 						'score':0})
 			else:
 				if _temp and _temp['in_los']:
@@ -1267,6 +1306,13 @@ class life:
 			elif _in_storage:
 				self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
+	def can_build_relationship_with(self,who):
+		"""Sees if the ALife can develop a relationship with 'who'"""
+		_ret  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
+		_ret.extend(self.get_all_items_of_type(['food','cooked food']))
+		
+		return _ret
+	
 	def build_relationship_with(self,who):
 		"""Makes ALife attempt to form relationship with 'who'"""
 		#Decide what to give this person
@@ -1284,6 +1330,8 @@ class life:
 				second=who)
 		elif _in_storage:
 			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
+		else:
+			print self.can_build_relationship_with(who)
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -1450,31 +1498,6 @@ class human(life):
 			
 			self.go_to(_pos,z=self.z-1)
 	
-	def get_top_love_interests(self):
-		"""Returns this ALife's top love interests."""
-		_ret = []
-		_t = []
-		
-		for item in self.seen:
-			_temp = {'score':item['score'],'item':item}
-			
-			if not len(_t): _t.append(_temp);continue
-			
-			_highest = 0
-			for _item in _t:
-				if _item['item'] == item: continue
-				if _temp['score'] < _item['score']:
-					if _t.index(_item) > _highest: _highest = _t.index(_item)
-			
-			_t.insert(_highest,_temp)
-		
-		for item in _t:
-			_who = item['item']['who']
-			if not _who.gender == self.gender and self.race == _who.race:
-				_ret.append({'who':_who,'score':item['score']})
-		
-		return _ret
-
 	def judge(self,who):
 		#Don't waste time if they're dead
 		if not who.hp: return 0
@@ -1498,7 +1521,7 @@ class human(life):
 			#find a way to calculate how attractive someone is based on stats
 			#and replace the fixed value
 			if not self.gender == who.gender:
-				_score+=10
+				_score+=5
 		
 			#Some people are more attracted to power. Power (for now) is the
 			#max damage a weapon can potentially do.
@@ -1667,7 +1690,7 @@ class human(life):
 				if self.fatigue>=15 and self.get_open_beds(self.get_claimed('home')):
 					if not self.is_in_bed():
 						self.rest(self.get_claimed('home'))
-				elif self.fatigue>=10:
+				elif self.fatigue>=10 and self.is_in_bed():
 					pass
 				else:
 					if not self.task_delay:
@@ -1681,7 +1704,7 @@ class human(life):
 						_building = self.level.get_open_buildings_of_type('home')[0]['name']
 						self.go_to_and_claim_building(_building,'home')
 					else:
-						print 'No h0mez'		
+						print 'No h0mez'
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
 		elif self.task['what'] == 'follow':
@@ -1759,6 +1782,13 @@ class human(life):
 		if self.get_top_love_interests() and not self.married:
 			_likes = self.get_top_love_interests()[0]
 			_love_score += _likes['score']
+			_can_build = self.can_build_relationship_with(_likes['who'])
+			
+			if _can_build:
+				_love_score += len(_can_build)
+			else:
+				_love_score = 0
+			
 			self.add_event('find_love',_love_score,who=_likes['who'],delay=20)
 		
 		_in_bed = self.is_in_bed()
@@ -1767,8 +1797,7 @@ class human(life):
 			
 			if not tuple(self.pos) == tuple(_in_bed['pos']):
 				_in_bed['owner'] = None
-				self.on_wake()
-			
+				self.on_wake()		
 		else:
 			self.add_event('stay_home',self.fatigue,delay=15)
 		
