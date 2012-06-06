@@ -35,7 +35,7 @@ Current Version: 06.06.2012A
 ----------------------------
 Changed
 -------
-* ALife no longer wakes u
+* ALife no longer wakes up and goes back to bed immediately
 
 Previous Version: 06.05.2012A
 ----------------------------
