@@ -10,6 +10,7 @@ Todo
 * Need animal class
 * Need "tilling" task for farming
 * Relationships (would probably get rid of life.owner)
+* Relationship flags: Likes pets
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -30,7 +31,13 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.05.2012A
+Current Version: 06.06.2012A
+----------------------------
+Changed
+-------
+* ALife no longer wakes u
+
+Previous Version: 06.05.2012A
 ----------------------------
 Changed
 -------

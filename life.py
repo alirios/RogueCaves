@@ -222,7 +222,6 @@ class life:
 	
 	def give_item_to(self,item,who):
 		"""Gives item to ALife"""
-		print item
 		item['from'] = self
 		who.items.append(item)
 		self.items.remove(item)
@@ -422,6 +421,22 @@ class life:
 		
 		return _ret
 	
+	def get_all_gifts_from(self,who):
+		"""Returns all gifts received from 'who'"""
+		_ret = []
+		
+		for item in self.items:
+			if item.has_key('from') and item['from']==who:
+				_ret.append(item)
+		
+		_building = self.get_claimed('home')
+		if _building:
+			for item in self.level.get_all_items_in_building(self.get_claimed('home')):
+				if item.has_key('from') and item['from']==who:
+					_ret.append(item)	
+		
+		return _ret
+	
 	def get_item_id(self,id):
 		"""Returns item of id 'id'"""
 		for item in self.items:
@@ -511,10 +526,10 @@ class life:
 		pass
 	
 	def on_wake(self):
-		pass
+		logging.debug('[ALife.%s] Woke up' % self.name)
 	
 	def on_sleep(self):
-		pass
+		logging.debug('[ALife.%s] Fell asleep' % self.name)
 	
 	def claim_real_estate(self,pos,size,label):
 		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
@@ -1349,9 +1364,11 @@ class human(life):
 		self.events = []
 	
 	def on_wake(self):
+		life.on_wake(self)
 		self.say('yawns.',action=True)
 	
 	def on_sleep(self):
+		life.on_sleep(self)
 		self.say('Zzz')
 	
 	def is_in_danger(self,who):
@@ -1509,6 +1526,10 @@ class human(life):
 				_score+=len(who.claims)*5
 				_score+=len(who.owned_land)*3
 			
+			#Consider gifts from this person.
+			for item in self.get_all_gifts_from(who):
+				_score+=(item['price']/2)
+			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?
 			if self.married == who:
@@ -1643,17 +1664,17 @@ class human(life):
 			self.rest()
 		elif self.task['what'] == 'stay_home':
 			if self.get_claimed('home'):
-				if not self.is_in_bed():
-					if self.get_open_beds(self.get_claimed('home')):
+				if self.fatigue>=15 and self.get_open_beds(self.get_claimed('home')):
+					if not self.is_in_bed():
 						self.rest(self.get_claimed('home'))
-					else:
-						if not self.task_delay:
-							self.guard_building(self.get_claimed('home'))
-							self.task_delay = self.task['delay']
-						elif self.task_delay>0:
-							self.task_delay-=1
+				elif self.fatigue>=10:
+					pass
 				else:
-					print 'Sleeping!',self.fatigue*2
+					if not self.task_delay:
+						self.guard_building(self.get_claimed('home'))
+						self.task_delay = self.task['delay']
+					elif self.task_delay>0:
+						self.task_delay-=1
 			else:
 				if self.z==1:
 					if self.level.get_open_buildings_of_type('home'):
