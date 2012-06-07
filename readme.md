@@ -36,12 +36,19 @@ Current Version: 06.06.2012A
 ----------------------------
 Changed
 -------
+* Fixed saving/loading
+
+Previous Version: 06.06.2012A
+----------------------------
+Changed
+-------
 * Added phrases.txt
 * Added names_male_dogs.txt
 * Added names_female_dogs.txt
 * functions.get_dog_name_by_gender()
 * functions.generate_human()
 * functions.get_phrase()
+* functions.get_number_of_alife_with_gender()
 * life.say_phrase()
 * human.get_top_love_interests() is now life.get_top_love_interests()
 * All event functions were moved to life

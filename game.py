@@ -268,19 +268,19 @@ else:
 		test.pos = test.level.get_open_space_around((2,2))[0]
 		test.owner = var.player
 		
-	for i in range(1):
-		test = life.human()
-		test.z = 1
-		test.speed = 1
-		test.speed_max = 1
-		test.level = var.world.get_level(test.z)
-		_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
-		test.claim_building(_building,'home')
-		test.icon['color'][0] = 'red'
-		for i in range(9):
-			test.add_item_raw(21)
-		test.skills = ['farm']
-		test.pos = list(test.get_claimed('home',return_building=True)['door'])
+	#for i in range(1):
+	#	test = life.human()
+	#	test.z = 1
+	#	test.speed = 1
+	#	test.speed_max = 1
+	#	test.level = var.world.get_level(test.z)
+	#	_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
+	#	test.claim_building(_building,'home')
+	#	test.icon['color'][0] = 'red'
+	#	for i in range(9):
+	#		test.add_item_raw(21)
+	#	test.skills = ['farm']
+	#	test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
 var.temp_fps = 0
 var.gametime = time.time()
@@ -562,7 +562,7 @@ def get_input():
 				var.player.place_item(21,(1,0))
 			elif event.key == K_s:
 				var.player.place_item(21,(0,1))
-			elif event.key == K_c:
+			elif event.key == K_v:
 				for pos in var.player.level.real_estate:
 					var.view.tint(b=255,region=(pos[0],pos[1],1,1))
 			elif event.key == K_b:
@@ -627,6 +627,8 @@ def get_input():
 			elif event.key == K_x:
 				var.max_fps = 60
 			elif event.key == K_c:
+				var.max_fps = 1
+			elif event.key == K_v:
 				for pos in var.player.level.real_estate:
 					var.view.setbrightness(0, region=(pos[0],pos[1],1,1))
 		elif event.type == MOUSEMOTION:
@@ -635,14 +637,19 @@ def get_input():
 			for life in var.life:
 				if life.z == var.player.z:
 					if life.pos == list(var.mouse_pos):
+						print '='*8
+						print life.name
 						print 'Task: %s' % life.task
 						print 'Path: %s' % life.path
 						print 'Path dest: %s' % str(life.path_dest)
-						print 'Path type: %s' % life.path_type
+						#print 'Path type: %s' % life.path_type
 						print 'Position: %s' % str(life.pos)
-						print 'Inventory: '
-						for item in life.items:
-							print item
+						print 'Traits: %s' % life.traits
+						print 'Attracted to: %s' % life.attracted_to
+						print '='*8
+						#print 'Inventory: '
+						#for item in life.items:
+						#	print item
 			
 			for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
 				if item['pos'] == var.mouse_pos:

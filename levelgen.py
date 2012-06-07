@@ -81,6 +81,8 @@ class LevelGen:
 								_item['planted_by'] = _item['planted_by'].id
 							if _item.has_key('from'):
 								_item['from'] = _item['from'].id
+					if item['type'] == 'stove' and item['cooking'] and item['cooking'].has_key('planted_by'):
+						item['cooking']['planted_by'] = item['cooking']['planted_by'].id
 		
 		_keys['items'] = _items
 		
@@ -103,6 +105,8 @@ class LevelGen:
 	def finalize(self):
 		"""Cleans up after load()"""
 		for room in self.rooms:
+			room['name'] = str(room['name'])
+			
 			if room.has_key('owner') and room['owner']:
 				room['owner'] = functions.get_alife_by_id(room['owner'])
 		
@@ -120,6 +124,8 @@ class LevelGen:
 								_item['planted_by'] = functions.get_alife_by_id(_item['planted_by'])
 							if _item.has_key('from'):
 								_item['from'] = functions.get_alife_by_id(_item['from'])
+					if item['type'] == 'stove' and item['cooking'] and item['cooking'].has_key('planted_by'):
+						item['cooking']['planted_by'] = functions.get_alife_by_id(item['cooking']['planted_by'])
 	
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
@@ -904,7 +910,7 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','home','home','store','store']:
+		for _room_type in ['home','home','home','home','store','store']:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False

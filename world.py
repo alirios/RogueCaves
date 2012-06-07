@@ -1,4 +1,4 @@
-import levelgen, life as alife, var
+import levelgen, life as alife, functions, var
 import logging, random, time, json, os
 
 class World:
@@ -71,6 +71,9 @@ class World:
 		
 		logging.debug('[LevelGen] Took: %s' % (time.time()-_stime))
 		logging.debug('[World.ALife] Creating ALife...')
+		
+		for r in range(2): functions.generate_human('trade')
+		for r in range(2): functions.generate_human('farmer')
 	
 	def save(self):
 		logging.debug('[World.save] Gathering ALife strings...')
@@ -86,7 +89,9 @@ class World:
 		logging.debug('[World.save] Offloading strings to disk...')
 		
 		_save_file = open(os.path.join('data','test01.sav'),'w')
+		#_save_file.write(str(_alife))
 		_save_file.write(json.dumps({'alife':_alife})+'\n')
+		#_save_file.write(str(_levels))
 		_save_file.write(json.dumps({'levels':_levels})+'\n')
 		_save_file.close()
 		
@@ -112,6 +117,8 @@ class World:
 		for life in _alife['alife']:
 			if life['race'] == 'human':
 				_alife = alife.human()
+			elif life['race'] == 'dog':
+				_alife = alife.dog()
 			else:
 				logging.error('[World.load] Can\'t load: %s' % life['race'])
 			
@@ -134,3 +141,4 @@ class World:
 		logging.debug('[World.Stats] Gathering stats...')
 		_cache = var.cache.get_stats()
 		logging.debug('[World.Stats.Cache_Size] %s' % _cache['size'])
+		self.save()

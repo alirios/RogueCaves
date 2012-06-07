@@ -24,6 +24,9 @@ def get_dog_name_by_gender(gender):
 	else:
 		return random.choice(var.names_female_dogs).strip()
 
+def get_alife_with_gender(gender):
+	return [life for life in var.life if life.gender==gender]
+
 def get_alife_by_id(id):
 	for life in var.life:
 		if life.id == id: return life
@@ -141,7 +144,12 @@ def get_item_price(item):
 	return item['price']
 
 def generate_human(job):
-	_ret =  life.human(male=random.randint(0,1))
+	if len(get_alife_with_gender('male')) > len(get_alife_with_gender('female')):
+		_gender = False
+	else:
+		_gender = True
+	
+	_ret =  life.human(male=_gender)
 	_ret.z = 1
 	_ret.level = var.world.get_level(_ret.z)
 	
@@ -150,17 +158,17 @@ def generate_human(job):
 	#ALife.
 	_traits = []
 	
-	if random.randint(0,10)>6:
+	if random.randint(0,10)>7:
 		_traits.append('athletic')
-		_ret.speed_max = 2
+		_ret.speed_max = 1
 		_ret.atk = 3
 	elif random.randint(0,10)>4:
 		_traits.append('fit')
-		_ret.speed_max = 3
+		_ret.speed_max = 2
 		_ret.atk = 2
 	else:
 		_traits.append('slow')
-		_ret.speed_max = 4
+		_ret.speed_max = 3
 	
 	_ret.speed = _ret.speed_max
 	
@@ -174,13 +182,15 @@ def generate_human(job):
 	
 	#Here we get to stereotype!
 	if 'attractive' in _traits:
-		_ret.attracted_to.append()
+		_ret.attracted_to.append('looks')
+	
+	_ret.traits = _traits[:]
 	
 	if job=='trade':
 		_ret.icon['color'][0] = 'blue'
 		_ret.skills = ['trade']
 		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
-	elif job=='farm':
+	elif job=='farmer':
 		_ret.level = var.world.get_level(_ret.z)
 		_building = _ret.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
 		_ret.claim_building(_building,'home')

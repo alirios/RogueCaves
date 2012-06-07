@@ -5,9 +5,7 @@ class life:
 	def __init__(self,player=False):
 		self.player = player
 		
-		if self.player:
-			self.icon = {'icon':'@','color':['white',None]}
-		else:
+		if not self.player:
 			self.icon = {'icon':'L','color':['white',None]}
 		
 		self.id = functions.get_id()
@@ -63,8 +61,8 @@ class life:
 		
 		var.life.append(self)
 	
-	def save(self):
-		_keys = {}
+	def save(self,keys={}):
+		_keys = keys
 		_keys['id'] = self.id
 		_keys['name'] = self.name
 		_keys['player'] = self.player
@@ -80,8 +78,14 @@ class life:
 		_keys['skill_level'] = self.skill_level
 		_keys['race'] = self.race
 		_keys['faction'] = self.faction
-		_keys['task'] = self.task
-		_keys['events'] = self.events
+		_keys['task'] = copy.deepcopy(self.task)
+		if _keys['task'] and _keys['task'].has_key('who') and _keys['task']['who']:
+			_keys['task']['who'] = self.task['who'].id
+		
+		_keys['events'] = copy.deepcopy(self.events)
+		for event in _keys['events']:
+			if event['who']: event['who'] = event['who'].id
+		
 		_keys['claims'] = self.claims
 		
 		_keys['seen'] = []
@@ -116,7 +120,6 @@ class life:
 		_keys['fatigue_timer'] = self.fatigue_timer
 		_keys['fatigue_timer_max'] = self.fatigue_timer_max
 		_keys['fatigued_at'] = self.fatigued_at
-		_keys['in_danger'] = self.in_danger
 		
 		_items = copy.deepcopy(self.items)
 		for item in _items:
@@ -128,6 +131,7 @@ class life:
 		
 		_keys['items'] = _items
 		_keys['talents'] = self.talents
+		_keys['traits'] = self.traits
 		_keys['skills'] = self.skills
 		
 		return _keys
@@ -157,8 +161,17 @@ class life:
 		self.race = keys['race']
 		self.faction = keys['faction']
 		self.task = keys['task']
+		
 		self.events = keys['events']
+		for event in self.events:
+			if event['who']:
+				event['who'] = functions.get_alife_by_id(event['who'])
+		
 		self.claims = keys['claims']
+		for claim in self.claims:
+			claim['where'] = str(claim['where'])
+			claim['label'] = str(claim['label'])
+		
 		self.seen = keys['seen']
 		self.path = keys['path']
 		self.path_type = keys['path_type']
@@ -179,9 +192,9 @@ class life:
 		self.hunger_timer = keys['hunger_timer']
 		self.hunger_timer_max = keys['hunger_timer_max']
 		self.hungry_at = keys['hungry_at']
-		self.in_danger = keys['in_danger']
 		self.items = keys['items']
 		self.talents = keys['talents']
+		self.traits = keys['traits']
 		self.skills = keys['skills']
 	
 	def finalize(self):
@@ -194,8 +207,17 @@ class life:
 			if item.has_key('from'):
 				item['from'] = functions.get_alife_by_id(item['from'].id)
 		
+		if self.task.has_key('what'):
+			if self.task.has_key('who') and self.task['who']:
+				self.task['who'] = functions.get_alife_by_id(self.task['who'])
+			
+			if self.task.has_key('where') and self.task['where']:
+				self.task['where'] = str(self.task['where'])
+		
 		if self.owner:
 			self.owner = functions.get_alife_by_id(self.owner)
+		
+		#self.task['who'] = functions.get_alife_by_id(self.task['who'])
 
 	def add_event(self,what,score,who=None,where=None,items=[],delay=0):
 		for event in self.events:
@@ -1280,6 +1302,7 @@ class life:
 	def go_to_and_claim_building(self,where,label):
 		"""Go to 'where' and claim as 'label'"""
 		_room = self.level.get_room(where)
+		#print _room
 		
 		if self.go_to(_room['door']):
 			#if tuple(self.pos) in _room['walking_space'] and not _room['owner']:
@@ -1338,7 +1361,7 @@ class life:
 							item['items'].remove(_item)
 							self.add_item(_item)
 							logging.debug('[ALife.%s] %s removed from storage at %s' %
-								(self.name,_item['type'],pos))
+								(self.name,_item['name'],pos))
 							_found = True
 							break
 					
@@ -1604,27 +1627,39 @@ class human(life):
 	def __init__(self,player=False,male=True):
 		life.__init__(self,player=player)
 		
-		self.icon = {'icon':'H','color':['white',None]}
+		if self.player:
+			self.icon = {'icon':'@','color':['white',None]}
+		else:
+			self.icon = {'icon':'H','color':['white',None]}
 		
 		self.race = 'human'
 		if male:
 			self.gender = 'male'
 			self.name = functions.get_name_by_gender('male')
-			self.attracted_to = ['looks']
 		else:
 			self.gender = 'female'
 			self.name = functions.get_name_by_gender('female')
-			self.attracted_to = ['power']
 		
 		self.hp = 20
 		self.hp_max = 20
 		
 		self.thirsty_at = -1
 		self.married = None
-		#self.worth = None
 		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
+	
+	def save(self):
+		_keys = {}
+		_keys['in_danger'] = self.in_danger
+		
+		return life.save(self,keys=_keys)
+	
+	def load(self,keys):
+		if keys.has_key('in_danger'):
+			self.in_danger = keys['in_danger']
+		
+		return life.load(self,keys)
 	
 	def on_wake(self):
 		life.on_wake(self)
@@ -1724,6 +1759,9 @@ class human(life):
 				#bonus from it.
 				_score+=who.atk
 			
+			if 'looks' in self.attracted_to:
+				if 'attractive' in who.traits: _score+=10
+								
 			#Status is also something to consider. A person with a lot of
 			#real estate is more likely to be higher up the ladder than others
 			if 'status' in self.attracted_to:
@@ -1871,7 +1909,6 @@ class dog(life):
 		if male:
 			self.gender = 'male'
 			self.name = functions.get_dog_name_by_gender('male')
-			self.attracted_to = ['looks']
 		else:
 			self.gender = 'female'
 			self.name = functions.get_dog_name_by_gender('female')
