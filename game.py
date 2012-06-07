@@ -63,6 +63,8 @@ var.menu_index = 0
 var.menu_name = ''
 var.names_female = []
 var.names_male = []
+var.names_female_dogs = []
+var.names_male_dogs = []
 var.phrases = []
 var.input = {'up':False,
 	'down':False}
@@ -155,6 +157,16 @@ if not var.server:
 	var.log.autoupdate = False
 
 	#Log
+	_title = 'Rogue Caves'
+	var.view.putchars(_title,
+		x=(var.window_size[0]/2)-(len(_title)/2),
+		y=var.window_size[1]/2,
+		fgcolor='white')
+	var.view.putchars(__version__,
+		x=(var.window_size[0]/2)-(len(__version__)/2),
+		y=(var.window_size[1]/2)+1,
+		fgcolor='gray')
+	
 	var.view.putchars('Generating world...',x=0,y=0)
 	var.view.update()
 
@@ -179,6 +191,16 @@ for line in _phrases.readlines():
 	_line = line.split(':')
 	var.phrases.append({'type':_line[0],'text':_line[1].strip()})
 _phrases.close()
+
+_mdnames = open(os.path.join('data','names_male_dogs.txt'),'r')
+for line in _mdnames.readlines():
+	var.names_male_dogs.append(line)
+_mdnames.close()
+
+_fdnames = open(os.path.join('data','names_female_dogs.txt'),'r')
+for line in _fdnames.readlines():
+	var.names_female_dogs.append(line)
+_fdnames.close()
 
 #Generate level
 var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
@@ -227,41 +249,38 @@ else:
 		_i = test.add_item_raw(19)
 		test.equip_item(_i)
 
-	for i in range(2):
-		test = life.human(male=False)
-		test.z = 1
-		test.speed = 3
-		test.speed_max = 3
-		test.level = var.world.get_level(test.z)
-		test.icon['color'][0] = 'blue'
-		test.skills = ['trade']
-		test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
+	#for i in range(2):
+	#	test = life.human(male=False)
+	#	test.z = 1
+	#	test.speed = 3
+	#	test.speed_max = 3
+	#	test.level = var.world.get_level(test.z)
+	#	test.icon['color'][0] = 'blue'
+	#	test.skills = ['trade']
+	#	test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
 	
 	for i in range(1):
-		test = life.dog()
-		test.name = 'Fido'
+		test = life.dog(male=random.randint(0,1))
 		test.z = 1
 		test.speed = 1
 		test.speed_max = 1
 		test.level = var.world.get_level(test.z)
-		#test.skills = ['trade']
-		#test.add_event('follow',50,who=var.player,delay=20)
 		test.pos = test.level.get_open_space_around((2,2))[0]
 		test.owner = var.player
 		
-	for i in range(1):
-		test = life.human()
-		test.z = 1
-		test.speed = 1
-		test.speed_max = 1
-		test.level = var.world.get_level(test.z)
-		_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
-		test.claim_building(_building,'home')
-		test.icon['color'][0] = 'red'
-		for i in range(9):
-			test.add_item_raw(21)
-		test.skills = ['farm']
-		test.pos = list(test.get_claimed('home',return_building=True)['door'])
+	#for i in range(1):
+	#	test = life.human()
+	#	test.z = 1
+	#	test.speed = 1
+	#	test.speed_max = 1
+	#	test.level = var.world.get_level(test.z)
+	#	_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
+	#	test.claim_building(_building,'home')
+	#	test.icon['color'][0] = 'red'
+	#	for i in range(9):
+	#		test.add_item_raw(21)
+	#	test.skills = ['farm']
+	#	test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
 var.temp_fps = 0
 var.gametime = time.time()

@@ -1,3 +1,16 @@
 thank_you:Thank you, <other.name>.
+enter_building:Welcome to <building.name>, <other.name>
+enter_building:Welcome, <other.name>.
+leave_building:See you later, <other.name>.
+leave_building:Have a good day, <other.name>.
+leave_building:Please come back soon!
+leave_building:Please come back soon, <other.name>.
 receive_gift_positive:I really like <gift.type>!
 receive_gift_positive:I really enjoy <gift.type>!
+dog_happy:wags <self.gender> tail.
+dog_happy:woofs!
+dog_happy_owner:wags <self.gender> tail at <other.name>!
+dog_happy_owner:woofs at <other.name>!
+dog_angry:barks at <other.name>!
+dog_angry:growls at <other.name>!
+dog_angry:snarls at <other.name>!

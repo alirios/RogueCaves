@@ -70,6 +70,7 @@ class World:
 			#logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
 		logging.debug('[LevelGen] Took: %s' % (time.time()-_stime))
+		logging.debug('[World.ALife] Creating ALife...')
 	
 	def save(self):
 		logging.debug('[World.save] Gathering ALife strings...')
@@ -133,4 +134,3 @@ class World:
 		logging.debug('[World.Stats] Gathering stats...')
 		_cache = var.cache.get_stats()
 		logging.debug('[World.Stats.Cache_Size] %s' % _cache['size'])
-		

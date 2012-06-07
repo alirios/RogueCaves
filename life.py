@@ -250,7 +250,6 @@ class life:
 			if _index == 0:
 				#who.say('')
 				pass
-			
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -618,7 +617,7 @@ class life:
 			if action: functions.log('%s %s' % (self.name,what))
 			else: functions.log('%s: %s' % (self.name,what))
 	
-	def say_phrase(self,type,**kargv):
+	def say_phrase(self,type,action=False,**kargv):
 		"""Retrieves a phrase and formats it accordingly"""
 		_phrase = functions.get_phrase(type)
 		_tags = [tag.strip('<>') for tag in re.findall('<[\d\w\s.]*>',_phrase)]
@@ -627,10 +626,15 @@ class life:
 			
 			if _split[0]=='other':
 				if _split[1]=='name': _phrase = _phrase.replace(tag,kargv['other'].name)
+			elif _split[0]=='building':
+				if _split[1]=='name': _phrase = _phrase.replace(tag,kargv['building']['name'])
+			elif _split[0]=='self':
+				if _split[1]=='gender':
+					if self.gender=='male': _phrase = _phrase.replace(tag,'his')
+					else: _phrase = _phrase.replace(tag,'her')
 		
-		#print repr(_phrase)
 		_phrase = _phrase.replace('<','').replace('>','')
-		self.say(_phrase)
+		self.say(_phrase,action=action)
 	
 	def attack(self,who):
 		"""Performs attack on object 'who'"""
@@ -835,10 +839,10 @@ class life:
 					not tuple(room['owner'].pos) in room['walking_space']: continue
 				if tuple(self.pos) in room['walking_space']:
 					if not tuple(self.last_pos) in room['walking_space']:
-						room['owner'].say('Welcome to \'%s\'!' % room['name'])
+						room['owner'].say_phrase('enter_building',building=room,other=self)
 				elif tuple(self.last_pos) in room['walking_space']:
 					if not tuple(self.pos) in room['walking_space']:
-						room['owner'].say('Thanks for stopping by!')
+						room['owner'].say_phrase('leave_building',other=self)
 	
 	def think(self):
 		"""Tracks whether ALife on the current level have been seen for the
@@ -1856,24 +1860,32 @@ class crazy_miner(human):
 		self.say('I see yah, you crazy bastard!')
 
 class dog(human):
-	def __init__(self):
+	def __init__(self,male=True):
 		human.__init__(self)
 		
 		self.race = 'dog'
 		self.faction = 'good'
+		
+		if male:
+			self.gender = 'male'
+			self.name = functions.get_dog_name_by_gender('male')
+			self.attracted_to = ['looks']
+		else:
+			self.gender = 'female'
+			self.name = functions.get_dog_name_by_gender('female')
 		
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
 	
 	def on_enemy_spotted(self,who):
 		human.on_enemy_spotted(self,who)
-		self.say('barks!',action=True)
+		self.say_phrase('dog_angry',other=who,action=True)
 	
 	def on_friendly_spotted(self,who):
 		human.on_friendly_spotted(self,who)
 		
 		if self.owner == who:
-			self.say('Woof!')
+			self.say_phrase('dog_happy_owner',other=who,action=True)
 	
 	def judge(self,who):
 		_score = 0

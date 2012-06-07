@@ -1,4 +1,4 @@
-import random, var
+import random, life, var
 
 def log(text):
 	if len(var.history)>=5: var.history.pop(0)
@@ -17,6 +17,12 @@ def get_name_by_gender(gender):
 		return random.choice(var.names_male).strip()
 	else:
 		return random.choice(var.names_female).strip()
+
+def get_dog_name_by_gender(gender):
+	if gender == 'male':
+		return random.choice(var.names_male_dogs).strip()
+	else:
+		return random.choice(var.names_female_dogs).strip()
 
 def get_alife_by_id(id):
 	for life in var.life:
@@ -133,3 +139,52 @@ def get_item_price(item):
 	But until all of this gets implemented, we'll just return the base price
 	"""
 	return item['price']
+
+def generate_human(job):
+	_ret =  life.human(male=random.randint(0,1))
+	_ret.z = 1
+	_ret.level = var.world.get_level(_ret.z)
+	
+	#Now we generate some stats here based on things called 'flags'
+	#'flags' are randomly chosen, and determine the 'base' of each
+	#ALife.
+	_flags = []
+	_personality
+	
+	if random.randint(0,10)>6:
+		_flags.append('athletic')
+		_ret.speed_max = 2
+		_ret.atk = 3
+	elif random.randint(0,10)>4:
+		_flags.append('fit')
+		_ret.speed_max = 3
+		_ret.atk = 2
+	else:
+		_flags.append('slow')
+		_ret.speed_max = 4
+	
+	_ret.speed = _ret.speed_max
+	
+	#Determine their chance of being attractive here...
+	_attractive_score = 0
+	if 'athletic' in _flags: _attractive_score = 2
+	elif 'fit' in _flags: _attractive_score = 4
+	else: _attractive_score = 6
+	
+	if random.randint(0,10)>_attractive_score: _flags.append('attractive')
+	
+	if job=='trade':
+		_ret.icon['color'][0] = 'blue'
+		_ret.skills = ['trade']
+		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
+	elif job=='farm':
+		_ret.level = var.world.get_level(_ret.z)
+		_building = _ret.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
+		_ret.claim_building(_building,'home')
+		_ret.icon['color'][0] = 'red'
+		for i in range(9):
+			_ret.add_item_raw(21)
+		_ret.skills = ['farm']
+		_ret.pos = list(_ret.get_claimed('home',return_building=True)['door'])
+	
+	return _ret
