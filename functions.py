@@ -145,33 +145,36 @@ def generate_human(job):
 	_ret.z = 1
 	_ret.level = var.world.get_level(_ret.z)
 	
-	#Now we generate some stats here based on things called 'flags'
-	#'flags' are randomly chosen, and determine the 'base' of each
+	#Now we generate some stats here based on traits which 
+	#are randomly chosen, and determine the 'base' of each
 	#ALife.
-	_flags = []
-	_personality
+	_traits = []
 	
 	if random.randint(0,10)>6:
-		_flags.append('athletic')
+		_traits.append('athletic')
 		_ret.speed_max = 2
 		_ret.atk = 3
 	elif random.randint(0,10)>4:
-		_flags.append('fit')
+		_traits.append('fit')
 		_ret.speed_max = 3
 		_ret.atk = 2
 	else:
-		_flags.append('slow')
+		_traits.append('slow')
 		_ret.speed_max = 4
 	
 	_ret.speed = _ret.speed_max
 	
 	#Determine their chance of being attractive here...
 	_attractive_score = 0
-	if 'athletic' in _flags: _attractive_score = 2
-	elif 'fit' in _flags: _attractive_score = 4
+	if 'athletic' in _traits: _attractive_score = 2
+	elif 'fit' in _traits: _attractive_score = 4
 	else: _attractive_score = 6
 	
-	if random.randint(0,10)>_attractive_score: _flags.append('attractive')
+	if random.randint(0,10)>_attractive_score: _traits.append('attractive')
+	
+	#Here we get to stereotype!
+	if 'attractive' in _traits:
+		_ret.attracted_to.append()
 	
 	if job=='trade':
 		_ret.icon['color'][0] = 'blue'

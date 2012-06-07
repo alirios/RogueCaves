@@ -268,19 +268,19 @@ else:
 		test.pos = test.level.get_open_space_around((2,2))[0]
 		test.owner = var.player
 		
-	#for i in range(1):
-	#	test = life.human()
-	#	test.z = 1
-	#	test.speed = 1
-	#	test.speed_max = 1
-	#	test.level = var.world.get_level(test.z)
-	#	_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
-	#	test.claim_building(_building,'home')
-	#	test.icon['color'][0] = 'red'
-	#	for i in range(9):
-	#		test.add_item_raw(21)
-	#	test.skills = ['farm']
-	#	test.pos = list(test.get_claimed('home',return_building=True)['door'])
+	for i in range(1):
+		test = life.human()
+		test.z = 1
+		test.speed = 1
+		test.speed_max = 1
+		test.level = var.world.get_level(test.z)
+		_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
+		test.claim_building(_building,'home')
+		test.icon['color'][0] = 'red'
+		for i in range(9):
+			test.add_item_raw(21)
+		test.skills = ['farm']
+		test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
 var.temp_fps = 0
 var.gametime = time.time()

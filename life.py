@@ -7,6 +7,8 @@ class life:
 		
 		if self.player:
 			self.icon = {'icon':'@','color':['white',None]}
+		else:
+			self.icon = {'icon':'L','color':['white',None]}
 		
 		self.id = functions.get_id()
 		self.name = 'Default'
@@ -34,6 +36,14 @@ class life:
 		self.weapon = None
 		self.claims = []
 		self.owned_land = []
+		self.traits = []
+		self.attracted_to = []
+		
+		self.lowest = {'who':None,'score':0}
+		self.highest = {'who':None,'score':0}
+		self.task = {'what':None}
+		self.task_delay = 0
+		self.events = []
 		
 		self.thirst = 0
 		self.thirst_timer_max = 100
@@ -186,6 +196,40 @@ class life:
 		
 		if self.owner:
 			self.owner = functions.get_alife_by_id(self.owner)
+
+	def add_event(self,what,score,who=None,where=None,items=[],delay=0):
+		for event in self.events:
+			if event['what'] == what and event['who'] == who:
+				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
+				#	(self.name,event['what'],event['score'],score))
+				event['score'] = score
+				return False
+		
+		logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
+		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay,\
+			'items':items})
+		return True
+	
+	def get_event(self):
+		_highest = {'what':None,'score':-1}
+		for event in self.events:
+			if event['score']>=_highest['score']:
+				_highest['what'] = event['what']
+				_highest['ret'] = event
+				_highest['score'] = event['score']
+		
+		if _highest['what']:
+			return _highest['ret']
+		else:
+			return _highest
+	
+	def remove_event(self,what):
+		for event in self.events:
+			if event['what'] == what:
+				self.events.remove(event)
+				return True
+		
+		return False
 	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
@@ -881,6 +925,156 @@ class life:
 				if _temp and _temp['in_los']:
 					_temp['in_los'] = False
 		
+		for seen in self.seen:
+			if seen['in_los']:
+				_score = self.judge(seen['who'])
+				seen['score'] = _score
+				
+				if _score < 0 and _score <= self.lowest['score']:
+					self.lowest['who'] = seen['who']
+					
+					if _score < self.lowest['score']:
+						self.on_enemy_spotted(self.lowest['who'])
+					
+					self.lowest['score'] = _score
+					self.lowest['last_seen'] = seen['last_seen'][:]
+				
+				if _score >= 0:
+					if _score >= self.highest['score']:
+						self.highest['who'] = seen['who']
+						
+						if _score > self.highest['score']:
+							self.on_friendly_spotted(self.highest['who'])
+						
+						self.highest['score'] = _score
+						self.highest['last_seen'] = seen['last_seen'][:]
+			
+			else:
+				if self.lowest['who'] == seen['who']:
+					self.lowest['last_seen'] = seen['last_seen'][:]
+				
+				if self.highest['who'] == seen['who']:
+					self.highest['last_seen'] = seen['last_seen'][:]
+		
+		if self.lowest['who']:
+			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
+				if self.add_event('attack',100,who=self.lowest['who']):
+					if self.lowest['who'].player:
+						self.lowest['who'].is_in_danger(self)
+			else:
+				if self.add_event('flee',100,who=self.lowest['who']):
+					self.remove_event('attack')
+				self.task = 'flee'
+		else:
+			if self.task == 'attacking':
+				self.task = None
+		
+		_event = self.get_event()
+		
+		if _event and not self.task==_event:
+			self.task = _event
+
+	def think_finalize(self):
+		if self.task['what'] == 'food':
+			##TODO: Eventually sort this array by how good the food is
+			_item = self.get_all_items_of_type(['food','cooked food'])
+			
+			if _item:
+				self.hunger = 0
+				self.hunger_timer = self.hunger_timer_max
+				self.items.remove(_item[0])
+				self.remove_event(self.task['what'])
+				self.task = None
+				self.say('That was good!')
+			else:
+				_items = []
+				
+				for claim in self.claims:
+					for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
+						_items.append(item)
+				
+				if _items:
+					_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
+					self.pick_up_item_at(_item['pos'],'food')
+		elif self.task['what'] == 'mine':
+			self.mine()
+		elif self.task['what'] == 'deliver':
+			if len(self.get_all_items_of_type('ore')):
+				_pos = None
+				_room = var.world.get_level(1).get_room('storage')
+				_chest = None
+				for pos in _room['walking_space']:
+					for item in var.world.get_level(1).items[pos[0]][pos[1]]:
+						if item['type']=='storage':
+							for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+								if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
+									_pos = (pos[0]+space[0],pos[1]+space[1])
+									_chest = item
+									break
+							break
+				
+				if tuple(self.pos) == _pos:
+					self.put_all_items_of_type('ore',_chest['pos'])
+					self.remove_event(self.task['what'])
+					self.task = None
+					self.mine_dest = None
+				elif _pos:
+					self.go_to(_pos,z=1)
+		elif self.task['what'] == 'attack':
+			if self.task['who'].hp>0:
+				self.go_to(self.task['who'].pos,z=self.task['who'].z)
+			else:
+				if self.remove_event(self.task['what']):
+					self.task = None
+					self.say('Got em.')
+					self.lowest = {'who':None,'score':0}
+		elif self.task['what'] == 'run_shop':
+			self.run_shop(self.task['where'])
+		elif self.task['what'] == 'flee':
+			print 'Running away'
+		elif self.task['what'] == 'farm':
+			self.farm(self.task['where'])
+		elif self.task['what'] == 'cook':
+			self.cook()
+		elif self.task['what'] == 'rest':
+			self.rest()
+		elif self.task['what'] == 'stay_home':
+			if self.get_claimed('home'):
+				if self.fatigue>=15 and self.get_open_beds(self.get_claimed('home')):
+					if not self.is_in_bed():
+						self.rest(self.get_claimed('home'))
+				elif self.fatigue>=10 and self.is_in_bed():
+					pass
+				else:
+					if not self.task_delay:
+						self.guard_building(self.get_claimed('home'))
+						self.task_delay = self.task['delay']
+					elif self.task_delay>0:
+						self.task_delay-=1
+			else:
+				if self.z==1:
+					if self.level.get_open_buildings_of_type('home'):
+						_building = self.level.get_open_buildings_of_type('home')[0]['name']
+						self.go_to_and_claim_building(_building,'home')
+					else:
+						print 'No h0mez'
+		elif self.task['what'] == 'sell':
+			self.sell_items(self.task['items'])
+		elif self.task['what'] == 'follow':
+			self.follow_person(self.task['who'])
+		elif self.task['what'] == 'store_items':
+			self.store_items(self.task['items'])
+		elif self.task['what'] == 'find_love':
+			self.build_relationship_with(self.task['who'])
+		
+		if self.path:
+			if tuple(self.pos) == tuple(self.path[0]):
+				self.path.pop(0)
+			
+			if self.path:
+				_new_pos = [self.path[0][0],self.path[0][1]]
+				return _new_pos
+		
 		return self.pos
 	
 	def walk(self,dir):
@@ -1408,9 +1602,9 @@ class life:
 
 class human(life):
 	def __init__(self,player=False,male=True):
-		self.icon = {'icon':'H','color':['white',None]}
-		
 		life.__init__(self,player=player)
+		
+		self.icon = {'icon':'H','color':['white',None]}
 		
 		self.race = 'human'
 		if male:
@@ -1427,18 +1621,10 @@ class human(life):
 		
 		self.thirsty_at = -1
 		self.married = None
-		self.worth = None
-		self.mode = {'task':None,'who':None}
-		self.task = None
-		self.task_delay = 0
+		#self.worth = None
 		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
-		
-		self.lowest = {'who':None,'score':0}
-		self.highest = {'who':None,'score':0}
-		
-		self.events = []
 	
 	def on_wake(self):
 		life.on_wake(self)
@@ -1471,40 +1657,6 @@ class human(life):
 			_name+=' covered in %s' % self.weapon['status']
 			
 		return _name
-	
-	def add_event(self,what,score,who=None,where=None,items=[],delay=0):
-		for event in self.events:
-			if event['what'] == what and event['who'] == who:
-				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
-				#	(self.name,event['what'],event['score'],score))
-				event['score'] = score
-				return False
-		
-		logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
-		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay,\
-			'items':items})
-		return True
-	
-	def get_event(self):
-		_highest = {'what':None,'score':-1}
-		for event in self.events:
-			if event['score']>=_highest['score']:
-				_highest['what'] = event['what']
-				_highest['ret'] = event
-				_highest['score'] = event['score']
-		
-		if _highest['what']:
-			return _highest['ret']
-		else:
-			return _highest
-	
-	def remove_event(self,what):
-		for event in self.events:
-			if event['what'] == what:
-				self.events.remove(event)
-				return True
-		
-		return False
 	
 	def mine(self):
 		if self.mine_dest and self.path_dest == self.mine_dest: return
@@ -1597,152 +1749,10 @@ class human(life):
 	def think(self):
 		life.think(self)
 		
-		#ACT HUMANLY!
-		for seen in self.seen:
-			if seen['in_los']:
-				_score = self.judge(seen['who'])
-				seen['score'] = _score
-				
-				if _score < 0 and _score <= self.lowest['score']:
-					self.lowest['who'] = seen['who']
-					
-					if _score < self.lowest['score']:
-						self.on_enemy_spotted(self.lowest['who'])
-					
-					self.lowest['score'] = _score
-					self.lowest['last_seen'] = seen['last_seen'][:]
-				
-				if _score >= 0:
-					if _score >= self.highest['score']:
-						self.highest['who'] = seen['who']
-						
-						if _score > self.highest['score']:
-							self.on_friendly_spotted(self.highest['who'])
-						
-						self.highest['score'] = _score
-						self.highest['last_seen'] = seen['last_seen'][:]
-			
-			else:
-				if self.lowest['who'] == seen['who']:
-					self.lowest['last_seen'] = seen['last_seen'][:]
-				
-				if self.highest['who'] == seen['who']:
-					self.highest['last_seen'] = seen['last_seen'][:]
-		
-		if self.lowest['who']:
-			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
-				if self.add_event('attack',100,who=self.lowest['who']):
-					if self.lowest['who'].player:
-						self.lowest['who'].is_in_danger(self)
-			else:
-				if self.add_event('flee',100,who=self.lowest['who']):
-					self.remove_event('attack')
-				self.task = 'flee'
-		else:
-			if self.task == 'attacking':
-				self.task = None
-		
 		if self.highest['who']:
 			if not self.married:
 				pass
 		
-		_event = self.get_event()
-		
-		if _event and not self.task==_event:
-			self.task = _event
-		
-		if self.task['what'] == 'food':
-			##TODO: Eventually sort this array by how good the food is
-			_item = self.get_all_items_of_type(['food','cooked food'])
-			
-			if _item:
-				self.hunger = 0
-				self.hunger_timer = self.hunger_timer_max
-				self.items.remove(_item[0])
-				self.remove_event(self.task['what'])
-				self.task = None
-				self.say('That was good!')
-			else:
-				_items = []
-				
-				for claim in self.claims:
-					for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
-						_items.append(item)
-				
-				if _items:
-					_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
-					self.pick_up_item_at(_item['pos'],'food')
-		elif self.task['what'] == 'mine':
-			self.mine()
-		elif self.task['what'] == 'deliver':
-			if len(self.get_all_items_of_type('ore')):
-				_pos = None
-				_room = var.world.get_level(1).get_room('storage')
-				_chest = None
-				for pos in _room['walking_space']:
-					for item in var.world.get_level(1).items[pos[0]][pos[1]]:
-						if item['type']=='storage':
-							for space in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-								if (pos[0]+space[0],pos[1]+space[1]) in _room['walking_space']:
-									_pos = (pos[0]+space[0],pos[1]+space[1])
-									_chest = item
-									break
-							break
-				
-				if tuple(self.pos) == _pos:
-					self.put_all_items_of_type('ore',_chest['pos'])
-					self.remove_event(self.task['what'])
-					self.task = None
-					self.mine_dest = None
-				elif _pos:
-					self.go_to(_pos,z=1)
-		elif self.task['what'] == 'attack':
-			if self.task['who'].hp>0:
-				self.go_to(self.task['who'].pos,z=self.task['who'].z)
-			else:
-				if self.remove_event(self.task['what']):
-					self.task = None
-					self.say('Got em.')
-					self.lowest = {'who':None,'score':0}
-		elif self.task['what'] == 'run_shop':
-			self.run_shop(self.task['where'])
-		elif self.task['what'] == 'flee':
-			print 'Running away'
-		elif self.task['what'] == 'farm':
-			self.farm(self.task['where'])
-		elif self.task['what'] == 'cook':
-			self.cook()
-		elif self.task['what'] == 'rest':
-			self.rest()
-		elif self.task['what'] == 'stay_home':
-			if self.get_claimed('home'):
-				if self.fatigue>=15 and self.get_open_beds(self.get_claimed('home')):
-					if not self.is_in_bed():
-						self.rest(self.get_claimed('home'))
-				elif self.fatigue>=10 and self.is_in_bed():
-					pass
-				else:
-					if not self.task_delay:
-						self.guard_building(self.get_claimed('home'))
-						self.task_delay = self.task['delay']
-					elif self.task_delay>0:
-						self.task_delay-=1
-			else:
-				if self.z==1:
-					if self.level.get_open_buildings_of_type('home'):
-						_building = self.level.get_open_buildings_of_type('home')[0]['name']
-						self.go_to_and_claim_building(_building,'home')
-					else:
-						print 'No h0mez'
-		elif self.task['what'] == 'sell':
-			self.sell_items(self.task['items'])
-		elif self.task['what'] == 'follow':
-			self.follow_person(self.task['who'])
-		elif self.task['what'] == 'store_items':
-			self.store_items(self.task['items'])
-		elif self.task['what'] == 'find_love':
-			self.build_relationship_with(self.task['who'])
-			
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
 			self.add_event('food',self.hunger)
@@ -1830,15 +1840,7 @@ class human(life):
 		else:
 			self.add_event('stay_home',self.fatigue,delay=15)
 		
-		if self.path:
-			if tuple(self.pos) == tuple(self.path[0]):
-				self.path.pop(0)
-			
-			if self.path:
-				_new_pos = [self.path[0][0],self.path[0][1]]
-				return _new_pos
-		
-		return self.pos
+		return life.think_finalize(self)
 	
 	def kill(self):
 		life.kill(self)
@@ -1859,9 +1861,9 @@ class crazy_miner(human):
 	def on_enemy_spotted(self,who):
 		self.say('I see yah, you crazy bastard!')
 
-class dog(human):
+class dog(life):
 	def __init__(self,male=True):
-		human.__init__(self)
+		life.__init__(self)
 		
 		self.race = 'dog'
 		self.faction = 'good'
@@ -1878,11 +1880,11 @@ class dog(human):
 		self.icon['color'][0] = 'brown'
 	
 	def on_enemy_spotted(self,who):
-		human.on_enemy_spotted(self,who)
+		life.on_enemy_spotted(self,who)
 		self.say_phrase('dog_angry',other=who,action=True)
 	
 	def on_friendly_spotted(self,who):
-		human.on_friendly_spotted(self,who)
+		life.on_friendly_spotted(self,who)
 		
 		if self.owner == who:
 			self.say_phrase('dog_happy_owner',other=who,action=True)
@@ -1906,11 +1908,13 @@ class dog(human):
 		
 		return _score
 	
-	def think(self):		
+	def think(self):
+		life.think(self)
+		
 		if self.highest['who']:
 			self.add_event('follow',50,who=self.highest['who'],delay=15)
-		
-		return human.think(self)
+
+		return life.think_finalize(self)
 
 class zombie(life):
 	def __init__(self,player=False):

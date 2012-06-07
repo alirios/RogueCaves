@@ -11,6 +11,7 @@ Todo
 * Need "tilling" task for farming
 * Relationships (would probably get rid of life.owner)
 * Relationship flags: Likes pets
+* Save var.id
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -43,6 +44,9 @@ Changed
 * functions.get_phrase()
 * life.say_phrase()
 * human.get_top_love_interests() is now life.get_top_love_interests()
+* All event functions were moved to life
+* human.think()
+* human.think_finalize()
 * ALife no longer wakes up and goes back to bed immediately
 * ALife no longer stands around after giving an item to someone
 
