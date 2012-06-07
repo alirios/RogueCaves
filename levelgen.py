@@ -211,7 +211,7 @@ class LevelGen:
 		_ret = []
 		
 		for room in self.rooms:
-			if room['type'].lower() == building.lower():
+			if room['name'].lower() == building.lower():
 				for pos in room['walking_space']:
 					for item in self.items[pos[0]][pos[1]]:
 						if item['type'] == 'storage':
@@ -251,7 +251,7 @@ class LevelGen:
 	def remove_item_from_building(self,item,building):
 		"""Removes 'item' from 'building'"""
 		for room in self.rooms:
-			if room['type'].lower() == building.lower():
+			if room['name'].lower() == building.lower():
 				for pos in room['walking_space']:
 					for _item in self.items[pos[0]][pos[1]]:
 						if _item['type'] == 'storage':
@@ -1010,7 +1010,7 @@ class LevelGen:
 		if room['type'] == 'home':
 			_needs = [26,24,18]
 		elif room['type'] == 'store':
-			_needs = [18,21,21,21]
+			_needs = [18,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
 		elif room['type'] == 'kitchen':
 			_needs = [18]
 		

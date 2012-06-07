@@ -1,12 +1,25 @@
 thank_you:Thank you, <other.name>.
-enter_building:Welcome to <building.name>, <other.name>
+enter_building:Welcome to <building.name>, <other.name>.
 enter_building:Welcome, <other.name>.
 leave_building:See you later, <other.name>.
 leave_building:Have a good day, <other.name>.
 leave_building:Please come back soon!
 leave_building:Please come back soon, <other.name>.
-receive_gift_positive:I really like <gift.type>!
-receive_gift_positive:I really enjoy <gift.type>!
+receive_item_negative_honest:Thank you, but I don't enjoy <item.type>.
+receive_item_negative_brash:Why would you give me this?
+receive_item_negative_brash:I don't like <item.type>!
+receive_item_negative_fake:This is a nice <item.type>, <other.name>.
+receive_item_brash_positive:I really like <item.type>!
+receive_item_positive:I really like <item.type>!
+receive_item_positive:I really enjoy <item.type>!
+receive_item_positive_shy:Oh, thank you, <other.name>.
+receive_item_positive_shy:This is a nice <item.name>, <other.name>.
+brash_attracted:smiles.
+brash_attracted:giggles.
+attracted:smiles.
+attracted:giggles.
+shy_attracted:looks away.
+shy_attracted:blushes.
 dog_happy:wags <self.gender> tail.
 dog_happy:woofs!
 dog_happy_owner:wags <self.gender> tail at <other.name>!

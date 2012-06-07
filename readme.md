@@ -36,6 +36,12 @@ Current Version: 06.07.2012A
 ----------------------------
 Changed
 -------
+* life.buy_items()
+* life.dislikes
+* life.likes
+* ALife finally buys more seeds
+* Additional phrases
+* Fixed a few errors in level.py that caused no rooms to be returned
 * Fixed saving/loading
 
 Previous Version: 06.06.2012A

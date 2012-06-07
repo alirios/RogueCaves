@@ -36,6 +36,8 @@ class life:
 		self.owned_land = []
 		self.traits = []
 		self.attracted_to = []
+		self.likes = []
+		self.dislikes = []
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -133,6 +135,8 @@ class life:
 		_keys['talents'] = self.talents
 		_keys['traits'] = self.traits
 		_keys['skills'] = self.skills
+		_keys['likes'] = self.likes
+		_keys['dislikes'] = self.dislikes
 		
 		return _keys
 	
@@ -196,6 +200,8 @@ class life:
 		self.talents = keys['talents']
 		self.traits = keys['traits']
 		self.skills = keys['skills']
+		self.likes = keys['likes']
+		self.dislikes = keys['dislikes']
 	
 	def finalize(self):
 		for seen in self.seen:
@@ -216,8 +222,6 @@ class life:
 		
 		if self.owner:
 			self.owner = functions.get_alife_by_id(self.owner)
-		
-		#self.task['who'] = functions.get_alife_by_id(self.task['who'])
 
 	def add_event(self,what,score,who=None,where=None,items=[],delay=0):
 		for event in self.events:
@@ -283,7 +287,7 @@ class life:
 	def buy_item_from_shop_alife(self,item,where):
 		"""Helper function for ALife. Buy 'item' from 'where'"""
 		##TODO: We aren't adding the original object to the buyer's item array
-
+		
 		for _item in self.level.get_all_items_in_building(where):
 			if _item['tile'] == item:
 				self.level.remove_item_from_building(_item,where)
@@ -308,14 +312,41 @@ class life:
 		
 		if self in _people:
 			_index = _people.index(self)
-			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
-				(who.name,item['name'],self.name))
 			
-			who.say_phrase('thank_you',other=self)
-			
-			if _index == 0:
-				#who.say('')
-				pass
+			if item['type'] in who.likes:
+				if 'brash' in who.traits:
+					who.say_phrase('receive_item_brash_positive',item=item,other=self)
+				elif 'shy' in who.traits:
+					who.say_phrase('receive_item_positive_shy',item=item,other=self)
+				else:
+					who.say_phrase('receive_item_positive',item=item)
+				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
+					(who.name,item['name'],self.name))
+			elif item['type'] in who.dislikes:
+				if 'honest' in who.traits:
+					who.say_phrase('receive_item_negative_honest',item=item)
+				elif 'shy' in who.traits:
+					who.say_phrase('receive_item_negative_shy',item=item)
+				else:
+					who.say_phrase('receive_item_negative_fake',item=item,other=self)
+				
+				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
+					(who.name,item['name'],self.name))
+		else:
+			if item['type'] in who.likes:
+				who.say_phrase('receive_item_positive',item=item)
+				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
+					(who.name,item['name'],self.name))
+			elif item['type'] in who.dislikes:
+				if 'brash' in who.traits:
+					who.say_phrase('receive_item_negative_brash',item=item)
+				elif 'honest' in who.traits:
+					who.say_phrase('receive_item_negative_honest',item=item)
+				else:
+					who.say_phrase('receive_item_negative_fake',item=item,other=self)
+				
+				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
+					(who.name,item['name'],self.name))
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -680,7 +711,10 @@ class life:
 		if not what: return False
 		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
-			if action: functions.log('%s %s' % (self.name,what))
+			if action:
+				if var.player.name in what:
+					what = what.replace(var.player.name,'you')
+				functions.log('%s %s' % (self.name,what))
 			else: functions.log('%s: %s' % (self.name,what))
 	
 	def say_phrase(self,type,action=False,**kargv):
@@ -698,6 +732,8 @@ class life:
 				if _split[1]=='gender':
 					if self.gender=='male': _phrase = _phrase.replace(tag,'his')
 					else: _phrase = _phrase.replace(tag,'her')
+			elif _split[0]=='item':
+				_phrase = _phrase.replace(tag,kargv['item'][_split[1]])
 		
 		_phrase = _phrase.replace('<','').replace('>','')
 		self.say(_phrase,action=action)
@@ -942,6 +978,7 @@ class life:
 						'in_los':True,
 						'last_seen':life.pos[:],
 						'likes':[],
+						'dislikes':[],
 						'score':0})
 			else:
 				if _temp and _temp['in_los']:
@@ -1008,16 +1045,19 @@ class life:
 				self.remove_event(self.task['what'])
 				self.task = None
 				self.say('That was good!')
+				logging.debug('[ALife.%s] Ate a %s.' %
+					(who.name,item['name'],self.name))
 			else:
 				_items = []
+				_wants = ['food','cooked food']
 				
 				for claim in self.claims:
-					for item in self.level.get_all_items_in_building_of_type(claim['where'],'food'):
+					for item in self.level.get_all_items_in_building_of_type(claim['where'],_wants):
 						_items.append(item)
 				
 				if _items:
 					_item = functions.sort_item_array_by_distance(_items,self.pos)[0]
-					self.pick_up_item_at(_item['pos'],'food')
+					self.pick_up_item_at(_item['pos'],_item['type'])
 		elif self.task['what'] == 'mine':
 			self.mine()
 		elif self.task['what'] == 'deliver':
@@ -1082,6 +1122,8 @@ class life:
 						print 'No h0mez'
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
+		elif self.task['what'] == 'buy':
+			self.buy_items(self.task['items'])
 		elif self.task['what'] == 'follow':
 			self.follow_person(self.task['who'])
 		elif self.task['what'] == 'store_items':
@@ -1537,6 +1579,9 @@ class life:
 		elif _stored_food:
 			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
 	
+	def buy_items(self,what):
+		self.go_to_building_and_buy(what,self.get_nearest_store())
+	
 	def store_items(self,what):
 		_home = self.get_claimed('home')
 		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
@@ -1557,6 +1602,9 @@ class life:
 		_ret  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
 		_ret.extend(self.get_all_items_of_type(['food','cooked food']))
 		
+		for item in _ret:
+			if item.has_key('from'): _ret.remove(item)
+		
 		return _ret
 	
 	def build_relationship_with(self,who):
@@ -1568,6 +1616,9 @@ class life:
 		
 		for item in _has:
 			if item.has_key('from'): _has.remove(item)
+		
+		for item in _in_storage:
+			if item.has_key('from'): _in_storage.remove(item)
 		
 		if _has:
 			self.go_to_and_do(who.pos,\
@@ -1801,6 +1852,7 @@ class human(life):
 		_farm_score = 0
 		_cook_score = 0
 		_sell_score = 0
+		_buy_score = 0
 		_store_items_score = 0
 		
 		#Consider skills
@@ -1822,6 +1874,10 @@ class human(life):
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
+			_buy_score = 30-len(self.get_all_items_of_type(['seed'],check_storage=True))
+			_buy_score -=len(self.get_all_grown_crops())
+			_buy_what = 21
+			
 			#Store away extra food
 			_store_items_score += \
 				len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*5
@@ -1833,6 +1889,7 @@ class human(life):
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
 			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
+			self.add_event('buy',_buy_score,items=_buy_what,delay=5)
 			self.add_event('store_items',_store_items_score,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
 			_trade_score = 25
@@ -1859,8 +1916,8 @@ class human(life):
 		if self.get_top_love_interests() and not self.married:
 			_likes = self.get_top_love_interests()[0]
 			_love_score += _likes['score']
-			_can_build = self.can_build_relationship_with(_likes['who'])
 			
+			_can_build = self.can_build_relationship_with(_likes['who'])
 			if _can_build:
 				_love_score += len(_can_build)
 			else:

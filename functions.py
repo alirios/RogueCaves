@@ -144,12 +144,13 @@ def get_item_price(item):
 	return item['price']
 
 def generate_human(job):
+	random.seed()
 	if len(get_alife_with_gender('male')) > len(get_alife_with_gender('female')):
-		_gender = False
+		_male = False
 	else:
-		_gender = True
+		_male = True
 	
-	_ret =  life.human(male=_gender)
+	_ret =  life.human(male=_male)
 	_ret.z = 1
 	_ret.level = var.world.get_level(_ret.z)
 	
@@ -179,22 +180,37 @@ def generate_human(job):
 	else: _attractive_score = 6
 	
 	if random.randint(0,10)>_attractive_score: _traits.append('attractive')
+	#if random.randint(0,10)>5:
+	#	_traits.append('brash')
+	#else:
+	#	_traits.append('honest')
+	_traits.append(random.choice(['brash','honest','shy']))
 	
 	#Here we get to stereotype!
 	if 'attractive' in _traits:
 		_ret.attracted_to.append('looks')
 	
+	#Now pick some things this ALife likes
+	_can_like = ['dogs','pets','animals','food','cooked food']
+	_ret.likes = random.sample(_can_like,random.randint(2,4))
+	
 	_ret.traits = _traits[:]
 	
 	if job=='trade':
-		_ret.icon['color'][0] = 'blue'
+		if _male:
+			_ret.icon['color'][0] = 'blue'
+		else:
+			_ret.icon['color'][0] = 'purple'
 		_ret.skills = ['trade']
 		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
 	elif job=='farmer':
 		_ret.level = var.world.get_level(_ret.z)
 		_building = _ret.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
 		_ret.claim_building(_building,'home')
-		_ret.icon['color'][0] = 'red'
+		if _male:
+			_ret.icon['color'][0] = 'red'
+		else:
+			_ret.icon['color'][0] = 'purple'
 		for i in range(9):
 			_ret.add_item_raw(21)
 		_ret.skills = ['farm']

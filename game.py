@@ -238,16 +238,16 @@ else:
 	for i in range(9):
 		var.player.add_item_raw(21)
 
-	for i in range(1,var.world.depth):
-		test = life.crazy_miner()
-		test.name = 'Chester'
-		test.z = -i
-		test.speed = 3
-		test.speed_max = 3
-		test.level = var.world.get_level(test.z)
-		test.pos = random.choice(test.level.walking_space)
-		_i = test.add_item_raw(19)
-		test.equip_item(_i)
+	#for i in range(1,var.world.depth):
+	#	test = life.crazy_miner()
+	#	test.name = 'Chester'
+	#	test.z = -i
+	#	test.speed = 3
+	#	test.speed_max = 3
+	#	test.level = var.world.get_level(test.z)
+	#	test.pos = random.choice(test.level.walking_space)
+	#	_i = test.add_item_raw(19)
+	#	test.equip_item(_i)
 
 	#for i in range(2):
 	#	test = life.human(male=False)
@@ -646,6 +646,8 @@ def get_input():
 						print 'Position: %s' % str(life.pos)
 						print 'Traits: %s' % life.traits
 						print 'Attracted to: %s' % life.attracted_to
+						print 'Likes: %s' % life.likes
+						print 'Dislikes: %s' % life.dislikes
 						print '='*8
 						#print 'Inventory: '
 						#for item in life.items:
