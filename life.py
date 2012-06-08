@@ -307,46 +307,53 @@ class life:
 		logging.debug('[ALife.%s] Gave %s to %s' %
 			(self.name,item['name'],who.name))
 		
-		_people = [person['who'] for person in who.get_top_love_interests()]
+		#_people = [person['who'] for person in who.get_top_love_interests()]
+		_people = self.get_all_relationships()
+		_person = self.get_relationship_with(who)
 		#print who.get_top_love_interests(),_people
 		
-		if self in _people:
-			_index = _people.index(self)
-			
-			if item['type'] in who.likes:
-				if 'brash' in who.traits:
-					who.say_phrase('receive_item_brash_positive',item=item,other=self)
-				elif 'shy' in who.traits:
-					who.say_phrase('receive_item_positive_shy',item=item,other=self)
-				else:
-					who.say_phrase('receive_item_positive',item=item)
-				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
-					(who.name,item['name'],self.name))
-			elif item['type'] in who.dislikes:
-				if 'honest' in who.traits:
-					who.say_phrase('receive_item_negative_honest',item=item)
-				elif 'shy' in who.traits:
-					who.say_phrase('receive_item_negative_shy',item=item)
-				else:
-					who.say_phrase('receive_item_negative_fake',item=item,other=self)
+		if item['type'] in who.likes:
+			if 'brash' in who.traits:
+				who.say_phrase('receive_item_brash_positive',item=item,other=self)
 				
-				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
-					(who.name,item['name'],self.name))
-		else:
-			if item['type'] in who.likes:
+				if not item['type'] in _person['likes']:
+					_person['likes'].append(item['type'])
+					logging.debug('[ALife.%s] Learned that %s likes %s.' %
+						(self.name,who.name,item['type']))
+					
+				print self.get_relationship_with(who)['likes']
+			elif 'shy' in who.traits:
+				who.say_phrase('receive_item_positive_shy',item=item,other=self)
+			else:
 				who.say_phrase('receive_item_positive',item=item)
-				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
-					(who.name,item['name'],self.name))
-			elif item['type'] in who.dislikes:
-				if 'brash' in who.traits:
-					who.say_phrase('receive_item_negative_brash',item=item)
-				elif 'honest' in who.traits:
-					who.say_phrase('receive_item_negative_honest',item=item)
-				else:
-					who.say_phrase('receive_item_negative_fake',item=item,other=self)
+			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
+				(who.name,item['name'],self.name))
+		elif item['type'] in who.dislikes:
+			if 'honest' in who.traits:
+				who.say_phrase('receive_item_negative_honest',item=item)
 				
-				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
-					(who.name,item['name'],self.name))
+				if not item['type'] in _person['dislikes']:
+					_person['dislikes'].append(item['type'])
+					logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
+						(self.name,who.name,item['type']))
+				
+			elif 'shy' in who.traits:
+				who.say_phrase('receive_item_negative_shy',item=item)
+			else:
+				who.say_phrase('receive_item_negative_fake',item=item,other=self)
+			
+			logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
+				(who.name,item['name'],self.name))
+		else:
+			who.say_phrase('thank_you',item=item)
+		
+		logging.debug('[ALife.%s] Relationship with %s: %s' %
+			(who.name,who.name,_person['score']))
+		#if self in _people:
+		#	if 'brash' in who.traits:
+		#		
+		#else:
+		return			
 	
 	def sell_item(self,item,**kargv):
 		"""Removes item from inventory and adds it to the items array."""
@@ -557,7 +564,7 @@ class life:
 		return _ret
 	
 	def get_top_love_interests(self):
-		"""Returns this ALife's top love interests."""
+		"""Returns this ALife's top love interests"""
 		_ret = []
 		_t = []
 		
@@ -569,7 +576,7 @@ class life:
 			_highest = 0
 			for _item in _t:
 				if _item['item'] == item: continue
-				if _temp['score'] < _item['score']:
+				if _temp['score'] > _item['score']:
 					if _t.index(_item) > _highest: _highest = _t.index(_item)
 			
 			_t.insert(_highest,_temp)
@@ -580,6 +587,29 @@ class life:
 				_ret.append({'who':_who,'score':item['score']})
 		
 		return _ret
+	
+	def get_all_relationships(self):
+		"""Returns this ALife's relationships"""
+		_ret = []
+		_t = []
+		
+		for item in self.seen:
+			_t.append({'score':item['score'],'item':item})
+		
+		for item in _t:
+			_who = item['item']['who']
+			if self.race == _who.race:
+				_ret.append({'who':_who,'score':item['score']})
+		
+		return _ret
+	
+	def get_relationship_with(self,who):
+		"""Returns this ALife's relationship with 'who'"""
+		for person in self.seen:
+			if person['who'] == who:
+				return person
+		
+		return False
 	
 	def get_item_id(self,id):
 		"""Returns item of id 'id'"""
@@ -960,7 +990,7 @@ class life:
 			
 			_l = draw.draw_diag_line(self.pos,life.pos)
 			
-			_seen = self.can_see(life.pos)#True
+			_seen = self.can_see(life.pos)
 			
 			if _seen:
 				_seen = self.can_traverse(life.pos)
@@ -1045,8 +1075,7 @@ class life:
 				self.remove_event(self.task['what'])
 				self.task = None
 				self.say('That was good!')
-				logging.debug('[ALife.%s] Ate a %s.' %
-					(who.name,item['name'],self.name))
+				logging.debug('[ALife.%s] Ate a %s.' % (self.name,_item[0]['name']))
 			else:
 				_items = []
 				_wants = ['food','cooked food']
@@ -1570,7 +1599,6 @@ class life:
 	
 	def sell_items(self,what):
 		##TODO: Sort these eventually...
-		#_food = self.get_all_cookable_items(self.get_claimed('home'))
 		_has_food = self.get_all_items_of_type(what)
 		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
 		
@@ -1610,9 +1638,18 @@ class life:
 	def build_relationship_with(self,who):
 		"""Makes ALife attempt to form relationship with 'who'"""
 		#Decide what to give this person
-		##TODO: Replace this with something besides food...
-		_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
-		_has = self.get_all_items_of_type(['food','cooked food'])
+		
+		_likes = self.get_relationship_with(who)['likes']
+		
+		if _likes:
+			_in_storage  = self.get_all_items_of_type(_likes,check_storage=True)
+			_has = self.get_all_items_of_type(_likes)
+		elif not _in_storage and not _has:
+			_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
+			_has = self.get_all_items_of_type(['food','cooked food'])
+		else:
+			_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
+			_has = self.get_all_items_of_type(['food','cooked food'])
 		
 		for item in _has:
 			if item.has_key('from'): _has.remove(item)
@@ -1812,6 +1849,9 @@ class human(life):
 			
 			if 'looks' in self.attracted_to:
 				if 'attractive' in who.traits: _score+=10
+				elif 'athletic' in who.traits: _score+=7
+				elif 'fit' in who.traits: _score+=5
+				else: _score -= 5
 								
 			#Status is also something to consider. A person with a lot of
 			#real estate is more likely to be higher up the ladder than others
@@ -1819,14 +1859,32 @@ class human(life):
 				_score+=len(who.claims)*5
 				_score+=len(who.owned_land)*3
 			
-			#Consider gifts from this person.
-			for item in self.get_all_gifts_from(who):
-				_score+=(item['price']/2)
+			if 'brash' in self.attracted_to:
+				_score+=5
+			
+			if 'honest' in self.attracted_to:
+				_score+=5
+			
+			if 'shy' in self.attracted_to:
+				_score+=5
+
+			#Consider gifts from this person.			
+			if 'charity' in self.attracted_to:
+				for item in self.get_all_gifts_from(who):
+					_score+=(item['price']/2)
+			else:
+				for item in self.get_all_gifts_from(who):
+					_score+=(item['price']/4)
 			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?
 			if self.married == who:
-				_score+=50
+				if 'faithful' in self.traits:
+					_score+=30
+				elif 'unfaithful' in self.traits:
+					pass #do nothing, no bonus
+				else:
+					_score+=20
 			
 		else:
 			_score += who.hp+who.atk+who.defe
@@ -1837,10 +1895,6 @@ class human(life):
 	
 	def think(self):
 		life.think(self)
-		
-		if self.highest['who']:
-			if not self.married:
-				pass
 		
 		#Take care of needs here
 		if self.hunger >= self.hungry_at and not self.hungry_at == -1:
@@ -1857,7 +1911,7 @@ class human(life):
 		
 		#Consider skills
 		if 'farm' in self.skills:
-			_farm_score-=len(self.get_all_items_of_type(['food','cooked_food'])*2)
+			_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
 			
 			##TODO: Calculate how much food this ALife needs
 			_farm_score+=len(self.get_all_items_of_type('seed'))*10
@@ -1865,7 +1919,7 @@ class human(life):
 			if self.get_open_stoves(self.get_claimed('home')):
 				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
 				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
-			_farm_score+=len(self.get_all_grown_crops())*15
+			_farm_score+=len(self.get_all_grown_crops())*20
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
@@ -1874,8 +1928,10 @@ class human(life):
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
-			_buy_score = 30-len(self.get_all_items_of_type(['seed'],check_storage=True))
-			_buy_score -=len(self.get_all_grown_crops())
+			_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
+			_buy_score -=(len(self.get_all_grown_crops())*5)
+			_buy_score -= _farm_score
+			_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
 			_buy_what = 21
 			
 			#Store away extra food
@@ -1908,7 +1964,7 @@ class human(life):
 					_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				self.add_event('run_shop',_trade_score,where=_building,delay=20)
 		
-		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)
+		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)/2
 		if _love_score>0: _love_score=0
 		
 		_love_score -= self.fatigue

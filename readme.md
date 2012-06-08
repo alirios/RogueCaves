@@ -32,7 +32,15 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.07.2012A
+Current Version: 06.08.2012A
+----------------------------
+Changed
+-------
+* ALife has more elaborate likes/dislikes/traits
+* life.get_all_relationships()
+* life.get_relationship_with()
+
+Previous Version: 06.07.2012A
 ----------------------------
 Changed
 -------

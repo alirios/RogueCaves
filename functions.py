@@ -157,44 +157,64 @@ def generate_human(job):
 	#Now we generate some stats here based on traits which 
 	#are randomly chosen, and determine the 'base' of each
 	#ALife.
-	_traits = []
+	_attractive_score = 0
+	_high_attractions_score = 0
+	_mid_attractions_score = 0
+	_low_attractions_score = 0
 	
-	if random.randint(0,10)>7:
-		_traits.append('athletic')
+	#"High" attractions are typically more superficial and have a higher
+	#chance of changing.
+	_high_attractions = ['looks','status','power','wealth','strength']
+	
+	#"Mid" attractions deal with the more concrete, unchanging values
+	_mid_attractions = ['honest','charity']
+	
+	#"Low" attractions are the negative things
+	_low_attractions = ['brash']
+	
+	_can_like = ['dogs','pets','animals','food','cooked food']
+	
+	_rand_value = random.randint(0,10)
+	if _rand_value>7:
+		_ret.traits.append('athletic')
+		_high_attractions_score+=2
+		_mid_attractions_score+=1
+		_attractive_score = 2
 		_ret.speed_max = 1
 		_ret.atk = 3
-	elif random.randint(0,10)>4:
-		_traits.append('fit')
+	elif _rand_value>4:
+		_ret.traits.append('fit')
+		_high_attractions_score+=1
+		_mid_attractions_score+=2
+		_low_attractions_score+=1
+		_attractive_score = 4
 		_ret.speed_max = 2
 		_ret.atk = 2
 	else:
-		_traits.append('slow')
+		_ret.traits.append('slow')
+		_mid_attractions_score+=1
+		_low_attractions_score+=2
+		_attractive_score = 6
 		_ret.speed_max = 3
 	
 	_ret.speed = _ret.speed_max
 	
-	#Determine their chance of being attractive here...
-	_attractive_score = 0
-	if 'athletic' in _traits: _attractive_score = 2
-	elif 'fit' in _traits: _attractive_score = 4
-	else: _attractive_score = 6
+	if random.randint(0,10)>_attractive_score:
+		_ret.traits.append('attractive')
+		_high_attractions_score+=1
+	else:
+		_mid_attractions_score+=1
 	
-	if random.randint(0,10)>_attractive_score: _traits.append('attractive')
-	#if random.randint(0,10)>5:
-	#	_traits.append('brash')
-	#else:
-	#	_traits.append('honest')
-	_traits.append(random.choice(['brash','honest','shy']))
+	_ret.traits.append(random.choice(['brash','honest','shy']))
+	_ret.traits.append(random.choice(['faithful']))
 	
-	#Here we get to stereotype!
-	if 'attractive' in _traits:
-		_ret.attracted_to.append('looks')
+	_ret.attracted_to.extend(random.sample(_high_attractions,_high_attractions_score))
+	_ret.attracted_to.extend(random.sample(_mid_attractions,_mid_attractions_score))
+	#_ret.attracted_to.extend(random.sample(_low_attractions,_low_attractions_score))
+	_ret.attracted_to.extend(random.sample(_low_attractions,1))
 	
 	#Now pick some things this ALife likes
-	_can_like = ['dogs','pets','animals','food','cooked food']
 	_ret.likes = random.sample(_can_like,random.randint(2,4))
-	
-	_ret.traits = _traits[:]
 	
 	if job=='trade':
 		if _male:
@@ -217,3 +237,7 @@ def generate_human(job):
 		_ret.pos = list(_ret.get_claimed('home',return_building=True)['door'])
 	
 	return _ret
+
+def generate_dog():
+	#obedient
+	pass

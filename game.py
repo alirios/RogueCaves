@@ -525,10 +525,6 @@ def get_input():
 	for event in pygame.event.get():
 		if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
 			if var.in_menu:
-				#for x in range(var.world_size[0]):
-				#	for y in range(var.world_size[1]):
-				#		var.menu.putchar(' ',x=x,y=y)
-				#var.menu.fill('black','black')
 				functions.destroy_menu(who=var.player)
 			else:
 				#var.world.save()
@@ -648,6 +644,9 @@ def get_input():
 						print 'Attracted to: %s' % life.attracted_to
 						print 'Likes: %s' % life.likes
 						print 'Dislikes: %s' % life.dislikes
+						#print [entry for entry in life.get_top_love_interests()]
+						for event in life.events:
+							print event['what'],event['score']
 						print '='*8
 						#print 'Inventory: '
 						#for item in life.items:
