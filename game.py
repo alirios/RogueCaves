@@ -85,7 +85,10 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
 			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
 			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8},
-			'26':{'name':'single bed','solid':False,'type':'bed','owner':None,'tile':26,'price':35}}
+			'26':{'name':'single bed','solid':False,'type':'bed','owner':None,'tile':26,'price':35},
+			'27':{'name':'clay pot','solid':False,'type':'cup','contains':None,'tile':27,'price':15,
+				'volume':0,'volume_max':10},
+			'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
 	'2':{'icon':'.','color':['silver','darkgray']},
@@ -112,7 +115,9 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'23':{'icon':'L','color':['silver',None]},
 	'24':{'icon':'#','color':['gray','darkergray']},
 	'25':{'icon':'i','color':['brown',None]},
-	'26':{'icon':'#','color':['white','red']}}
+	'26':{'icon':'#','color':['white','red']},
+	'27':{'icon':'u','color':['brown','darkbrown']},
+	'28':{'icon':'8','color':['brown','darkbrown']}}
 
 if not var.server:
 	#Colors...
@@ -124,6 +129,7 @@ if not var.server:
 	pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
 	pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
 	pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
+	pygcurse.colornames['darkbrown'] = pygame.Color(129, 84, 0)
 	pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
 	
 	#Setup
@@ -156,17 +162,25 @@ if not var.server:
 	var.view.autoupdate = False
 	var.log.autoupdate = False
 
-	#Log
+	#Draw title
+	for x in range(var.window_size[0]):
+		for y in range(var.window_size[1]):
+			var.view.putchar('#',
+				x=x,
+				y=y,
+				fgcolor=pygame.Color((x/2)+(y),(x/2)+(y),(x/2)+(y)))
+	
 	_logofile = open(os.path.join('data','logo.txt'),'r')
 	_y=13
 	for line in _logofile.readlines():
-		_x=0
+		_x=-1
 		for char in line:
+			_x+=1
+			if char in [' ','\n']: continue
 			var.view.putchar(char,
 				x=_x,
 				y=_y,
-				fgcolor=pygame.Color(_y*6,_y*6,_y*6))
-			_x+=1
+				fgcolor=pygame.Color((_x/2)+(_y*6),(_x/2)+(_y*6),(_x/2)+(_y*6)))
 		_y+=1
 	_logofile.close()
 	
@@ -175,12 +189,12 @@ if not var.server:
 		y=22,
 		fgcolor='white')
 	
-	var.view.putchars('Generating world...',x=0,y=0)
+	var.view.putchars('Generating world...',x=0,y=0,fgcolor='white')
 	var.view.update()
 
 #Load dictionary files
 if not var.server:
-	var.view.putchars('Loading dictionaries...',x=0,y=1)
+	var.view.putchars('Loading dictionaries...',x=0,y=1,fgcolor='white')
 	var.view.update()
 logging.debug('Loading dictionaries')
 
@@ -219,7 +233,7 @@ else:
 	
 	#Gods
 	if not var.server:
-		var.view.putchars('Gods...',x=0,y=2)
+		var.view.putchars('Gods...',x=0,y=2,fgcolor='white')
 		var.view.update()
 
 	var.ivan = life.god()
@@ -230,7 +244,7 @@ else:
 
 	#People
 	if not var.server:
-		var.view.putchars('People...',x=0,y=3)
+		var.view.putchars('People...',x=0,y=3,fgcolor='white')
 		var.view.update()
 
 	var.player = life.human(player=True)
@@ -245,27 +259,6 @@ else:
 
 	for i in range(9):
 		var.player.add_item_raw(21)
-
-	#for i in range(1,var.world.depth):
-	#	test = life.crazy_miner()
-	#	test.name = 'Chester'
-	#	test.z = -i
-	#	test.speed = 3
-	#	test.speed_max = 3
-	#	test.level = var.world.get_level(test.z)
-	#	test.pos = random.choice(test.level.walking_space)
-	#	_i = test.add_item_raw(19)
-	#	test.equip_item(_i)
-
-	#for i in range(2):
-	#	test = life.human(male=False)
-	#	test.z = 1
-	#	test.speed = 3
-	#	test.speed_max = 3
-	#	test.level = var.world.get_level(test.z)
-	#	test.icon['color'][0] = 'blue'
-	#	test.skills = ['trade']
-	#	test.pos = list(test.level.get_open_buildings_of_type('store')[0]['door'])
 	
 	for i in range(1):
 		test = life.dog(male=random.randint(0,1))
@@ -275,20 +268,6 @@ else:
 		test.level = var.world.get_level(test.z)
 		test.pos = test.level.get_open_space_around((2,2))[0]
 		test.owner = var.player
-		
-	#for i in range(1):
-	#	test = life.human()
-	#	test.z = 1
-	#	test.speed = 1
-	#	test.speed_max = 1
-	#	test.level = var.world.get_level(test.z)
-	#	_building = test.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
-	#	test.claim_building(_building,'home')
-	#	test.icon['color'][0] = 'red'
-	#	for i in range(9):
-	#		test.add_item_raw(21)
-	#	test.skills = ['farm']
-	#	test.pos = list(test.get_claimed('home',return_building=True)['door'])
 
 var.temp_fps = 0
 var.gametime = time.time()
@@ -449,8 +428,11 @@ def draw_screen(refresh=False):
 	if var.in_menu: var.menu.update()
 	else:
 		var.log.update()
-		#var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
-		var.view.update_alt(var.dirty)
+		
+		if var.player.level.outside:
+			var.view.update_alt(var.dirty)
+		else:
+			var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	
 	if time.time()-var.fpstime>=1:
 		var.fpstime=time.time()

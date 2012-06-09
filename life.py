@@ -298,6 +298,44 @@ class life:
 		
 		return False
 	
+	def buy_item_type_from_alife(self,type,who):
+		who.add_event('serve_item_to',75,who=self,items=type)
+	
+	def serve_item_to(self,type,who):
+		if type == 'drink' and 'barkeep' in self.skills:
+			_give_cup = None
+			_fill_cup = None
+			_has_cups = self.get_all_items_of_type('cup')
+			_stored_cups = self.level.get_all_items_in_building_of_type(self.get_claimed('work'),'cup')
+			_stored_drinks =\
+				self.level.get_all_items_in_building_of_type(self.get_claimed('work'),'container')
+			
+			if _has_cups:
+				for cup in _has_cups:
+					if cup['contains']:
+						_give_cup = cup
+						break
+					else:
+						_fill_cup = cup
+						break
+			elif _stored_cups:
+				self.pick_up_item_at(_stored_cups[0]['pos'],'cup')
+			
+			if _give_cup:
+				self.go_to_and_do(who.pos,
+					self.give_item_to,
+					first=_give_cup,
+					second=who)
+				
+				if self.pos == who.pos:
+					self.remove_event('serve_item_to')
+				
+			elif _fill_cup and _stored_drinks:
+				self.go_to_and_do(_stored_drinks[0]['pos'],
+					self.fill_container,
+					first=_fill_cup,
+					second=_stored_drinks[0])
+	
 	def give_item_to(self,item,who):
 		"""Gives item to ALife"""
 		item['from'] = self
@@ -345,10 +383,10 @@ class life:
 			logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
 				(who.name,item['name'],self.name))
 		else:
-			who.say_phrase('thank_you',item=item)
+			who.say_phrase('thank_you',item=item,other=self)
 		
 		logging.debug('[ALife.%s] Relationship with %s: %s' %
-			(who.name,who.name,_person['score']))
+			(self.name,who.name,_person['score']))
 		#if self in _people:
 		#	if 'brash' in who.traits:
 		#		
@@ -626,6 +664,21 @@ class life:
 		for building in self.level.get_all_buildings_of_type('store'):
 			if not building['owner']: continue
 			if not tuple(building['owner'].pos) in building['walking_space']: continue
+			_dist = functions.distance(self.pos,building['door'])
+			
+			if _dist < _lowest['dist']:
+				_lowest['name'] = building['name']
+				_lowest['dist'] = _dist
+		
+		if not _lowest['name']: return False
+		return _lowest['name']
+	
+	def get_nearest_building_of_type(self,type,open=True):
+		_lowest = {'name':None,'dist':9001}
+		
+		for building in self.level.get_all_buildings_of_type(type):
+			if not building['owner']: continue
+			if not tuple(building['owner'].pos) in building['walking_space'] and open: continue
 			_dist = functions.distance(self.pos,building['door'])
 			
 			if _dist < _lowest['dist']:
@@ -978,6 +1031,23 @@ class life:
 					if not tuple(self.pos) in room['walking_space']:
 						room['owner'].say_phrase('leave_building',other=self)
 	
+	def fill_container(self,item,what):
+		"""Fills 'item' with 'what'"""
+		item['contains'] = what['contains']
+		item['volume'] = item['volume_max']
+		logging.debug('[ALife.%s] Filled the %s with %s' %
+			(self.name,item['name'],what['contains']))
+	
+	def drink(self,what):
+		##TODO: How much can they drink at one time?
+		self.thirst -= 5
+		what['volume'] -= 5
+		
+		logging.debug('[ALife.%s] Drank some %s from a %s' %
+			(self.name,what['contains'],what['type']))
+		
+		if what['volume']<=0: what['contains'] = None
+	
 	def think(self):
 		"""Tracks whether ALife on the current level have been seen for the
 		first time, lost, or moved in the last tick."""
@@ -1123,6 +1193,10 @@ class life:
 					self.lowest = {'who':None,'score':0}
 		elif self.task['what'] == 'run_shop':
 			self.run_shop(self.task['where'])
+		elif self.task['what'] == 'run_bar':
+			self.run_bar(self.task['where'])
+		elif self.task['what'] == 'serve_item_to':
+			self.serve_item_to(self.task['items'],self.task['who'])
 		elif self.task['what'] == 'flee':
 			print 'Running away'
 		elif self.task['what'] == 'farm':
@@ -1151,6 +1225,8 @@ class life:
 						self.go_to_and_claim_building(_building,'home')
 					else:
 						print 'No h0mez'
+		elif self.task['what'] == 'socialize':
+			self.socialize()
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
 		elif self.task['what'] == 'buy':
@@ -1433,7 +1509,7 @@ class life:
 						if _item['type'] == want:
 							item['items'].remove(_item)
 							self.add_item(_item)
-							logging.debug('[ALife.%s] %s removed from storage at %s' %
+							logging.debug('[ALife.%s] Removed %s from storage at %s' %
 								(self.name,_item['name'],pos))
 							_found = True
 							break
@@ -1482,6 +1558,26 @@ class life:
 					self.task_delay = self.task['delay']
 				elif self.task_delay>0:
 					self.task_delay-=1
+		else:
+			self.go_to_and_claim_building(where,'work')
+	
+	def run_bar(self,where):
+		if self.get_claimed('work'):
+			pass
+			#_storage = self.level.get_all_items_in_building_of_type(where,'storage')
+			#_dump = self.get_all_items_tagged('traded')
+			#
+			#if _dump and _storage:
+			#	self.go_to_and_do(_storage[0]['pos'],\
+			#		self.put_all_items_tagged,\
+			#		first='traded',
+			#		second=_storage[0]['pos'])
+			#else:
+			if not self.task_delay:
+				self.guard_building(where)
+				self.task_delay = self.task['delay']
+			elif self.task_delay>0:
+				self.task_delay-=1
 		else:
 			self.go_to_and_claim_building(where,'work')
 	
@@ -1686,6 +1782,27 @@ class life:
 		else:
 			print self.can_build_relationship_with(who),'This happens in build_relationship_with'
 	
+	def socialize(self):
+		"""ALife attends social functions to relieve stress"""
+		_building = self.get_nearest_building_of_type('bar')
+		_has_drink = self.get_all_items_of_type('cup')
+		
+		for drink in _has_drink:
+			if not drink['volume']: _has_drink.remove(drink)
+		
+		if not self.task_delay:
+			self.guard_building(_building)
+			self.task_delay = self.task['delay']
+		elif self.task_delay>0:
+			self.task_delay-=1
+		
+		if self.in_building(name=_building) and self.thirst>=5:
+			if _has_drink:
+				self.drink(_has_drink[0])
+			else:
+				_building_owner = self.level.get_room(_building)['owner']
+				self.buy_item_type_from_alife('drink',_building_owner)
+	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
 			self.z += 1
@@ -1750,7 +1867,7 @@ class human(life):
 		self.hp = 20
 		self.hp_max = 20
 		
-		self.thirsty_at = -1
+		#self.thirsty_at = -1
 		self.married = None
 		self.in_danger = False
 		self.faction = 'good'
@@ -1948,7 +2065,6 @@ class human(life):
 					_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			
 			_farm_score+=len(self.get_all_grown_crops())*25
-			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
 			_sell_score = len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*10
@@ -1956,8 +2072,7 @@ class human(life):
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
-			#if not self.can_farm():
-			if self.get_nearest_store():
+			if self.get_nearest_store() and self.get_money():
 				_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
 				_buy_score -=(len(self.get_all_grown_crops())*5)
 				_buy_score -= _farm_score
@@ -1968,9 +2083,11 @@ class human(life):
 			_store_items_score +=\
 				len(self.get_all_items_of_type(['seed','food','cooked food'],check_storage=True))*3
 			_store_what = ['seed','food','cooked food']
-			#_store_items_score += (self.get_money()/2)
 			
-			#print _farm_score,_cook_score,_sell_score,_store_items_score
+			#try:
+			#	print self.task
+			#except:
+			#	pass
 			
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
@@ -1993,10 +2110,25 @@ class human(life):
 				else:
 					_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				self.add_event('run_shop',_trade_score,where=_building,delay=20)
+		elif 'barkeep' in self.skills:
+			_barkeep_score = 25
+			
+			if self.get_claimed('work'):
+				self.add_event('run_bar',_barkeep_score,where=self.get_claimed('work'),delay=20)
+			else:
+				if self.task.has_key('where'):
+					_owner = self.level.get_room(self.task['where'])['owner']
+					if _owner and not _owner == self:
+						self.remove_event('run_bar')
+						_building = self.level.get_open_buildings_of_type('bar')[0]['name']
+					else:
+						_building = self.level.get_open_buildings_of_type('bar')[0]['name']
+				else:
+					_building = self.level.get_open_buildings_of_type('bar')[0]['name']
+				self.add_event('run_bar',_barkeep_score,where=_building,delay=20)
 		
 		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)/2
 		if _love_score>0: _love_score=0
-		
 		_love_score -= self.fatigue
 		
 		if self.get_top_love_interests() and not self.married:
@@ -2019,7 +2151,9 @@ class human(life):
 				_in_bed['owner'] = None
 				self.on_wake()		
 		else:
-			self.add_event('stay_home',self.fatigue,delay=15)
+			self.add_event('stay_home',self.fatigue*.8,delay=15)
+		
+		self.add_event('socialize',self.fatigue,delay=20)
 		
 		return life.think_finalize(self)
 	

@@ -74,6 +74,8 @@ class LevelGen:
 						item['planted_by'] = item['planted_by'].id
 					if item.has_key('from'):
 						item['from'] = item['from'].id
+					if item.has_key('owner') and item['owner']:
+						item['owner'] = item['owner'].id
 					
 					if item['type'] == 'storage':
 						for _item in item['items']:
@@ -117,6 +119,8 @@ class LevelGen:
 						item['planted_by'] = functions.get_alife_by_id(item['planted_by'])
 					if item.has_key('from'):
 						item['from'] = functions.get_alife_by_id(item['from'])
+					if item.has_key('owner') and item['owner']:
+						item['owner'] = functions.get_alife_by_id(item['owner'])
 					
 					if item['type'] == 'storage':
 						for _item in item['items']:
@@ -139,7 +143,8 @@ class LevelGen:
 	def add_item(self,item,pos,no_place=False):
 		_item = var.items[str(item)].copy()
 		
-		if item in [18]: _item['items'] = []
+		#if item in [18]: _item['items'] = []
+		if _item.has_key('items'): _item['items'] = []
 		
 		_item['pos'] = pos
 		
@@ -910,7 +915,7 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','home','home','home','store','store']:
+		for _room_type in ['home','home','home','home','store','store','bar']:
 			#Now we have to build our first building
 			#I took this from CaveGen, because why do it twice?
 			_found = False
@@ -1011,8 +1016,8 @@ class LevelGen:
 			_needs = [26,24,18]
 		elif room['type'] == 'store':
 			_needs = [18,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
-		elif room['type'] == 'kitchen':
-			_needs = [18]
+		elif room['type'] == 'bar':
+			_needs = [28,18,27,27,27]
 		
 		room['name'] += str(functions.get_id())
 		
@@ -1039,4 +1044,7 @@ class LevelGen:
 			
 			if _possible and not _stored:
 				_pos = _possible.pop()
-				self.add_item(need,_pos)
+				_i = self.add_item(need,_pos)
+				
+				if need == 28:
+					_i['contains'] = 'ale'

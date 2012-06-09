@@ -414,17 +414,7 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
             3) Calling pygame.display.update()
                 (Enabled by default if _windowsurface is set, self._autoblit == True, AND if _autodisplayupdate == True)
         """
-
-        # TODO - None of this code is optimized yet.
-        #if not _xrange:
-        #    _xrange = (0,self._width)
         
-        #if not _yrange:
-        #    _yrange = (0,self._height)
-        
-        # "Dirty" means that the cell's state has been altered on the backend and it needs to be redrawn on pygame.Surface object (which will make the cell "clean").
-        #for x in range(_xrange[0],_xrange[1]):
-        #    for y in range(_yrange[0],_yrange[1]):
         for x,y in positions:
             if self._screendirty[x][y]: # draw to surfaceobj all the dirty cells.
                 self._screendirty[x][y] = False
@@ -450,8 +440,6 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
                 charrect.centerx = self._cellwidth * x + int(self._cellwidth / 2)
                 charrect.bottom = self._cellheight * (y + 1) # TODO - not correct, this would put stuff like g, p, q higher than normal.
                 self._surfaceobj.blit(charsurf, charrect)
-
-        self._drawinputcursor()
 
         # automatically blit to "window surface" pygame.Surface object if it was set.
         if self._windowsurface is not None and self._autoblit:

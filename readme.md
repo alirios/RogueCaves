@@ -36,6 +36,14 @@ Current Version: 06.09.2012A
 ----------------------------
 Changed
 -------
+* ALife now drinks
+* Bartender now serves drinks
+* life.drink()
+* life.fill_container()
+* life.buy_item_type_from_alife()
+* life.get_nearest_building_of_type()
+* Drawing in caves works again
+* Fixed saving
 * Added logo
 * Fixed ALife shopping when shops are closed
 * Task weighting

@@ -235,6 +235,13 @@ def generate_human(job):
 			_ret.add_item_raw(21)
 		_ret.skills = ['farm']
 		_ret.pos = list(_ret.get_claimed('home',return_building=True)['door'])
+	elif job=='barkeep':
+		if _male:
+			_ret.icon['color'][0] = 'blue'
+		else:
+			_ret.icon['color'][0] = 'purple'
+		_ret.skills = ['barkeep']
+		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
 	
 	return _ret
 
