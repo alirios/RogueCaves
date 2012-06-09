@@ -36,6 +36,7 @@ Current Version: 06.08.2012A
 ----------------------------
 Changed
 -------
+* FPS increase
 * ALife has more elaborate likes/dislikes/traits
 * life.get_all_relationships()
 * life.get_relationship_with()

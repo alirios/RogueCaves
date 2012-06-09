@@ -402,6 +402,64 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
                 pygame.display.update()
 
 
+    def update_alt(self,positions):
+        """
+        Update the encapsulated pygame.Surface object to match the state of this PygcurseSurface object. This needs to be done before the pygame.Surface object is blitted to the screen if you want the most up-to-date state displayed.
+
+        There are three types of updating:
+            1) Updating the PygcurseSurface surface object to match the backend data.
+                (Enabled by default by setting self._autoupdate == True)
+            2) Blitting the PygcurseSurface surface object to the main window
+                (Enabled by setting self._windowsurface to the main window AND self._autoblit == True)
+            3) Calling pygame.display.update()
+                (Enabled by default if _windowsurface is set, self._autoblit == True, AND if _autodisplayupdate == True)
+        """
+
+        # TODO - None of this code is optimized yet.
+        #if not _xrange:
+        #    _xrange = (0,self._width)
+        
+        #if not _yrange:
+        #    _yrange = (0,self._height)
+        
+        # "Dirty" means that the cell's state has been altered on the backend and it needs to be redrawn on pygame.Surface object (which will make the cell "clean").
+        #for x in range(_xrange[0],_xrange[1]):
+        #    for y in range(_yrange[0],_yrange[1]):
+        for x,y in positions:
+            if self._screendirty[x][y]: # draw to surfaceobj all the dirty cells.
+                self._screendirty[x][y] = False
+
+                # modify the fg and bg color if there is a tint
+                cellfgcolor, cellbgcolor = self.getdisplayedcolors(x, y)
+
+                # fill in the entire background of the cell
+                cellrect = pygame.Rect(self._cellwidth * x, self._cellheight * y, self._cellwidth, self._cellheight)
+                
+                if self._screenchar[x][y] is None:
+                    self._surfaceobj.fill(ERASECOLOR, cellrect)
+                    continue
+
+                self._surfaceobj.fill(cellbgcolor, cellrect)
+
+                if self._screenchar[x][y] == ' ':
+                    continue # don't need to render anything if it is just a space character.
+
+                # render the character and draw it to the surface
+                charsurf = self._font.render(self._screenchar[x][y], 0, cellfgcolor, cellbgcolor)
+                charrect = charsurf.get_rect()
+                charrect.centerx = self._cellwidth * x + int(self._cellwidth / 2)
+                charrect.bottom = self._cellheight * (y + 1) # TODO - not correct, this would put stuff like g, p, q higher than normal.
+                self._surfaceobj.blit(charsurf, charrect)
+
+        self._drawinputcursor()
+
+        # automatically blit to "window surface" pygame.Surface object if it was set.
+        if self._windowsurface is not None and self._autoblit:
+            self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
+            if self._autodisplayupdate:
+                pygame.display.update()
+
+
     def _drawinputcursor(self):
         """Draws the input cursor directly onto the self._surfaceobj Surface object, if self._inputcursormode is not None."""
         if self._inputcursormode is not None and self._inputcursorx is not None and self._inputcursory is not None:

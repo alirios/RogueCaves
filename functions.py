@@ -167,7 +167,7 @@ def generate_human(job):
 	_high_attractions = ['looks','status','power','wealth','strength']
 	
 	#"Mid" attractions deal with the more concrete, unchanging values
-	_mid_attractions = ['honest','charity']
+	_mid_attractions = ['honest','charity','provider','skill']
 	
 	#"Low" attractions are the negative things
 	_low_attractions = ['brash']

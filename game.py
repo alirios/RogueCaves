@@ -285,6 +285,7 @@ else:
 var.temp_fps = 0
 var.gametime = time.time()
 var.fpstime = time.time()
+var.dirty = []
 
 def draw_tile(tile,pos,color):
 	if tile.has_key('id'):
@@ -292,6 +293,8 @@ def draw_tile(tile,pos,color):
 		else:
 			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['id']
+	
+	var.dirty.append(pos)
 	
 	if isinstance(tile['icon'],unicode):
 		tile['icon'] = str(tile['icon'])
@@ -307,6 +310,7 @@ def draw_screen(refresh=False):
 	
 	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
+	var.dirty = []
 	
 	if refresh:
 		_xrange = [0,var.world.size[0]]
@@ -437,7 +441,8 @@ def draw_screen(refresh=False):
 	if var.in_menu: var.menu.update()
 	else:
 		var.log.update()
-		var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+		#var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+		var.view.update_alt(var.dirty)
 	
 	if time.time()-var.fpstime>=1:
 		var.fpstime=time.time()

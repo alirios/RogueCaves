@@ -1640,6 +1640,8 @@ class life:
 		#Decide what to give this person
 		
 		_likes = self.get_relationship_with(who)['likes']
+		_in_storage = None
+		_has = None
 		
 		if _likes:
 			_in_storage  = self.get_all_items_of_type(_likes,check_storage=True)
@@ -1876,6 +1878,13 @@ class human(life):
 				for item in self.get_all_gifts_from(who):
 					_score+=(item['price']/4)
 			
+			if 'provider' in self.attracted_to:
+				if 'farm' in who.skills:
+					_score+=5
+			
+			if 'skill' in self.attracted_to:
+				_score+=(len(who.skills))*2
+			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?
 			if self.married == who:
@@ -1919,7 +1928,7 @@ class human(life):
 			if self.get_open_stoves(self.get_claimed('home')):
 				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
 				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
-			_farm_score+=len(self.get_all_grown_crops())*20
+			_farm_score+=len(self.get_all_grown_crops())*25
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
 			##TODO: Find out how much money is needed to buy more seed
