@@ -36,6 +36,7 @@ Current Version: 06.09.2012A
 ----------------------------
 Changed
 -------
+* Added logo
 * Fixed ALife shopping when shops are closed
 * Task weighting
 

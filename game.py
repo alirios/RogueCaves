@@ -157,15 +157,23 @@ if not var.server:
 	var.log.autoupdate = False
 
 	#Log
-	_title = 'Rogue Caves'
-	var.view.putchars(_title,
-		x=(var.window_size[0]/2)-(len(_title)/2),
-		y=var.window_size[1]/2,
-		fgcolor='white')
+	_logofile = open(os.path.join('data','logo.txt'),'r')
+	_y=13
+	for line in _logofile.readlines():
+		_x=0
+		for char in line:
+			var.view.putchar(char,
+				x=_x,
+				y=_y,
+				fgcolor=pygame.Color(_y*6,_y*6,_y*6))
+			_x+=1
+		_y+=1
+	_logofile.close()
+	
 	var.view.putchars(__version__,
 		x=(var.window_size[0]/2)-(len(__version__)/2),
-		y=(var.window_size[1]/2)+1,
-		fgcolor='gray')
+		y=22,
+		fgcolor='white')
 	
 	var.view.putchars('Generating world...',x=0,y=0)
 	var.view.update()
