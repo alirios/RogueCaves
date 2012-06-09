@@ -625,12 +625,14 @@ class life:
 		
 		for building in self.level.get_all_buildings_of_type('store'):
 			if not building['owner']: continue
+			if not tuple(building['owner'].pos) in building['walking_space']: continue
 			_dist = functions.distance(self.pos,building['door'])
 			
 			if _dist < _lowest['dist']:
 				_lowest['name'] = building['name']
 				_lowest['dist'] = _dist
 		
+		if not _lowest['name']: return False
 		return _lowest['name']
 	
 	def get_money(self):
@@ -1483,6 +1485,20 @@ class life:
 		else:
 			self.go_to_and_claim_building(where,'work')
 	
+	def can_farm(self):
+		"""Returns all open space left to farm."""
+		_ret = []
+		_land = self.get_owned_land('farm')
+		if not _land: return True
+		
+		for x in range(_land['size'][0]):
+			for y in range(_land['size'][1]):
+				pos = (_land['where'][0]+x,_land['where'][1]+y)
+				
+				if not self.level.items[pos[0]][pos[1]]: _ret.append(pos)
+		
+		return _ret
+	
 	def farm(self,where):
 		"""Instructs the ALife to farm a plot of land at 'where',
 		'where' is expected to be (x,y,width,height)"""
@@ -1608,6 +1624,7 @@ class life:
 			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
 	
 	def buy_items(self,what):
+		if not self.get_nearest_store(): return False
 		self.go_to_building_and_buy(what,self.get_nearest_store())
 	
 	def store_items(self,what):
@@ -1923,11 +1940,13 @@ class human(life):
 			_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
 			
 			##TODO: Calculate how much food this ALife needs
-			_farm_score+=len(self.get_all_items_of_type('seed'))*10
+			if self.can_farm():
+				_farm_score+=len(self.get_all_items_of_type('seed'))*10
+				
+				if self.get_open_stoves(self.get_claimed('home')):
+					_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
+					_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			
-			if self.get_open_stoves(self.get_claimed('home')):
-				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
-				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			_farm_score+=len(self.get_all_grown_crops())*25
 			#_farm_score+=len(self.get_all_growing_crops())*5
 			
@@ -1937,16 +1956,18 @@ class human(life):
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
-			_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
-			_buy_score -=(len(self.get_all_grown_crops())*5)
-			_buy_score -= _farm_score
-			_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
+			#if not self.can_farm():
+			if self.get_nearest_store():
+				_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
+				_buy_score -=(len(self.get_all_grown_crops())*5)
+				_buy_score -= _farm_score
+				_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
 			_buy_what = 21
 			
 			#Store away extra food
-			_store_items_score += \
-				len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*5
-			_store_what = ['food','cooked food']
+			_store_items_score +=\
+				len(self.get_all_items_of_type(['seed','food','cooked food'],check_storage=True))*3
+			_store_what = ['seed','food','cooked food']
 			#_store_items_score += (self.get_money()/2)
 			
 			#print _farm_score,_cook_score,_sell_score,_store_items_score

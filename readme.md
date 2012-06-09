@@ -32,12 +32,20 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.08.2012A
+Current Version: 06.09.2012A
+----------------------------
+Changed
+-------
+* Fixed ALife shopping when shops are closed
+
+Previous Version: 06.08.2012A
 ----------------------------
 Changed
 -------
 * FPS increase
 * ALife has more elaborate likes/dislikes/traits
+* ALife can learn the likes and dislikes of others
+* life.can_farm()
 * life.get_all_relationships()
 * life.get_relationship_with()
 
