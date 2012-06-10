@@ -11,9 +11,9 @@ receive_item_negative_brash:Why would you give me this?
 receive_item_negative_brash:I don't like <item.type>s!
 receive_item_negative_fake:This is a nice <item.type>, <other.name>.
 receive_item_negative_shy:I don't like <item.type>s very much...
-receive_item_positive_brash:I really like <item.type>!
-receive_item_positive:I really like <item.type>!
-receive_item_positive:I really enjoy <item.type>!
+receive_item_positive_brash:I really like <item.type>s!
+receive_item_positive:I really like <item.type>s!
+receive_item_positive:I really enjoy <item.type>s!
 receive_item_positive_shy:Oh, thank you, <other.name>.
 receive_item_positive_shy:This is a nice <item.name>, <other.name>.
 brash_attracted:smiles.

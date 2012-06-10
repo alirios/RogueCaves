@@ -1082,18 +1082,21 @@ class life:
 		logging.debug('[ALife.%s] Drank some %s from a %s' %
 			(self.name,what['contains'],what['name']))
 		
-		if what['contains'] in self.likes:
-			if 'brash' in self.traits:
-				self.say_phrase('drink_brash',action=True,item=what)
-			elif 'shy' in self.traits:
-				self.say_phrase('drink_shy',action=True,item=what)
-		elif what['contains'] in self.dislikes:
+		#if what['contains'] in self.likes:
+		if 'brash' in self.traits:
+			self.say_phrase('drink_brash',action=True,item=what)
+		elif 'shy' in self.traits:
+			self.say_phrase('drink_shy',action=True,item=what)
+		else:
+			self.say_phrase('drink',action=True,item=what)
+		
+		if what['contains'] in self.dislikes:
 			if 'brash' in self.traits:
 				self.say_phrase('vomit_brash',action=True,item=what)
 			else:
 				self.say_phrase('vomit',action=True,item=what)
-		else:
-			self.say_phrase('drink',action=True,item=what)
+		#else:
+		#	self.say_phrase('drink',action=True,item=what)
 		
 		if what['volume']<=0: what['contains'] = None
 	

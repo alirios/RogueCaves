@@ -19,10 +19,11 @@ else: logger.setLevel(logging.INFO)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 console_formatter = logging.Formatter('%(message)s')
 
-#fh = logging.FileHandler(os.path.join('data','log.txt'))
-#fh.setLevel(logging.DEBUG)
-#fh.setFormatter(file_formatter)
-#logger.addHandler(fh)
+if '-log' in sys.argv:
+	fh = logging.FileHandler(os.path.join('data','log.txt'))
+	fh.setLevel(logging.DEBUG)
+	fh.setFormatter(file_formatter)
+	logger.addHandler(fh)
 
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
