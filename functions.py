@@ -133,7 +133,7 @@ def get_item_name(item):
 		if item.has_key('contains') and item['contains']:
 			if item['volume'] == item['volume_max']:
 				return '%s %s filled with %s' % (item['material'],item['name'],item['contains'])
-			elif item['volume'] <= item['volume_max']/2:
+			elif item['volume'] <= float(item['volume_max'])/2:
 				return '%s %s filled halfway with %s' %\
 					(item['material'],item['name'],item['contains'])
 	else:

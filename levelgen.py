@@ -441,7 +441,7 @@ class LevelGen:
 			i+=1
 	
 	def tick(self):
-		for item in self.get_all_items_of_type(['seed','stove']):
+		for item in self.get_all_items_of_type(['seed','stove'],check_storage=False):
 			if item['type'] == 'seed':
 				if item.has_key('planted_by') and item['growth']==item['growth_max']:
 					self.items[item['pos'][0]][item['pos'][1]].remove(item)
@@ -898,9 +898,6 @@ class LevelGen:
 		self.exits = exits
 		self.entrances = [] #ALife needs this
 		
-		self.max_rooms = 0
-		#self.generate_cave(entrances=entrances,exits=exits)
-		
 		for x in range(self.size[0]):
 			for y in range(self.size[1]):
 				if not self.map[x][y]:
@@ -915,97 +912,66 @@ class LevelGen:
 		self.decompose_ext(3,find=6,to=6)
 		self.decompose_ext(3,find=7,to=7)
 		
-		for _room_type in ['home','home','home','home','store','store','bar']:
-			#Now we have to build our first building
-			#I took this from CaveGen, because why do it twice?
-			_found = False
-			_room_size = (random.randint(self.room_size[0],self.room_size[1]),\
-				random.randint(self.room_size[0],self.room_size[1]))
-
-			_walking = self.walking_space[:]
-
-			while not _found:
-				_found = True
-				_room = []
-				_pos = self.get_real_estate(_room_size)[random.randint(10,150)]
+		_town = town()
+		_town.generate()
+		
+		for _room_type in ['home','home','home','home','home','home','home','home','home',
+			'store','store','bar']:
+			_room = []
+			_room_size = (6,6)
+			_zone = _town.get_zone()
+			_pos = ((1+_zone['pos'][0])*_room_size[0],(1+_zone['pos'][1])*_room_size[1])
+			#print _pos
+		
+			for x in range(0,_room_size[0]):
+				_x = _pos[0]+x
+				for y in range(0,_room_size[1]):
+					_y = _pos[1]+y
+					_room.append((_x,_y))
+			
+			_room_walls = []
+			_room_floor = []
+			for pos in _room:
+				self.real_estate.append((pos[0],pos[1]))
+				if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
+					or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
+					self.map[pos[0]][pos[1]] = 15
+					_room_walls.append(pos)
+				else:
+					self.map[pos[0]][pos[1]] = 16
+					_room_floor.append(pos)
 				
-				logging.debug('[LevelGen] %s claimed %s' % (_room_type,_pos))
+				if pos in self.walls:
+					self.walls.remove(pos)
+			
+			__walls = _room_walls[:]
+			_doors = []
+			__pos = list(_pos)
+			if _zone['open'][0]==1:
+				__pos[0]+=((_zone['open'][0]*_room_size[0])-1)
+				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,3))
+			elif _zone['open'][0]==-1:
+				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,3))
+			if _zone['open'][1]==1:
+				__pos[1]+=((_zone['open'][1]*_room_size[1])-1)
+				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,3))
+			elif _zone['open'][1]==-1:
+				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,3))
+			
+			for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
+				____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
+				if not ____pos in self.real_estate:
+					self.real_estate.append(____pos)
+			
+			_room_walls.remove(tuple(__pos))
 				
-				for x in range(0,_room_size[0]):
-					_x = _pos[0]+x
-					
-					for y in range(0,_room_size[1]):
-						_y = _pos[1]+y
-						_room.append((_x,_y))
-				
-				if _found:
-					_room_walls = []
-					_room_floor = []
-					for pos in _room:
-						self.real_estate.append((pos[0],pos[1]))
-						if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
-							or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
-							self.map[pos[0]][pos[1]] = 15
-							_room_walls.append(pos)
-						else:
-							self.map[pos[0]][pos[1]] = 16
-							_room_floor.append(pos)
-						
-						if pos in self.walls:
-							self.walls.remove(pos)
-					
-					#Place the door
-					__walls = _room_walls[:]
-					_doors = []
-					while 1:
-						__pos = __walls.pop(random.randint(0,len(__walls)-1))
-						
-						_found = True
-						_ecount = 0
-						_scount = 0
-						for ___pos in [(-1,0),(1,0),(0,-1),(0,1)]:
-							_x = __pos[0]+___pos[0]
-							_y = __pos[1]+___pos[1]
-							if _x<0 or _x>=self.size[0]: continue
-							if _y<0 or _y>=self.size[1]: continue
-							if self.map[_x][_y] == 15: _ecount += 1
-						for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-							_x = __pos[0]+___pos[0]
-							_y = __pos[1]+___pos[1]
-							if _x<0 or _x>=self.size[0]: continue
-							if _y<0 or _y>=self.size[1]: continue
-							if self.map[_x][_y] == 16: _scount += 1
-						
-						if _ecount>2: _found = False
-						if _scount<2: _found = False
-						if _found:
-							_doors.append(__pos)
-							break
-					
-					_lowest = {'pos':None,'dist':9001}
-					for door in _doors:
-						_dist = functions.distance(door,(30,30))
-						
-						if _dist<_lowest['dist']:
-							_lowest['dist'] = _dist
-							_lowest['pos'] = door
-					
-					__pos = _lowest['pos']
-					
-					for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-						____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
-						if not ____pos in self.real_estate:
-							self.real_estate.append(____pos)
-					
-					_room_walls.remove(__pos)
-						
-					self.map[__pos[0]][__pos[1]] = 16
-					__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
-						'door':__pos,'type':_room_type,'owner':None}
-					self.rooms.append(__room)
-					self.generate_building(__room)
-					
-					self.landmarks.append(random.choice(_room))
+			self.map[__pos[0]][__pos[1]] = 16
+			__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
+				'door':__pos,'type':_room_type,'owner':None}
+			self.rooms.append(__room)
+			self.generate_building(__room)
+			
+			self.landmarks.append(random.choice(_room))
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
@@ -1048,3 +1014,111 @@ class LevelGen:
 				
 				if need == 28:
 					_i['contains'] = 'ale'
+
+class town:
+	def __init__(self,size=(60,36)):
+		self.size = size
+		self.zone_size = 6
+		self.map = []
+		self.zones = []
+		
+		#Instead of creating a map that is "real" size,
+		#	(that is, every x,y coord in self.size),
+		#	we instead make "zones", which are simply
+		#	chunks out of the landscape of size zone_size^2.
+		for x in range(self.size[0]/self.zone_size):
+			_y = []
+			
+			for y in range(self.size[1]/self.zone_size):
+				_y.append({'pos':(x,y),'zone':None,'facing_road':None})
+			
+			self.zones.append(_y)
+	
+	def generate(self):
+		#Here things get a bit complicated... sorta.
+		#We can make the process of generating a town
+		#	a lot easier by using the power of MATH to
+		#	calculate the available space and return
+		#	buildings of a proper size.
+		
+		#PASS 1: Layout
+		#It's good to have a blueprint before we start
+		#	putting down buildings, so do some guessing
+		#	as to what we want.
+		#LAYOUT FLAGS:
+		#	orientation: the way a town is built (hor,ver)
+		#	road_size: the number of plots a road takes (DEF: 1)
+		#	zone_type: the type of zone that is placed here (res,com)
+		_flags = {}
+		_flags['orientation'] = random.choice(['hor','ver'])
+		_flags['road_size'] = 1
+		_flags['zone_type'] = 'res'
+		_at_chunk = [0,0]
+		_chunk = [0,0]
+		_chunk_size = (2+(_flags['road_size']))
+		_chunk[0]=_chunk_size
+		_chunk[1]=_chunk_size
+		
+		for i in range(6):
+			for _x in range(_chunk[0]):
+				x = _at_chunk[0]+_x
+				for _y in range(_chunk[1]):
+					y = _at_chunk[1]+_y
+					
+					if _flags['orientation']=='ver':
+						if _x==0 or _x==_chunk_size-1:
+							self.zones[x][y]['zone'] = _flags['zone_type']
+						else:
+							self.zones[x][y]['zone'] = 'road'
+					else:
+						if _y==0 or _y==_chunk_size-1:
+							self.zones[x][y]['zone'] = _flags['zone_type']
+						else:
+							self.zones[x][y]['zone'] = 'road'
+					
+					#self.zones[x][y]['orientation'] = _flags['orientation']
+			
+			if y == (self.size[1]/self.zone_size)-1:
+				_at_chunk[1] = 0
+				_at_chunk[0] += _chunk_size
+			else:
+				_at_chunk[1] = _chunk[1]
+			
+			_flags['orientation'] = random.choice(['hor','ver'])
+		
+		#Now connect the zones.
+		_zones = copy.deepcopy(self.zones)
+		for x in range(self.size[0]/self.zone_size):
+			for y in range(self.size[1]/self.zone_size):
+				_count = 0
+				for __pos in [(-1,0),(1,0),(0,-1),(0,1)]:
+					_pos = (x+__pos[0],y+__pos[1])
+					if _pos[0]<0 or _pos[0]>=(self.size[0]/self.zone_size): continue
+					if _pos[1]<0 or _pos[1]>=(self.size[1]/self.zone_size): continue
+					
+					if self.zones[_pos[0]][_pos[1]]['zone']:
+						if self.zones[_pos[0]][_pos[1]]['zone']=='road':
+							_zones[x][y]['facing_road'] = __pos
+						else:
+							_count+=1
+				
+				if x==0: continue
+				if y==0 or y==(self.size[1]/self.zone_size)-1: continue
+				if _count==2:
+					_zones[x][y]['zone'] = None
+		
+		self.zones = _zones
+	
+	def get_zone(self):
+		for y in range(self.size[1]/self.zone_size):
+			for x in range(self.size[0]/self.zone_size):
+				if self.zones[x][y]['zone']=='res':
+					self.zones[x][y]['zone'] = None
+					return {'pos':(x,y),'open':self.zones[x][y]['facing_road']}
+	
+	def out(self):
+		for y in range(self.size[1]/self.zone_size):
+			for x in range(self.size[0]/self.zone_size):
+				if self.zones[x][y]['zone']: print self.zones[x][y]['zone'][0],
+				else: print '.',
+			print

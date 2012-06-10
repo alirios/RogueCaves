@@ -1079,6 +1079,8 @@ class life:
 		self.thirst -= 5
 		what['volume'] -= 5
 		
+		if not what['contains']: return False
+		
 		logging.debug('[ALife.%s] Drank some %s from a %s' %
 			(self.name,what['contains'],what['name']))
 		
@@ -1545,28 +1547,29 @@ class life:
 			first=item,\
 			second=_building_owner)
 	
-	def pick_up_item_at(self,pos,want):
+	def pick_up_item_at(self,pos,want,count=1):
 		"""Go to 'pos' and pick up item type 'want'"""
 		if not want: want=item['type']
 		
 		if tuple(self.pos) == pos:
-			for item in self.level.items[pos[0]][pos[1]]:
-				if item['type'] == want:
-					self.level.items[pos[0]][pos[1]].remove(item)
-					self.add_item(item)
-					break
-				elif item['type'] == 'storage':
-					_found = False
-					for _item in item['items']:
-						if _item['type'] == want:
-							item['items'].remove(_item)
-							self.add_item(_item)
-							logging.debug('[ALife.%s] Removed %s from storage at %s' %
-								(self.name,_item['name'],pos))
-							_found = True
-							break
-					
-					if _found: break
+			for i in range(count):
+				for item in self.level.items[pos[0]][pos[1]]:
+					if item['type'] == want:
+						self.level.items[pos[0]][pos[1]].remove(item)
+						self.add_item(item)
+						break
+					elif item['type'] == 'storage':
+						_found = False
+						for _item in item['items']:
+							if _item['type'] == want:
+								item['items'].remove(_item)
+								self.add_item(_item)
+								logging.debug('[ALife.%s] Removed %s from storage at %s' %
+									(self.name,_item['name'],pos))
+								_found = True
+								break
+						
+						if _found: break
 		
 		else:
 			self.go_to(pos)
@@ -1675,7 +1678,6 @@ class life:
 			self.claim_real_estate((where[0],where[1]),(where[2],where[3]),'farm')
 			
 		_open = []
-		
 		for x in range(where[2]):
 			for y in range(where[3]):
 				_pos = (where[0]+x,where[1]+y)
@@ -1685,21 +1687,19 @@ class life:
 		
 		if not self.task_delay:
 			self.task_delay = self.task['delay']
-			if not _open or not len(self.get_all_items_of_type('seed')):
+			_stored_seed = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed')
+			
+			if not _open or (not len(self.get_all_items_of_type('seed')) and not _stored_seed):
 				self.task['delay'] = 5
-				_crops_to_sell = self.get_all_items_tagged('planted_by')
 				_get = self.get_all_grown_crops()
 				
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
-				##TODO: Put this in a function
-				#else:
-				#	if self.get_money() and\
-				#		len(self.level.get_all_items_in_building_of_type('storage','seed')):
-				#		self.go_to_building_and_buy(21,'storage')
-			else:
+			elif _open and len(self.get_all_items_of_type('seed')):
 				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
 				return True
+			elif _stored_seed:
+				self.pick_up_item_at(_stored_seed[0]['pos'],'seed',count=len(_open))
 		elif self.task_delay>0:
 			self.task_delay-=1
 	
@@ -1778,7 +1778,6 @@ class life:
 	def store_items(self,what):
 		_home = self.get_claimed('home')
 		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-		#_in_storage  = self.get_all_items_of_type(what,check_storage=True)
 		_has = self.get_all_items_of_type(what)
 
 		if len(_storage):	
@@ -1787,8 +1786,6 @@ class life:
 					self.put_item_of_type,
 					first=_has[0]['type'],
 					second=_storage[0]['pos'])
-			#elif _in_storage:
-			#	self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
 	def can_build_relationship_with(self,who):
 		"""Sees if the ALife can develop a relationship with 'who'"""
@@ -1843,7 +1840,6 @@ class life:
 		
 		for drink in _has_drink:
 			if not drink['volume'] or not drink['contains']: _has_drink.remove(drink)
-			
 		
 		if not self.task_delay:
 			self.guard_building(_building)
@@ -2106,10 +2102,12 @@ class human(life):
 		
 		#Consider skills
 		if 'farm' in self.skills:
-			_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
+			#_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
 			
 			##TODO: Calculate how much food this ALife needs
 			if self.can_farm() and not self.task['what']=='farm':
+				_farm_score+=\
+					len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))*10
 				_farm_score+=len(self.get_all_items_of_type('seed'))*10
 			elif self.can_farm() and self.task['what']=='farm':
 				_farm_score = 75
@@ -2142,10 +2140,7 @@ class human(life):
 					_buy_score = 75
 				else:
 					_buy_score = int((_open_can_seed/float(_farm_size))*100)/2
-					#(_farm_size-len(self.get_all_items_of_type('seed')))*3
-					#_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
-					#_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
-				#print _buy_score
+			
 			_buy_what = 21
 			
 			#Store away extra food
@@ -2153,11 +2148,11 @@ class human(life):
 				len(self.get_all_items_of_type(['seed','food','cooked food']))*3
 			_store_what = ['seed','food','cooked food']
 			
-			self.add_event('farm',_farm_score,delay=5)
-			self.add_event('cook',_cook_score,delay=5)
-			self.add_event('sell',_sell_score,items=_sell_what,delay=5)
-			self.add_event('buy',_buy_score,items=_buy_what,delay=5)
-			self.add_event('store_items',_store_items_score,items=_store_what,delay=5)
+			self.add_event('farm',_farm_score-self.fatigue,delay=5)
+			self.add_event('cook',_cook_score-self.fatigue,delay=5)
+			self.add_event('sell',_sell_score-self.fatigue,items=_sell_what,delay=5)
+			self.add_event('buy',_buy_score-self.fatigue,items=_buy_what,delay=5)
+			self.add_event('store_items',_store_items_score-self.fatigue,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
 			_trade_score = 25
 			
@@ -2173,7 +2168,7 @@ class human(life):
 						_building = self.level.get_open_buildings_of_type('store')[0]['name']
 				else:
 					_building = self.level.get_open_buildings_of_type('store')[0]['name']
-				self.add_event('run_shop',_trade_score,where=_building,delay=20)
+				self.add_event('run_shop',_trade_score-self.fatigue,where=_building,delay=20)
 		elif 'barkeep' in self.skills:
 			_barkeep_score = 25
 			
@@ -2189,7 +2184,7 @@ class human(life):
 						_building = self.level.get_open_buildings_of_type('bar')[0]['name']
 				else:
 					_building = self.level.get_open_buildings_of_type('bar')[0]['name']
-				self.add_event('run_bar',_barkeep_score,where=_building,delay=20)
+				self.add_event('run_bar',_barkeep_score-self.fatigue,where=_building,delay=20)
 		
 		_love_score = -(_farm_score+_cook_score+_sell_score+_store_items_score)/2
 		if _love_score>0: _love_score=0

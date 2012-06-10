@@ -254,7 +254,7 @@ else:
 	var.player.speed = 1
 	var.player.speed_max = 1
 	var.player.level = var.world.get_level(var.player.z)
-	var.player.pos = list(var.player.level.get_open_buildings_of_type('store')[0]['door'])
+	var.player.pos = list(var.player.level.get_open_buildings_of_type('bar')[0]['door'])
 	var.player.god = var.ivan
 	var.player.talents.append('Animal Husbandry')
 

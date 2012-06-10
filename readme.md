@@ -36,6 +36,9 @@ Current Version: 06.10.2012A
 ----------------------------
 Changed
 -------
+* levelgen.town()
+* Buildings are now placed in an orderly fashion
+* Bought carrots not longer grow in storage
 * functions.get_item_name()
 * ALife is more vocal when interacting with items
 * Added more phrases
