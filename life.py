@@ -322,10 +322,11 @@ class life:
 				self.pick_up_item_at(_stored_cups[0]['pos'],'cup')
 			
 			if _give_cup:
-				self.go_to_and_do(who.pos,
-					self.give_item_to,
-					first=_give_cup,
-					second=who)
+				if not who == self:					
+					self.go_to_and_do(who.pos,
+						self.give_item_to,
+						first=_give_cup,
+						second=who)
 				
 				if self.pos == who.pos:
 					self.remove_event('serve_item_to')
@@ -345,35 +346,49 @@ class life:
 		logging.debug('[ALife.%s] Gave %s to %s' %
 			(self.name,item['name'],who.name))
 		
-		#_people = [person['who'] for person in who.get_top_love_interests()]
-		_people = self.get_all_relationships()
 		_person = self.get_relationship_with(who)
-		#print who.get_top_love_interests(),_people
+		_likes = who.does_like_item(item)
+		_dislikes = who.does_dislike_item(item)
 		
-		if item['type'] in who.likes:
+		self.say_phrase('give_item',item=item,other=who,action=True)
+		
+		if _likes:
 			if 'brash' in who.traits:
-				who.say_phrase('receive_item_brash_positive',item=item,other=self)
+				who.say_phrase('receive_item_positive_brash',item=item,other=self)
 				
-				if not item['type'] in _person['likes']:
-					_person['likes'].append(item['type'])
-					logging.debug('[ALife.%s] Learned that %s likes %s.' %
-						(self.name,who.name,item['type']))
-					
-				print self.get_relationship_with(who)['likes']
+				for like in _likes:
+					if not like in _person['likes']:
+						_person['likes'].append(like)
+						logging.debug('[ALife.%s] Learned that %s likes %s.' %
+							(self.name,who.name,like))
+			
 			elif 'shy' in who.traits:
 				who.say_phrase('receive_item_positive_shy',item=item,other=self)
 			else:
 				who.say_phrase('receive_item_positive',item=item)
+				
 			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
 				(who.name,item['name'],self.name))
-		elif item['type'] in who.dislikes:
-			if 'honest' in who.traits:
+		elif _dislikes:
+			if 'brash' in who.traits:
+				who.say_phrase('receive_item_negative_brash',item=item)
+				
+				for dislike in _dislikes:
+					if not dislike in _person['dislikes']:
+						if not item['type'] in _person['dislikes']:
+							_person['dislikes'].append(dislike)
+							logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
+								(self.name,who.name,dislike))
+				
+			elif 'honest' in who.traits:
 				who.say_phrase('receive_item_negative_honest',item=item)
 				
-				if not item['type'] in _person['dislikes']:
-					_person['dislikes'].append(item['type'])
-					logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
-						(self.name,who.name,item['type']))
+				for dislike in _dislikes:
+					if not dislike in _person['dislikes']:
+						if not dislike in _person['dislikes']:
+							_person['dislikes'].append(dislike)
+							logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
+								(self.name,who.name,dislike))
 				
 			elif 'shy' in who.traits:
 				who.say_phrase('receive_item_negative_shy',item=item)
@@ -387,10 +402,8 @@ class life:
 		
 		logging.debug('[ALife.%s] Relationship with %s: %s' %
 			(self.name,who.name,_person['score']))
-		#if self in _people:
-		#	if 'brash' in who.traits:
-		#		
-		#else:
+		
+		
 		return			
 	
 	def sell_item(self,item,**kargv):
@@ -696,14 +709,7 @@ class life:
 			_ret+=ore['price']
 		
 		return _ret
-	
-	def get_owned_land(self,label):
-		for entry in self.owned_land:
-			if entry['label'] == label:
-				return entry
 		
-		return False
-	
 	def get_open_stoves(self,where):
 		"""Returns all stoves in 'where' either done cooking or empty"""
 		_ret = []
@@ -748,6 +754,26 @@ class life:
 		
 		return False
 	
+	def does_like_item(self,item):
+		"""Returns a list of things this ALife likes about 'item'"""
+		_ret = []
+		
+		if item['type'] in self.likes: _ret.append(item['type'])
+		if item.has_key('contains') and item['contains'] in self.likes:
+			_ret.append(item['contains'])
+		
+		return _ret
+	
+	def does_dislike_item(self,item):
+		"""Returns a list of things this ALife likes about 'item'"""
+		_ret = []
+		
+		if item['type'] in self.dislikes: _ret.append(item['type'])
+		if item.has_key('contains') and item['contains'] in self.dislikes:
+			_ret.append(item['contains'])
+		
+		return _ret
+	
 	def on_enemy_spotted(self,who):
 		pass
 	
@@ -767,6 +793,13 @@ class life:
 		
 		logging.debug('[ALife.%s.Land] Claimed %s,%s with size %s,%s as %s'
 			% (self.name,pos[0],pos[1],size[0],size[1],label))
+	
+	def get_owned_land(self,label):
+		for entry in self.owned_land:
+			if entry['label'] == label:
+				return entry
+		
+		return False
 	
 	def claim_building(self,where,label):
 		_temp = {'where':where,'label':label}
@@ -818,7 +851,10 @@ class life:
 					if self.gender=='male': _phrase = _phrase.replace(tag,'his')
 					else: _phrase = _phrase.replace(tag,'her')
 			elif _split[0]=='item':
-				_phrase = _phrase.replace(tag,kargv['item'][_split[1]])
+				if _split[1]=='name':
+					_phrase = _phrase.replace(tag,functions.get_item_name(kargv['item']))
+				else:
+					_phrase = _phrase.replace(tag,kargv['item'][_split[1]])
 		
 		_phrase = _phrase.replace('<','').replace('>','')
 		self.say(_phrase,action=action)
@@ -1044,7 +1080,20 @@ class life:
 		what['volume'] -= 5
 		
 		logging.debug('[ALife.%s] Drank some %s from a %s' %
-			(self.name,what['contains'],what['type']))
+			(self.name,what['contains'],what['name']))
+		
+		if what['contains'] in self.likes:
+			if 'brash' in self.traits:
+				self.say_phrase('drink_brash',action=True,item=what)
+			elif 'shy' in self.traits:
+				self.say_phrase('drink_shy',action=True,item=what)
+		elif what['contains'] in self.dislikes:
+			if 'brash' in self.traits:
+				self.say_phrase('vomit_brash',action=True,item=what)
+			else:
+				self.say_phrase('vomit',action=True,item=what)
+		else:
+			self.say_phrase('drink',action=True,item=what)
 		
 		if what['volume']<=0: what['contains'] = None
 	
@@ -1225,7 +1274,7 @@ class life:
 						self.go_to_and_claim_building(_building,'home')
 					else:
 						print 'No h0mez'
-		elif self.task['what'] == 'socialize':
+		elif self.task['what'] in ['water','socialize']:
 			self.socialize()
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
@@ -1726,7 +1775,7 @@ class life:
 	def store_items(self,what):
 		_home = self.get_claimed('home')
 		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-		_in_storage  = self.get_all_items_of_type(what,check_storage=True)
+		#_in_storage  = self.get_all_items_of_type(what,check_storage=True)
 		_has = self.get_all_items_of_type(what)
 
 		if len(_storage):	
@@ -1735,8 +1784,8 @@ class life:
 					self.put_item_of_type,
 					first=_has[0]['type'],
 					second=_storage[0]['pos'])
-			elif _in_storage:
-				self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
+			#elif _in_storage:
+			#	self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
 	def can_build_relationship_with(self,who):
 		"""Sees if the ALife can develop a relationship with 'who'"""
@@ -1785,10 +1834,13 @@ class life:
 	def socialize(self):
 		"""ALife attends social functions to relieve stress"""
 		_building = self.get_nearest_building_of_type('bar')
+		if not _building: return
+		
 		_has_drink = self.get_all_items_of_type('cup')
 		
 		for drink in _has_drink:
-			if not drink['volume']: _has_drink.remove(drink)
+			if not drink['volume'] or not drink['contains']: _has_drink.remove(drink)
+			
 		
 		if not self.task_delay:
 			self.guard_building(_building)
@@ -2057,14 +2109,19 @@ class human(life):
 			_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
 			
 			##TODO: Calculate how much food this ALife needs
-			if self.can_farm():
+			if self.can_farm() and not self.task['what']=='farm':
 				_farm_score+=len(self.get_all_items_of_type('seed'))*10
-				
-				if self.get_open_stoves(self.get_claimed('home')):
-					_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
-					_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
+			elif self.can_farm() and self.task['what']=='farm':
+				_farm_score = 75
 			
-			_farm_score+=len(self.get_all_grown_crops())*25
+			if self.get_all_grown_crops():
+				_farm_score = 75
+			#else:			
+				
+			#Cooking
+			if self.get_open_stoves(self.get_claimed('home')):
+				_cook_score+=len(self.get_all_cookable_items(self.get_claimed('home')))*15
+				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			
 			##TODO: Find out how much money is needed to buy more seed
 			_sell_score = len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*10
@@ -2072,22 +2129,29 @@ class human(life):
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
 			
-			if self.get_nearest_store() and self.get_money():
-				_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
-				_buy_score -=(len(self.get_all_grown_crops())*5)
-				_buy_score -= _farm_score
-				_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
+			_farm = self.get_owned_land('farm')
+			if self.get_nearest_store() and _farm:# and self.get_money():
+				_farm_size = _farm['size'][0]*_farm['size'][1]
+				_seeds = len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))
+				_seeds += len(self.get_all_items_of_type('seed'))
+				#print _seeds
+				
+				_open_can_seed = _farm_size-_seeds
+				
+				if self.task['what']=='buy' and _open_can_seed>0:
+					_buy_score = 75
+				else:
+					_buy_score = int((_open_can_seed/float(_farm_size))*100)/2
+					#(_farm_size-len(self.get_all_items_of_type('seed')))*3
+					#_buy_score = (9-len(self.get_all_items_of_type(['seed'],check_storage=True)))*5
+					#_buy_score -= len(self.get_all_items_of_type(['food','cooked_food'])*2)
+				#print _buy_score
 			_buy_what = 21
 			
 			#Store away extra food
 			_store_items_score +=\
-				len(self.get_all_items_of_type(['seed','food','cooked food'],check_storage=True))*3
+				len(self.get_all_items_of_type(['seed','food','cooked food']))*3
 			_store_what = ['seed','food','cooked food']
-			
-			#try:
-			#	print self.task
-			#except:
-			#	pass
 			
 			self.add_event('farm',_farm_score,delay=5)
 			self.add_event('cook',_cook_score,delay=5)
@@ -2153,7 +2217,8 @@ class human(life):
 		else:
 			self.add_event('stay_home',self.fatigue*.8,delay=15)
 		
-		self.add_event('socialize',self.fatigue,delay=20)
+		if self.get_nearest_building_of_type('bar'):
+			self.add_event('socialize',self.fatigue,delay=20)
 		
 		return life.think_finalize(self)
 	

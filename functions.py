@@ -128,6 +128,17 @@ def remove_menu_item(item):
 		var.in_menu.remove(item)
 	else: item['count']-=1
 
+def get_item_name(item):
+	if item['type']=='cup':
+		if item.has_key('contains') and item['contains']:
+			if item['volume'] == item['volume_max']:
+				return '%s %s filled with %s' % (item['material'],item['name'],item['contains'])
+			elif item['volume'] <= item['volume_max']/2:
+				return '%s %s filled halfway with %s' %\
+					(item['material'],item['name'],item['contains'])
+	else:
+		return item['name']
+
 def get_item_price(item):
 	"""Returns the price of an item.
 	
@@ -172,7 +183,7 @@ def generate_human(job):
 	#"Low" attractions are the negative things
 	_low_attractions = ['brash']
 	
-	_can_like = ['dogs','pets','animals','food','cooked food']
+	_likes = ['dogs','pets','animals','food','cooked food','ale','cup','weapon']
 	
 	_rand_value = random.randint(0,10)
 	if _rand_value>7:
@@ -214,7 +225,13 @@ def generate_human(job):
 	_ret.attracted_to.extend(random.sample(_low_attractions,1))
 	
 	#Now pick some things this ALife likes
-	_ret.likes = random.sample(_can_like,random.randint(2,4))
+	_ret.likes = random.sample(_likes,random.randint(2,4))
+	
+	for like in _ret.likes:
+		_likes.remove(like)
+	
+	#and dislikes
+	_ret.dislikes = random.sample(_likes,random.randint(2,4))
 	
 	if job=='trade':
 		if _male:

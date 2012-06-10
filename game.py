@@ -19,7 +19,7 @@ else: logger.setLevel(logging.INFO)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 console_formatter = logging.Formatter('%(message)s')
 
-#fh = logging.FileHandler('log.txt')
+#fh = logging.FileHandler(os.path.join('data','log.txt'))
 #fh.setLevel(logging.DEBUG)
 #fh.setFormatter(file_formatter)
 #logger.addHandler(fh)
@@ -86,8 +86,8 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
 			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8},
 			'26':{'name':'single bed','solid':False,'type':'bed','owner':None,'tile':26,'price':35},
-			'27':{'name':'clay pot','solid':False,'type':'cup','contains':None,'tile':27,'price':15,
-				'volume':0,'volume_max':10},
+			'27':{'name':'pot','solid':False,'type':'cup','contains':None,'tile':27,'price':15,
+				'volume':0,'volume_max':10,'material':'clay'},
 			'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40}}
 tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
@@ -171,7 +171,7 @@ if not var.server:
 				fgcolor=pygame.Color((x/2)+(y),(x/2)+(y),(x/2)+(y)))
 	
 	_logofile = open(os.path.join('data','logo.txt'),'r')
-	_y=13
+	_y=11
 	for line in _logofile.readlines():
 		_x=-1
 		for char in line:
@@ -186,7 +186,7 @@ if not var.server:
 	
 	var.view.putchars(__version__,
 		x=(var.window_size[0]/2)-(len(__version__)/2),
-		y=22,
+		y=20,
 		fgcolor='white')
 	
 	var.view.putchars('Generating world...',x=0,y=0,fgcolor='white')
@@ -604,6 +604,9 @@ def get_input():
 				var.player.teleport(-3)
 			elif event.key == K_6:
 				var.player.teleport(-4)
+			elif event.key == K_j:
+				logging.debug('Taking screenshot...')
+				pygame.image.save(var.window._windowsurface, 'screenshot.jpg')
 		elif event.type == KEYUP:
 			if event.key == K_UP:
 				var.input['up'] = False

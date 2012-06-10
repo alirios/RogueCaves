@@ -32,12 +32,22 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.09.2012A
+Current Version: 06.10.2012A
 ----------------------------
 Changed
 -------
+* functions.get_item_name()
+* ALife is more vocal when interacting with items
+* Added more phrases
+
+Previous Version: 06.09.2012A
+----------------------------
+Changed
+-------
+* Added dislikes
 * ALife now drinks
 * Bartender now serves drinks
+* life.does_like_item()
 * life.drink()
 * life.fill_container()
 * life.buy_item_type_from_alife()

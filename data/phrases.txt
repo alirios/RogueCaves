@@ -5,11 +5,13 @@ leave_building:See you later, <other.name>.
 leave_building:Have a good day, <other.name>.
 leave_building:Please come back soon!
 leave_building:Please come back soon, <other.name>.
-receive_item_negative_honest:Thank you, but I don't enjoy <item.type>.
+give_item:gives a <item.name> to <other.name>.
+receive_item_negative_honest:Thank you, but I don't enjoy <item.type>s.
 receive_item_negative_brash:Why would you give me this?
-receive_item_negative_brash:I don't like <item.type>!
+receive_item_negative_brash:I don't like <item.type>s!
 receive_item_negative_fake:This is a nice <item.type>, <other.name>.
-receive_item_brash_positive:I really like <item.type>!
+receive_item_negative_shy:I don't like <item.type>s very much...
+receive_item_positive_brash:I really like <item.type>!
 receive_item_positive:I really like <item.type>!
 receive_item_positive:I really enjoy <item.type>!
 receive_item_positive_shy:Oh, thank you, <other.name>.
@@ -20,6 +22,13 @@ attracted:smiles.
 attracted:giggles.
 shy_attracted:looks away.
 shy_attracted:blushes.
+drink_brash:slurps from <self.gender> <item.name> intensely!
+drink_brash:gulps vigorously from <self.gender> <item.name>.
+drink_shy:sips from a <item.name>.
+drink:takes a drink from <self.gender> <item.name>.
+vomit_brash:spews <item.contains> everywhere!
+vomit:spits up the <item.contains>!
+vomit:throws up the <item.contains>!
 dog_happy:wags <self.gender> tail.
 dog_happy:woofs!
 dog_happy_owner:wags <self.gender> tail at <other.name>!

@@ -22,8 +22,8 @@ class cache:
 		for __path in self.path_cache:
 			if __path['start'] == tuple(start) and __path['end'] == tuple(end)\
 				and __path['z']==z:
-				logging.debug('[Cache.old_path] Returning: %s,%s to %s,%s, z=%s' %
-					((start[0],start[1],end[0],end[1],z)))
+				#logging.debug('[Cache.old_path] Returning: %s,%s to %s,%s, z=%s' %
+				#	((start[0],start[1],end[0],end[1],z)))
 				return __path['path']			
 		
 		return False
