@@ -138,24 +138,24 @@ if not var.server:
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
 	
 	#Fonts...
-	_font = pygame.font.Font('ProggyClean.ttf', 16)
+	_font = pygame.font.Font(os.path.join('data','ProggyClean.ttf'), 16)
 
 	#Surfaces...
-	var.window = pygcurse.PygcurseWindow(var.window_size[0],\
-		var.window_size[1],\
-		font=_font,\
+	var.window = pygcurse.PygcurseWindow(var.window_size[0],
+		var.window_size[1],
+		font=_font,
 		caption='RogueCaves')
-	var.view = pygcurse.PygcurseSurface(var.window_size[0],\
-		var.window_size[1]-6,\
-		font=_font,\
+	var.view = pygcurse.PygcurseSurface(var.window_size[0],
+		var.window_size[1]-6,
+		font=_font,
 		windowsurface=var.window._windowsurface)
-	var.menu = pygcurse.PygcurseSurface(var.window_size[0],\
-		var.window_size[1]-6,\
-		font=_font,\
+	var.menu = pygcurse.PygcurseSurface(var.window_size[0],
+		var.window_size[1]-6,
+		font=_font,
 		windowsurface=var.window._windowsurface)
-	var.log = pygcurse.PygcurseSurface(var.window_size[0],\
-		var.window_size[1],\
-		font=_font,\
+	var.log = pygcurse.PygcurseSurface(var.window_size[0],
+		var.window_size[1],
+		font=_font,
 		windowsurface=var.window._windowsurface)
 
 	#Stuff...

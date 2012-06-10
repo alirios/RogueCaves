@@ -442,10 +442,11 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
                 self._surfaceobj.blit(charsurf, charrect)
 
         # automatically blit to "window surface" pygame.Surface object if it was set.
-        if self._windowsurface is not None and self._autoblit:
-            self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
-            if self._autodisplayupdate:
-                pygame.display.update()
+        #if self._windowsurface is not None and self._autoblit:
+        #    self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
+        #    if self._autodisplayupdate:
+        self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
+        pygame.display.update()
 
 
     def _drawinputcursor(self):

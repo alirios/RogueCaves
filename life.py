@@ -6,7 +6,7 @@ class life:
 		self.player = player
 		
 		if not self.player:
-			self.icon = {'icon':'L','color':['white',None]}
+			self.icon = {'icon':'@','color':['white',None]}
 		
 		self.id = functions.get_id()
 		self.name = 'Default'
@@ -1906,10 +1906,7 @@ class human(life):
 	def __init__(self,player=False,male=True):
 		life.__init__(self,player=player)
 		
-		if self.player:
-			self.icon = {'icon':'@','color':['white',None]}
-		else:
-			self.icon = {'icon':'H','color':['white',None]}
+		self.icon = {'icon':'@','color':['white',None]}
 		
 		self.race = 'human'
 		if male:
