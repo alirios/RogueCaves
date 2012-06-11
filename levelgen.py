@@ -901,16 +901,16 @@ class LevelGen:
 		for x in range(self.size[0]):
 			for y in range(self.size[1]):
 				if not self.map[x][y]:
-					self.map[x][y] = random.choice([5,9])
+					self.map[x][y] = random.choice(var.GRASS)
 				self.walking_space.append((x,y))
 		
-		self.walk(where=self.walking_space,types=[6,7])
+		#self.walk(where=self.walking_space,types=[6,7])
 		
-		self.decompose_ext(3,find=8,to=8)
-		self.decompose_ext(3,find=8,to=7)
-		self.decompose_ext(1,find=7,to=7,count=1)
-		self.decompose_ext(3,find=6,to=6)
-		self.decompose_ext(3,find=7,to=7)
+		#self.decompose_ext(3,find=8,to=8)
+		#self.decompose_ext(3,find=8,to=7)
+		#self.decompose_ext(1,find=7,to=7,count=1)
+		#self.decompose_ext(3,find=6,to=6)
+		#self.decompose_ext(3,find=7,to=7)
 		
 		_town = town()
 		_town.generate()
@@ -919,9 +919,8 @@ class LevelGen:
 		for _room_type in ['home','home','home','home','home','home','home','home','home',
 			'store','store','bar','store','store','store']:
 			_room = []
-			_zone = _town.get_zone()
+			_zone = _town.get_random_zone()
 			_pos = (1+(_zone['pos'][0])*_room_size[0],1+(_zone['pos'][1])*_room_size[1])
-			#print _pos
 		
 			for x in range(0,_room_size[0]):
 				_x = _pos[0]+x
@@ -964,10 +963,11 @@ class LevelGen:
 					self.real_estate.append(____pos)
 			
 			_room_walls.remove(tuple(__pos))
-				
+			
 			self.map[__pos[0]][__pos[1]] = 16
 			__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
-				'door':__pos,'type':_room_type,'owner':None}
+				'door':__pos[:],'type':_room_type,'owner':None}
+			
 			self.rooms.append(__room)
 			self.generate_building(__room)
 			
@@ -1031,7 +1031,7 @@ class LevelGen:
 					_i['contains'] = 'ale'
 
 class town:
-	def __init__(self,size=(60,36)):
+	def __init__(self,size=(78,36)):
 		self.size = size
 		self.zone_size = 6
 		self.map = []
@@ -1074,7 +1074,7 @@ class town:
 		_chunk[0]=_chunk_size
 		_chunk[1]=_chunk_size
 		
-		for i in range(6):
+		for i in range(8):
 			for _x in range(_chunk[0]):
 				x = _at_chunk[0]+_x
 				for _y in range(_chunk[1]):
@@ -1131,6 +1131,18 @@ class town:
 				if self.zones[x][y]['zone']=='res':
 					if remove: self.zones[x][y]['zone'] = None
 					return {'pos':(x,y),'open':self.zones[x][y]['facing_road']}
+	
+	def get_random_zone(self,remove=True):
+		_zones = []
+		
+		for y in range(self.size[1]/self.zone_size):
+			for x in range(self.size[0]/self.zone_size):
+				if self.zones[x][y]['zone']=='res':
+					_zones.append({'pos':(x,y),'open':self.zones[x][y]['facing_road']})
+		
+		_ret = random.choice(_zones)
+		self.zones[_ret['pos'][0]][_ret['pos'][1]]['zone'] = None
+		return _ret
 	
 	def get_all_zones_of_type(self,type):
 		_ret = []

@@ -36,6 +36,9 @@ Current Version: 06.11.2012A
 ----------------------------
 Changed
 -------
+* life.get_farm_speed()
+* Fixed error in farming task that caused ALife to freeze in stores out of the item they need
+* Fixed logic in pathfinding.getadj() that caused negative x,y positions to pass the check
 * Added Pygame output flag (-pygame)
 * Added libtcod output (default)
 * Increased level size a bit

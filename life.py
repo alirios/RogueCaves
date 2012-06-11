@@ -457,10 +457,19 @@ class life:
 		else: return False
 		
 		if _item['type'] == 'seed':
+			if not self.level.map[_pos[0]][_pos[1]] in var.DIRT:
+				self.level.map[_pos[0]][_pos[1]] = random.choice(var.DIRT)
+				
+				if self.weapon and self.weapon['name']=='hoe':
+					self.weapon['status']='dirt'
+				
+				return False
 			_item['planted_by'] = self
 			_item['pos'] = _pos
 			self.level.items[_pos[0]][_pos[1]].append(_item)
 			self.items.remove(_item)
+		
+		return True
 	
 	def flag_item(self,item,flag):
 		item[flag] = True
@@ -718,6 +727,12 @@ class life:
 			_ret+=ore['price']
 		
 		return _ret
+	
+	def get_farm_speed(self):
+		"""Returns speed this ALife can farm at."""
+		if self.weapon and self.weapon['name']=='hoe': return self.weapon['speed']
+		
+		return 8
 		
 	def get_open_stoves(self,where):
 		"""Returns all stoves in 'where' either done cooking or empty"""
@@ -1654,7 +1669,6 @@ class life:
 		for x in range(_land['size'][0]):
 			for y in range(_land['size'][1]):
 				pos = (_land['where'][0]+x,_land['where'][1]+y)
-				
 				if not self.level.items[pos[0]][pos[1]]: _ret.append(pos)
 		
 		return _ret
@@ -1705,8 +1719,10 @@ class life:
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
 			elif _open and len(self.get_all_items_of_type('seed')):
-				self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0])
-				return True
+				if not self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0]):
+					self.task_delay = self.get_farm_speed()
+				
+				#return True
 			elif _stored_seed:
 				self.pick_up_item_at(_stored_seed[0]['pos'],'seed',count=len(_open))
 		elif self.task_delay>0:
@@ -1781,7 +1797,9 @@ class life:
 			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
 	
 	def buy_items(self,what):
-		if not self.get_nearest_store(): return False
+		if not self.get_nearest_store():
+			print 'WHAT AM I DOING IN THIS STORE?'
+			return False
 		self.go_to_building_and_buy(what,self.get_nearest_store())
 	
 	def store_items(self,what):
@@ -2137,7 +2155,7 @@ class human(life):
 			if not self.get_nearest_store(): _sell_score = -1
 			
 			_farm = self.get_owned_land('farm')
-			if self.get_nearest_store() and _farm:# and self.get_money():
+			if self.get_nearest_store(items=['seed']) and _farm:# and self.get_money():
 				_farm_size = _farm['size'][0]*_farm['size'][1]
 				_seeds = len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))
 				_seeds += len(self.get_all_items_of_type('seed'))

@@ -1,4 +1,4 @@
-import levelgen, functions, world, cache, life
+import levelgen, tiles, functions, world, cache, life
 import logging, random, time, var, sys, os
 
 try:
@@ -49,7 +49,7 @@ if var.server: logging.info('Rogue Caves Server - %s' % __version__)
 else: logging.info('Rogue Caves - %s' % __version__)
 
 #Setup stuff...
-var.window_size = (80,34)
+var.window_size = (100,50)
 var.world_size = var.window_size
 var.max_fps = 20
 var.tick_history = []
@@ -71,7 +71,6 @@ var.history = []
 var.skill_mod = 6
 var.solid = [0,11,15]
 var.blocking = [10]
-var.items = [13,14]
 var.cache = cache.cache()
 var.mouse_pos = (0,0)
 var.in_menu = None
@@ -84,63 +83,16 @@ var.names_male_dogs = []
 var.phrases = []
 var.input = {'up':False,
 	'down':False}
-var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11},
-			'13':{'name':'gold','solid':False,'type':'ore','tile':13,'price':15},
-			'14':{'name':'coal','solid':False,'type':'ore','tile':14,'price':2},
-			'17':{'name':'meat','solid':False,'type':'food','tile':17,'price':8},
-			'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18,'price':25},
-			'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
-				'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
-			'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
-			'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
-				'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':30,'image_index':0,\
-				'images':['i','I','Y'],'makes':22},
-			'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10,\
-				'makes':25},
-			'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
-				'status':None,'rank':1,'sharp':True,'tile':23,'price':9},
-			'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
-			'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8},
-			'26':{'name':'single bed','solid':False,'type':'bed','owner':None,'tile':26,'price':35},
-			'27':{'name':'pot','solid':False,'type':'cup','contains':None,'tile':27,'price':15,
-				'volume':0,'volume_max':10,'material':'clay'},
-			'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40}}
-tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
-	'1':{'icon':' ','color':['black','darkgray']},
-	'2':{'icon':'.','color':['silver','darkgray']},
-	'3':{'icon':'<','color':['white','darkgray']},
-	'4':{'icon':'>','color':['white','darkgray']},
-	'5':{'icon':' ','color':['white','green']},
-	'6':{'icon':';','color':['altlightgreen','lightgreen']},
-	'7':{'icon':';','color':['lightgreen','altlightgreen']},
-	'8':{'icon':';','color':['lightsand','sand']},
-	'9':{'icon':',','color':['altlightgreen','green']},
-	'10':{'icon':'o','color':['blue','blue']},
-	'11':{'icon':';','color':['sand','brown']},
-	'12':{'icon':'#','color':['sand','brown']},
-	'13':{'icon':'1','color':['sand','gold']},
-	'14':{'icon':'c','color':['darkgray','darkergray']},
-	'15':{'icon':'#','color':['white','brown']},
-	'16':{'icon':'.','color':['brown','sand']},
-	'17':{'icon':'F','color':['red','lightsand']},
-	'18':{'icon':'#','color':['brown','lightsand']},
-	'19':{'icon':'/','color':['silver',None]},
-	'20':{'icon':'b','color':['gray','brown']},
-	'21':{'icon':'i','color':['sand',None]},
-	'22':{'icon':'Y','color':['brown',None]},
-	'23':{'icon':'L','color':['silver',None]},
-	'24':{'icon':'#','color':['gray','darkergray']},
-	'25':{'icon':'i','color':['brown',None]},
-	'26':{'icon':'#','color':['white','red']},
-	'27':{'icon':'u','color':['brown','darkbrown']},
-	'28':{'icon':'8','color':['brown','darkbrown']},
-	'29':{'icon':'.','color':['sand','palebrown']}}
+var.temp_fps = 0
+var.gametime = time.time()
+var.fpstime = time.time()
+var.dirty = []
 
 color_codes = {'black':(0,0,0),
 	'white':(255,255,255),
 	'gray':(128,128,128),
 	'red':(255,0,0),
-	'green':(0,128,0),
+	'green':(0,130,0),
 	'blue':(0,0,255),
 	'purple':(128,0,128),
 	'darkgray':(86, 86, 86),
@@ -153,21 +105,15 @@ color_codes = {'black':(0,0,0),
 	'lightsand':(255, 211, 148),
 	'brown':(205, 133, 63),
 	'darkbrown':(129, 84, 0),
+	'darkishbrown':(111,72,0),
 	'gold':(253, 233, 16)}
 
 if not var.server and var.output=='pygame':
 	#Colors...
-	pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
-	pygcurse.colornames['darkergray'] = pygame.Color(46, 46, 46)
-	pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
-	pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
-	pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
-	pygcurse.colornames['palebrown'] = pygame.Color(255, 197, 115)
-	pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
-	pygcurse.colornames['lightsand'] = pygame.Color(255, 211, 148)
-	pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
-	pygcurse.colornames['darkbrown'] = pygame.Color(129, 84, 0)
-	pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)
+	for color in color_codes:
+		pygcurse.colornames[color] = pygame.Color(color_codes[color][0],
+			color_codes[color][1],
+			color_codes[color][2])
 	
 	#Setup
 	var.clock = pygame.time.Clock()
@@ -227,7 +173,7 @@ if not var.server and var.output=='pygame':
 		fgcolor='white')
 elif not var.server and var.output=='libtcod':
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
-	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_gs_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
 	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
 	var.log = libtcod.console_new(var.window_size[0], 6)
@@ -297,13 +243,8 @@ else:
 		test.speed = 1
 		test.speed_max = 1
 		test.level = var.world.get_level(test.z)
-		test.pos = test.level.get_open_space_around((2,2))[0]
+		test.pos = test.level.get_open_space_around(var.player.pos)[0]
 		test.owner = var.player
-
-var.temp_fps = 0
-var.gametime = time.time()
-var.fpstime = time.time()
-var.dirty = []
 
 def draw_tile(tile,pos,color):
 
@@ -361,7 +302,7 @@ def draw_screen(refresh=False):
 			
 			if var.player.level.items[x][y]:
 				_item = var.player.level.items[x][y][0]
-				_tile = tile_map[str(_item['tile'])].copy()
+				_tile = var.tile_map[str(_item['tile'])].copy()
 				
 				if _item.has_key('images'):
 					_tile['icon'] = _item['images'][_item['image_index']]
@@ -376,9 +317,9 @@ def draw_screen(refresh=False):
 			
 			if var.player.level.vmap[x][y]:
 				if not _tile:
-					_tile = tile_map[str(var.player.level.map[x][y])]
+					_tile = var.tile_map[str(var.player.level.map[x][y])]
 					_tile['id'] = var.player.level.map[x][y]
-				_bgcolor = tile_map[str(var.player.level.map[x][y])]['color'][1]
+				_bgcolor = var.tile_map[str(var.player.level.map[x][y])]['color'][1]
 				
 				if not _tile['color'][1]:
 					if _tile['color'][0]=='white' and _bgcolor in ['white','sand','lightsand','brown']:
@@ -396,7 +337,7 @@ def draw_screen(refresh=False):
 				
 				
 			elif var.player.level.fmap[x][y]:
-				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
+				if not _tile: _tile = var.tile_map[str(var.player.level.map[x][y])]
 				
 				#var.view.putchar(_tile['icon'],\
 				#	x=x,\
@@ -429,6 +370,7 @@ def draw_screen(refresh=False):
 		var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
 		var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
 	else:
+		libtcod.console_clear(var.log)
 		libtcod.console_set_foreground_color(var.log, libtcod.white)
 		libtcod.console_print_left(var.log, 0, 0, libtcod.BKGND_NONE, _char)
 		libtcod.console_set_foreground_color(var.log, libtcod.green)
@@ -453,7 +395,7 @@ def draw_screen(refresh=False):
 				_color = 'white'
 			else:
 				_color = 'gray'
-			_tile = tile_map[str(item['item']['tile'])]
+			_tile = var.tile_map[str(item['item']['tile'])]
 			_entry = '%s x%s (%sb)' % (item['item']['name'],item['count'],functions.get_item_price(item['item']))
 			_center_x = (var.window_size[0]/2)-len(var.menu_name)/2
 			_center_y = (var.window_size[1]/2)-(len(var.in_menu)/2)+var.in_menu.index(item)-3
@@ -470,12 +412,14 @@ def draw_screen(refresh=False):
 			_fgcolor = 'brown'
 		
 		if var.output=='pygame':
-			var.log.putchars(entry,\
-				x=0,\
-				y=var.\
-				window_size[1]-5+(_i),\
-				fgcolor=_fgcolor,\
+			var.log.putchars(entry,
+				x=0,
+				y=var.window_size[1]-5+(_i),
+				fgcolor=_fgcolor,
 				bgcolor='black')
+		else:
+			libtcod.console_set_foreground_color(var.log, libtcod.white)
+			libtcod.console_print_left(var.log, 0, 1+_i, libtcod.BKGND_NONE, entry)
 		_i+=1
 	
 	if var.output=='pygame':
@@ -715,7 +659,6 @@ def get_input():
 						print item
 	else:
 		key = libtcod.console_check_for_keypress(flags=libtcod.KEY_PRESSED) 
-		#print key.vk,libtcod.KEY_UP
 		
 		if key.vk == libtcod.KEY_UP:
 			var.input['up']=True
@@ -740,12 +683,10 @@ def get_input():
 		if key.c == ord('x'):
 			var.max_fps=60
 			libtcod.sys_set_fps(var.max_fps)
-			print 'set fps'
 		
 		if key.c == ord('z'):
 			var.max_fps=20
 			libtcod.sys_set_fps(var.max_fps)
-			print 'set fps'
 		
 		if key.vk in [libtcod.KEY_ESCAPE] or key.c == ord('q'):
 			return True

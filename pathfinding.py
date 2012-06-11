@@ -1,4 +1,4 @@
-import var, time
+import var, time, sys
 from copy import deepcopy
 
 class astar:
@@ -142,6 +142,7 @@ class astar:
 			if _broken:
 				print self.end
 				print 'Broken A*!'
+				return self.start
 				
 		else:
 			#Roll downhill
@@ -182,9 +183,9 @@ class astar:
 		for r in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 			_x = pos[0]+r[0]
 			_y = pos[1]+r[1]
-
-			#if _x<0 or _y<0 or _x>=self.size[0] or _y>=self.size[1] or not self.map[_x][_y]: continue
-			if 0 < _x >= self.size[0] or 0 < _y >= self.size[1] or not self.map[_x][_y]: continue
+			
+			if _x<0 or _x>=self.size[0] or _y<0 or _y>=self.size[1] or not self.map[_x][_y]: continue
+			
 			if (_x,_y) in self.clist and checkclist:
 				continue 
 			adj.append((_x,_y))
