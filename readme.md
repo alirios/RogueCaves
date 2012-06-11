@@ -32,6 +32,13 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
+Current Version: 06.11.2012A
+----------------------------
+Changed
+-------
+* Added libtcod output (default)
+* Increased level size a bit
+
 Current Version: 06.10.2012A
 ----------------------------
 Changed

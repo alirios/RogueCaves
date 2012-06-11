@@ -1,12 +1,24 @@
 import levelgen, functions, world, cache, life
 import logging, random, time, var, sys, os
 
+try:
+	import psyco
+	psyco.full()
+except:
+	pass
+
+var.output = 'libtcod'
+
 if '-server' in sys.argv:
 	var.server = True
 else:
-	import pygcurse, pygame
-	from pygame.locals import *
-	pygame.font.init()
+	if var.output == 'pygame':
+		import pygcurse, pygame
+		from pygame.locals import *
+		pygame.font.init()
+	else:	
+		import libtcodpy as libtcod
+	
 	var.server = False
 
 __release__ = None
@@ -34,8 +46,8 @@ if var.server: logging.info('Rogue Caves Server - %s' % __version__)
 else: logging.info('Rogue Caves - %s' % __version__)
 
 #Setup stuff...
-var.window_size = (99,33)
-var.world_size = (99,33)
+var.window_size = (80,34)
+var.world_size = var.window_size
 var.max_fps = 20
 var.tick_history = []
 var.timer = 0
@@ -121,7 +133,26 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'28':{'icon':'8','color':['brown','darkbrown']},
 	'29':{'icon':'.','color':['sand','palebrown']}}
 
-if not var.server:
+color_codes = {'black':(0,0,0),
+	'white':(255,255,255),
+	'gray':(128,128,128),
+	'red':(255,0,0),
+	'green':(0,128,0),
+	'blue':(0,0,255),
+	'purple':(128,0,128),
+	'darkgray':(86, 86, 86),
+	'darkergray':(46, 46, 46),
+	'altgray':(148, 148, 148),
+	'lightgreen':(0, 150, 0),
+	'altlightgreen':(0, 140, 0),
+	'palebrown':(255, 197, 115),
+	'sand':(255, 197, 138),
+	'lightsand':(255, 211, 148),
+	'brown':(205, 133, 63),
+	'darkbrown':(129, 84, 0),
+	'gold':(253, 233, 16)}
+
+if not var.server and var.output=='pygame':
 	#Colors...
 	pygcurse.colornames['darkgray'] = pygame.Color(86, 86, 86)
 	pygcurse.colornames['darkergray'] = pygame.Color(46, 46, 46)
@@ -191,14 +222,16 @@ if not var.server:
 		x=(var.window_size[0]/2)-(len(__version__)/2),
 		y=20,
 		fgcolor='white')
-	
-	var.view.putchars('Generating world...',x=0,y=0,fgcolor='white')
-	var.view.update()
+elif not var.server and var.output=='libtcod':
+	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_gs_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
+	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
+	var.log = libtcod.console_new(var.window_size[0], 6)
+	libtcod.console_set_keyboard_repeat(100,1)
+	libtcod.sys_set_fps(var.max_fps)
 
 #Load dictionary files
-if not var.server:
-	var.view.putchars('Loading dictionaries...',x=0,y=1,fgcolor='white')
-	var.view.update()
 logging.debug('Loading dictionaries')
 
 _fnames = open(os.path.join('data','names_female.txt'),'r')
@@ -235,10 +268,6 @@ else:
 	var.world.generate()
 	
 	#Gods
-	if not var.server:
-		var.view.putchars('Gods...',x=0,y=2,fgcolor='white')
-		var.view.update()
-
 	var.ivan = life.god()
 	var.ivan.name = 'Ivan'
 	var.ivan.purpose = 'death'
@@ -246,10 +275,6 @@ else:
 	var.ivan.accepts = ['human']
 
 	#People
-	if not var.server:
-		var.view.putchars('People...',x=0,y=3,fgcolor='white')
-		var.view.update()
-
 	var.player = life.human(player=True)
 	var.player.name = 'flags'
 	var.player.z = 1
@@ -278,6 +303,7 @@ var.fpstime = time.time()
 var.dirty = []
 
 def draw_tile(tile,pos,color):
+
 	if tile.has_key('id'):
 		if var.buffer[pos[0]][pos[1]] == tile['id'] and var.player.level.outside: return
 		else:
@@ -289,15 +315,18 @@ def draw_tile(tile,pos,color):
 			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['icon']
 	
-	#else:
-	#	print 'didnt have id',tile
-	
 	var.dirty.append(pos)
 	
 	if isinstance(tile['icon'],unicode):
 		tile['icon'] = str(tile['icon'])
 	
-	var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
+	if var.output=='pygame':
+		var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
+	else:
+		_color = (color_codes[color[0]],color_codes[color[1]])
+		libtcod.console_set_foreground_color(var.view, libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
+		libtcod.console_set_back(var.view, pos[0], pos[1], libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), libtcod.BKGND_SET )
+		libtcod.console_print_left(var.view, pos[0], pos[1], libtcod.BKGND_NONE, tile['icon'])
 
 def draw_screen(refresh=False):	
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
@@ -359,26 +388,20 @@ def draw_screen(refresh=False):
 				else:
 					draw_tile(_tile,(x,y),_tile['color'])
 				
-				if var.player.level.tmap[x][y]:
-					var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
+				#if var.player.level.tmap[x][y]:
+				#	var.view.tint(r=var.player.level.tmap[x][y],region=(x,y,1,1))
 				
-				#_dist = functions.distance(var.player.pos,var.mouse_pos)
-				#if (x,y)==var.mouse_pos:
-				#	if _dist<=5:
-				#		var.view.lighten(50,(x,y,1,1))
-				#	else:
-				#		var.view.darken(50,(x,y,1,1))
-
+				
 			elif var.player.level.fmap[x][y]:
 				if not _tile: _tile = tile_map[str(var.player.level.map[x][y])]
 				
-				var.view.putchar(_tile['icon'],\
-					x=x,\
-					y=y,\
-					fgcolor=_tile['color'][0],\
-					bgcolor='altgray')
-				var.view.darken(100,(x,y,1,1))
-			elif refresh:
+				#var.view.putchar(_tile['icon'],\
+				#	x=x,\
+				#	y=y,\
+				#	fgcolor=_tile['color'][0],\
+				#	bgcolor='altgray')
+				#var.view.darken(100,(x,y,1,1))
+			elif refresh and var.output=='pygame':
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
@@ -394,13 +417,29 @@ def draw_screen(refresh=False):
 		_in_building = var.player.in_building()
 		if _in_building: _depth += ' (%s)' % (_in_building['name'])
 	
-	var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
-	var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
-	var.log.putchars(_depth,x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
-	var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
-	var.log.putchars(_thirst,x=len(_char)+len(_health)+len(_depth)+len(_skill)+4,y=var.window_size[1]-6,fgcolor='blue',bgcolor='black')
-	var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
-	var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
+	if var.output=='pygame':
+		var.log.putchars(_char,x=0,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
+		var.log.putchars(_health,x=len(_char)+1,y=var.window_size[1]-6,fgcolor='green',bgcolor='black')
+		var.log.putchars(_depth,x=len(_char)+len(_health)+2,y=var.window_size[1]-6,fgcolor='gray',bgcolor='black')
+		var.log.putchars(_skill,x=len(_char)+len(_health)+len(_depth)+3,y=var.window_size[1]-6,fgcolor='white',bgcolor='black')
+		var.log.putchars(_thirst,x=len(_char)+len(_health)+len(_depth)+len(_skill)+4,y=var.window_size[1]-6,fgcolor='blue',bgcolor='black')
+		var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
+		var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
+	else:
+		libtcod.console_set_foreground_color(var.log, libtcod.white)
+		libtcod.console_print_left(var.log, 0, 0, libtcod.BKGND_NONE, _char)
+		libtcod.console_set_foreground_color(var.log, libtcod.green)
+		libtcod.console_print_left(var.log, len(_char)+1, 0, libtcod.BKGND_NONE, _health)
+		libtcod.console_set_foreground_color(var.log, libtcod.grey)
+		libtcod.console_print_left(var.log, len(_char)+len(_health)+2, 0, libtcod.BKGND_NONE, _depth)
+		libtcod.console_set_foreground_color(var.log, libtcod.white)
+		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+3, 0, libtcod.BKGND_NONE, _skill)
+		libtcod.console_set_foreground_color(var.log, libtcod.blue)
+		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+len(_skill)+4, 0, libtcod.BKGND_NONE, _thirst)
+		libtcod.console_set_foreground_color(var.log, libtcod.dark_red)
+		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5, 0, libtcod.BKGND_NONE, _hunger)
+		libtcod.console_set_foreground_color(var.log, libtcod.white)
+		libtcod.console_print_left(var.log, var.window_size[0]-7, 0, libtcod.BKGND_NONE, 'FPS: %s' % str(var.fps))
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
@@ -427,23 +466,28 @@ def draw_screen(refresh=False):
 		elif entry.count('bronze'):
 			_fgcolor = 'brown'
 		
-		var.log.putchars(entry,\
-			x=0,\
-			y=var.\
-			window_size[1]-5+(_i),\
-			fgcolor=_fgcolor,\
-			bgcolor='black')
+		if var.output=='pygame':
+			var.log.putchars(entry,\
+				x=0,\
+				y=var.\
+				window_size[1]-5+(_i),\
+				fgcolor=_fgcolor,\
+				bgcolor='black')
 		_i+=1
 	
-	if var.in_menu: var.menu.update()
-	else:
-		var.log.update()
-		
-		if var.player.level.outside:
-			#print len(var.dirty)
-			var.view.update_alt(var.dirty)
+	if var.output=='pygame':
+		if var.in_menu: var.menu.update()
 		else:
-			var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+			var.log.update()
+			
+			if var.player.level.outside:
+				var.view.update_alt(var.dirty)
+			else:
+				var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
+	else:
+		libtcod.console_blit(var.log, 0, 0, var.window_size[0], 6, 0, 0, var.window_size[1]-6)
+		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
+		libtcod.console_flush()
 	
 	if time.time()-var.fpstime>=1:
 		var.fpstime=time.time()
@@ -525,165 +569,207 @@ def tick():
 		draw_screen(refresh=True)
 	else:
 		draw_screen()
-	var.clock.tick(var.max_fps)
+	
+	if var.output=='pygame': var.clock.tick(var.max_fps)
 
 def get_input():
-	for event in pygame.event.get():
-		if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
-			if var.in_menu:
-				functions.destroy_menu(who=var.player)
-			else:
-				#var.world.save()
-				pygame.quit()
-				sys.exit()
-		elif event.type == KEYDOWN:
-			if event.key == K_UP:
-				var.input['up'] = True
-				var.menu_index-=1
-			elif event.key == K_DOWN:
-				var.input['down'] = True
-				var.menu_index+=1
-			elif event.key == K_LEFT:
-				var.input['left'] = True
-			elif event.key == K_RIGHT:
-				var.input['right'] = True
-			elif event.key == K_RETURN:
+	if var.output=='pygame':
+		for event in pygame.event.get():
+			if event.type == QUIT or event.type == KEYDOWN and event.key in [K_ESCAPE,K_q]:
 				if var.in_menu:
-					functions.menu_select()
+					functions.destroy_menu(who=var.player)
 				else:
-					var.player.enter()
-					var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
-					region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
-					var.view.setbrightness(0, region=region)
-					draw_screen(refresh=True)
-			elif event.key == K_w:
-				var.player.place_item(21,(0,-1))
-			elif event.key == K_a:
-				var.player.place_item(21,(-1,0))
-			elif event.key == K_d:
-				var.player.place_item(21,(1,0))
-			elif event.key == K_s:
-				var.player.place_item(21,(0,1))
-			elif event.key == K_v:
-				for pos in var.player.level.real_estate:
-					var.view.tint(b=255,region=(pos[0],pos[1],1,1))
-			elif event.key == K_b:
-				if var.player.in_building(name='storage') and not var.in_menu:
-					_building_owner = var.player.level.get_room('storage')['owner']
-					
-					if _building_owner and _building_owner.in_building(name='storage'):
-						_menu = var.player.level.get_room_items('storage')
-						if len(_menu):
-							functions.build_menu(var.player.level.get_room_items('storage'),
-								who=var.player,
-								name='Shopping (Buy)',
-								trading=True,
-								callback=var.player.buy_item)
-							_building_owner.say('What would you like today?')
-						else:
-							_building_owner.say('I have nothing to sell!')
-			
-			elif event.key == K_n:
-				if var.player.in_building(name='storage') and not var.in_menu:
-					_building_owner = var.player.level.get_room('storage')['owner']
-					
-					if _building_owner and _building_owner.in_building(name='storage'):
-						functions.build_menu(var.player.items,
-							who=var.player,
-							name='Shopping (Sell)',
-							trading=True,
-							callback=var.player.sell_item,
-							sell_to=_building_owner)
-						_building_owner.say('What items do you have for me?')
+					#var.world.save()
+					pygame.quit()
+					sys.exit()
+			elif event.type == KEYDOWN:
+				if event.key == K_UP:
+					var.input['up'] = True
+					var.menu_index-=1
+				elif event.key == K_DOWN:
+					var.input['down'] = True
+					var.menu_index+=1
+				elif event.key == K_LEFT:
+					var.input['left'] = True
+				elif event.key == K_RIGHT:
+					var.input['right'] = True
+				elif event.key == K_RETURN:
+					if var.in_menu:
+						functions.menu_select()
+					else:
+						var.player.enter()
+						var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+						region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
+						var.view.setbrightness(0, region=region)
+						draw_screen(refresh=True)
+				elif event.key == K_w:
+					var.player.place_item(21,(0,-1))
+				elif event.key == K_a:
+					var.player.place_item(21,(-1,0))
+				elif event.key == K_d:
+					var.player.place_item(21,(1,0))
+				elif event.key == K_s:
+					var.player.place_item(21,(0,1))
+				elif event.key == K_v:
+					for pos in var.player.level.real_estate:
+						var.view.tint(b=255,region=(pos[0],pos[1],1,1))
+				elif event.key == K_b:
+					if var.player.in_building(name='storage') and not var.in_menu:
+						_building_owner = var.player.level.get_room('storage')['owner']
 						
-			elif event.key == K_i:
-				if len(var.player.items):
-					functions.build_menu(var.player.items,
-						name='Inventory',
-						callback=var.player.equip_item)
-			elif event.key == K_p:
-				var.world.get_stats()
-			elif event.key == K_1:
-				var.player.teleport(1)
-			elif event.key == K_2:
-				var.player.teleport(0)
-			elif event.key == K_3:
-				var.player.teleport(-1)
-			elif event.key == K_4:
-				var.player.teleport(-2)
-			elif event.key == K_5:
-				var.player.teleport(-3)
-			elif event.key == K_6:
-				var.player.teleport(-4)
-			elif event.key == K_j:
-				logging.debug('Taking screenshot...')
-				pygame.image.save(var.window._windowsurface, 'screenshot.jpg')
-		elif event.type == KEYUP:
-			if event.key == K_UP:
-				var.input['up'] = False
-			elif event.key == K_DOWN:
-				var.input['down'] = False
-			elif event.key == K_LEFT:
-				var.input['left'] = False
-			elif event.key == K_RIGHT:
-				var.input['right'] = False
-			elif event.key == K_z:
-				var.max_fps = 20
-			elif event.key == K_x:
-				var.max_fps = 60
-			elif event.key == K_c:
-				var.max_fps = 1
-			elif event.key == K_v:
-				for pos in var.player.level.real_estate:
-					var.view.setbrightness(0, region=(pos[0],pos[1],1,1))
-		elif event.type == MOUSEMOTION:
-			var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
-		elif event.type == MOUSEBUTTONDOWN:
-			for life in var.life:
-				if life.z == var.player.z:
-					if life.pos == list(var.mouse_pos):
-						print '='*8
-						print life.name
-						print 'Task: %s' % life.task
-						print 'Path: %s' % life.path
-						print 'Path dest: %s' % str(life.path_dest)
-						#print 'Path type: %s' % life.path_type
-						print 'Position: %s' % str(life.pos)
-						print 'Traits: %s' % life.traits
-						print 'Attracted to: %s' % life.attracted_to
-						print 'Likes: %s' % life.likes
-						print 'Dislikes: %s' % life.dislikes
-						#print [entry for entry in life.get_top_love_interests()]
-						for event in life.events:
-							print event['what'],event['score']
-						print '='*8
-						#print 'Inventory: '
-						#for item in life.items:
-						#	print item
-			
-			for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
-				if item['pos'] == var.mouse_pos:
-					print item
+						if _building_owner and _building_owner.in_building(name='storage'):
+							_menu = var.player.level.get_room_items('storage')
+							if len(_menu):
+								functions.build_menu(var.player.level.get_room_items('storage'),
+									who=var.player,
+									name='Shopping (Buy)',
+									trading=True,
+									callback=var.player.buy_item)
+								_building_owner.say('What would you like today?')
+							else:
+								_building_owner.say('I have nothing to sell!')
+				
+				elif event.key == K_n:
+					if var.player.in_building(name='storage') and not var.in_menu:
+						_building_owner = var.player.level.get_room('storage')['owner']
+						
+						if _building_owner and _building_owner.in_building(name='storage'):
+							functions.build_menu(var.player.items,
+								who=var.player,
+								name='Shopping (Sell)',
+								trading=True,
+								callback=var.player.sell_item,
+								sell_to=_building_owner)
+							_building_owner.say('What items do you have for me?')
+							
+				elif event.key == K_i:
+					if len(var.player.items):
+						functions.build_menu(var.player.items,
+							name='Inventory',
+							callback=var.player.equip_item)
+				elif event.key == K_p:
+					var.world.get_stats()
+				elif event.key == K_1:
+					var.player.teleport(1)
+				elif event.key == K_2:
+					var.player.teleport(0)
+				elif event.key == K_3:
+					var.player.teleport(-1)
+				elif event.key == K_4:
+					var.player.teleport(-2)
+				elif event.key == K_5:
+					var.player.teleport(-3)
+				elif event.key == K_6:
+					var.player.teleport(-4)
+				elif event.key == K_j:
+					logging.debug('Taking screenshot...')
+					pygame.image.save(var.window._windowsurface, 'screenshot.jpg')
+			elif event.type == KEYUP:
+				if event.key == K_UP:
+					var.input['up'] = False
+				elif event.key == K_DOWN:
+					var.input['down'] = False
+				elif event.key == K_LEFT:
+					var.input['left'] = False
+				elif event.key == K_RIGHT:
+					var.input['right'] = False
+				elif event.key == K_z:
+					var.max_fps = 20
+				elif event.key == K_x:
+					var.max_fps = 60
+				elif event.key == K_c:
+					var.max_fps = 1
+				elif event.key == K_v:
+					for pos in var.player.level.real_estate:
+						var.view.setbrightness(0, region=(pos[0],pos[1],1,1))
+			elif event.type == MOUSEMOTION:
+				var.mouse_pos = var.view.getcoordinatesatpixel(event.pos)
+			elif event.type == MOUSEBUTTONDOWN:
+				for life in var.life:
+					if life.z == var.player.z:
+						if life.pos == list(var.mouse_pos):
+							print '='*8
+							print life.name
+							print 'Task: %s' % life.task
+							print 'Path: %s' % life.path
+							print 'Path dest: %s' % str(life.path_dest)
+							#print 'Path type: %s' % life.path_type
+							print 'Position: %s' % str(life.pos)
+							print 'Traits: %s' % life.traits
+							print 'Attracted to: %s' % life.attracted_to
+							print 'Likes: %s' % life.likes
+							print 'Dislikes: %s' % life.dislikes
+							#print [entry for entry in life.get_top_love_interests()]
+							for event in life.events:
+								print event['what'],event['score']
+							print '='*8
+							#print 'Inventory: '
+							#for item in life.items:
+							#	print item
+				
+				for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
+					if item['pos'] == var.mouse_pos:
+						print item
+	else:
+		key = libtcod.console_check_for_keypress(flags=libtcod.KEY_PRESSED) 
+		#print key.vk,libtcod.KEY_UP
+		
+		if key.vk == libtcod.KEY_UP:
+			var.input['up']=True
+		else:
+			var.input['up']=False
+		
+		if key.vk == libtcod.KEY_DOWN:
+			var.input['down']=True
+		else:
+			var.input['down']=False
+		
+		if key.vk == libtcod.KEY_LEFT:
+			var.input['left']=True
+		else:
+			var.input['left']=False
+		
+		if key.vk == libtcod.KEY_RIGHT:
+			var.input['right']=True
+		else:
+			var.input['right']=False
+		
+		if key.c == ord('x'):
+			var.max_fps=60
+			libtcod.sys_set_fps(var.max_fps)
+			print 'set fps'
+		
+		if key.c == ord('z'):
+			var.max_fps=20
+			libtcod.sys_set_fps(var.max_fps)
+			print 'set fps'
+		
+		if key.vk in [libtcod.KEY_ESCAPE] or key.c == ord('q'):
+			return True
 	
 	tick()
+	return False
 
-if not var.server: draw_screen()
-
-while 1:
-	if var.server:
-		try:
-			tick()
-		except KeyboardInterrupt:
-			logging.info('Shutting down.')
-			
-			_total = 0
-			for entry in var.tick_history:
-				_total+=entry
-			
+#if not var.server: draw_screen()
+if var.server or var.output=='pygame':
+	while 1:
+		if var.server:
 			try:
-				logging.info('Average FPS: %s' % str((_total/len(var.tick_history))))
-			except:
-				logging.error('Wasn\'t running long enough to find average FPS')
-			var.world.save()
-			sys.exit()
-	else: get_input()
+				tick()
+			except KeyboardInterrupt:
+				logging.info('Shutting down.')
+				
+				_total = 0
+				for entry in var.tick_history:
+					_total+=entry
+				
+				try:
+					logging.info('Average FPS: %s' % str((_total/len(var.tick_history))))
+				except:
+					logging.error('Wasn\'t running long enough to find average FPS')
+				var.world.save()
+				sys.exit()
+		else: get_input()
+else:
+	while not libtcod.console_is_window_closed():
+		if get_input(): break
