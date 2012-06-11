@@ -118,7 +118,8 @@ tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'25':{'icon':'i','color':['brown',None]},
 	'26':{'icon':'#','color':['white','red']},
 	'27':{'icon':'u','color':['brown','darkbrown']},
-	'28':{'icon':'8','color':['brown','darkbrown']}}
+	'28':{'icon':'8','color':['brown','darkbrown']},
+	'29':{'icon':'.','color':['sand','palebrown']}}
 
 if not var.server:
 	#Colors...
@@ -127,8 +128,9 @@ if not var.server:
 	pygcurse.colornames['altgray'] = pygame.Color(148, 148, 148)
 	pygcurse.colornames['lightgreen'] = pygame.Color(0, 150, 0)
 	pygcurse.colornames['altlightgreen'] = pygame.Color(0, 140, 0)
+	pygcurse.colornames['palebrown'] = pygame.Color(255, 197, 115)
 	pygcurse.colornames['sand'] = pygame.Color(255, 197, 138)
-	pygcurse.colornames['lightsand'] = pygame.Color(255, 231, 206)
+	pygcurse.colornames['lightsand'] = pygame.Color(255, 211, 148)
 	pygcurse.colornames['brown'] = pygame.Color(205, 133, 63)
 	pygcurse.colornames['darkbrown'] = pygame.Color(129, 84, 0)
 	pygcurse.colornames['gold'] = pygame.Color(253, 233, 16)

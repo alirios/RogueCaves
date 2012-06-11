@@ -914,13 +914,13 @@ class LevelGen:
 		
 		_town = town()
 		_town.generate()
+		_room_size = (6,6)
 		
 		for _room_type in ['home','home','home','home','home','home','home','home','home',
 			'store','store','bar']:
 			_room = []
-			_room_size = (6,6)
 			_zone = _town.get_zone()
-			_pos = ((1+_zone['pos'][0])*_room_size[0],(1+_zone['pos'][1])*_room_size[1])
+			_pos = (1+(_zone['pos'][0])*_room_size[0],1+(_zone['pos'][1])*_room_size[1])
 			#print _pos
 		
 			for x in range(0,_room_size[0]):
@@ -972,6 +972,21 @@ class LevelGen:
 			self.generate_building(__room)
 			
 			self.landmarks.append(random.choice(_room))
+		
+		#for road in _town.get_all_zones_of_type('road'):
+		#	_pos = (1+(road['pos'][0])*_room_size[0],1+(road['pos'][1])*_room_size[1])
+		#	for x in range(0,_room_size[0]):
+		#		_x = _pos[0]+x
+		#		for y in range(0,_room_size[1]):
+		#			_y = _pos[1]+y
+		#			try:
+		#				#if road['orientation']=='hor':
+		#				#	if y==0 or y==_room_size[1]-1: continue
+		#				#else:
+		#				#	if x==0 or x==_room_size[0]-1: continue
+		#				self.map[_x][_y]=29
+		#			except:
+		#				pass
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
@@ -1076,7 +1091,7 @@ class town:
 						else:
 							self.zones[x][y]['zone'] = 'road'
 					
-					#self.zones[x][y]['orientation'] = _flags['orientation']
+					self.zones[x][y]['orientation'] = _flags['orientation']
 			
 			if y == (self.size[1]/self.zone_size)-1:
 				_at_chunk[1] = 0
@@ -1090,6 +1105,7 @@ class town:
 		_zones = copy.deepcopy(self.zones)
 		for x in range(self.size[0]/self.zone_size):
 			for y in range(self.size[1]/self.zone_size):
+				if self.zones[x][y]['zone']=='road': continue
 				_count = 0
 				for __pos in [(-1,0),(1,0),(0,-1),(0,1)]:
 					_pos = (x+__pos[0],y+__pos[1])
@@ -1105,20 +1121,30 @@ class town:
 				if x==0: continue
 				if y==0 or y==(self.size[1]/self.zone_size)-1: continue
 				if _count==2:
-					_zones[x][y]['zone'] = None
+					_zones[x][y]['zone'] = 'road'
 		
 		self.zones = _zones
 	
-	def get_zone(self):
+	def get_zone(self,remove=True):
 		for y in range(self.size[1]/self.zone_size):
 			for x in range(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']=='res':
-					self.zones[x][y]['zone'] = None
+					if remove: self.zones[x][y]['zone'] = None
 					return {'pos':(x,y),'open':self.zones[x][y]['facing_road']}
+	
+	def get_all_zones_of_type(self,type):
+		_ret = []
+		
+		for y in range(self.size[1]/self.zone_size):
+			for x in range(self.size[0]/self.zone_size):
+				if self.zones[x][y]['zone']==type:
+					_ret.append({'pos':(x,y),'orientation':self.zones[x][y]['orientation']})
+		
+		return _ret
 	
 	def out(self):
 		for y in range(self.size[1]/self.zone_size):
 			for x in range(self.size[0]/self.zone_size):
-				if self.zones[x][y]['zone']: print self.zones[x][y]['zone'][0],
+				if self.zones[x][y]['zone']: print self.zones[x][y]['zone'][1],
 				else: print '.',
 			print
