@@ -670,13 +670,22 @@ class life:
 		
 		return False
 	
-	def get_nearest_store(self):
+	def get_nearest_store(self,items=None):
 		"""Returns nearest store to this ALife"""
 		_lowest = {'name':None,'dist':9001}
 		
 		for building in self.level.get_all_buildings_of_type('store'):
 			if not building['owner']: continue
 			if not tuple(building['owner'].pos) in building['walking_space']: continue
+			if items:
+				_has_item = False
+				for item in self.level.get_all_items_in_building(building['name']):
+					if item['type'] in items: _has_item = True;break
+			
+				if not _has_item: continue
+			else:
+				_has_item = True
+			
 			_dist = functions.distance(self.pos,building['door'])
 			
 			if _dist < _lowest['dist']:

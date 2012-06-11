@@ -283,6 +283,14 @@ def draw_tile(tile,pos,color):
 		else:
 			#print var.buffer[pos[0]][pos[1]],tile['id']
 			var.buffer[pos[0]][pos[1]] = tile['id']
+	elif tile.has_key('icon'):
+		if var.buffer[pos[0]][pos[1]] == tile['icon'] and var.player.level.outside: return
+		else:
+			#print var.buffer[pos[0]][pos[1]],tile['id']
+			var.buffer[pos[0]][pos[1]] = tile['icon']
+	
+	#else:
+	#	print 'didnt have id',tile
 	
 	var.dirty.append(pos)
 	
@@ -373,7 +381,6 @@ def draw_screen(refresh=False):
 			elif refresh:
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
-	var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
 	_char = '%s the %s %s' % (var.player.name,var.player.alignment,var.player.race)
 	_char = '%s' % (var.player.name)
 	_health = 'HP: (%s\%s)' % (var.player.hp,var.player.hp_max)
@@ -433,6 +440,7 @@ def draw_screen(refresh=False):
 		var.log.update()
 		
 		if var.player.level.outside:
+			#print len(var.dirty)
 			var.view.update_alt(var.dirty)
 		else:
 			var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))

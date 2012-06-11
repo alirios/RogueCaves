@@ -84,7 +84,7 @@ A "region" defines an area of the surface. It can be the following formats:
 
 Note about flickering: If your program is experiencing a lot of flicker, than you should disable the self._autoupdate member. By default, this is enabled and the screen is redrawn after each method call that makes a change to the screen.
 """
-
+FLAGS = DOUBLEBUF
 
 DEFAULTFGCOLOR = pygame.Color(164, 164, 164, 255) # default foreground color is gray (must be a pygame.Color object)
 DEFAULTBGCOLOR = pygame.Color(0, 0, 0, 255) # default background color is black (must be a pygame.Color object)
@@ -203,7 +203,7 @@ class PygcurseSurface(object):
 
         self._autoupdate = True
         if windowsurface == _NEW_WINDOW:
-            self._windowsurface = pygame.display.set_mode((self._cellwidth * width, self._cellheight * height))
+            self._windowsurface = pygame.display.set_mode((self._cellwidth * width, self._cellheight * height), FLAGS)
             self._managesdisplay = True
         elif windowsurface == FULLSCREEN:
             self._windowsurface = pygame.display.set_mode((self._cellwidth * width, self._cellheight * height), pygame.FULLSCREEN)
@@ -446,8 +446,6 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         #    self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
         #    if self._autodisplayupdate:
         self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
-        pygame.display.update()
-
 
     def _drawinputcursor(self):
         """Draws the input cursor directly onto the self._surfaceobj Surface object, if self._inputcursormode is not None."""

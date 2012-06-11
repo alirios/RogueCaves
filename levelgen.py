@@ -917,7 +917,7 @@ class LevelGen:
 		_room_size = (6,6)
 		
 		for _room_type in ['home','home','home','home','home','home','home','home','home',
-			'store','store','bar']:
+			'store','store','bar','store','store','store']:
 			_room = []
 			_zone = _town.get_zone()
 			_pos = (1+(_zone['pos'][0])*_room_size[0],1+(_zone['pos'][1])*_room_size[1])

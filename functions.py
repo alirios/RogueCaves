@@ -1,7 +1,9 @@
 import random, life, var
 
 def log(text):
-	if len(var.history)>=5: var.history.pop(0)
+	if len(var.history)>=5:
+		var.log.fill(fgcolor=(255,0,0),region=(0,var.window_size[1]-6,var.window_size[0],6))
+		var.history.pop(0)
 	
 	var.history.append(text)
 
