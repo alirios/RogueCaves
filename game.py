@@ -7,7 +7,10 @@ try:
 except:
 	pass
 
-var.output = 'libtcod'
+if '-pygame' in sys.argv:
+	var.output = 'pygame'
+else:
+	var.output = 'libtcod'
 
 if '-server' in sys.argv:
 	var.server = True

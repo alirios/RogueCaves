@@ -36,6 +36,7 @@ Current Version: 06.11.2012A
 ----------------------------
 Changed
 -------
+* Added Pygame output flag (-pygame)
 * Added libtcod output (default)
 * Increased level size a bit
 
