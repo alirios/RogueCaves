@@ -36,6 +36,8 @@ Current Version: 06.12.2012A
 ----------------------------
 Changed
 -------
+* life.build_history()
+* Added more detail to histories
 * Announces
 
 Previous Version: 06.11.2012A

@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import logging, random, copy, sys, re
+import logging, random, copy, sys, re, os
 
 class life:
 	def __init__(self,player=False):
@@ -213,6 +213,22 @@ class life:
 		self.likes = keys['likes']
 		self.dislikes = keys['dislikes']
 	
+	def build_history(self):
+		logging.debug('[ALife.%s.HistoryGen] Starting...' % (self.name))
+		
+		_out = open(os.path.join('data','history.txt'),'w')
+		for entry in self.history:
+			if entry.has_key('to'):
+				entry['to'] = functions.get_alife_by_id(entry['to']).name
+			for word in entry['what'].split(' '):
+				if word == 'from': continue
+				if entry.has_key(word):
+					print entry,entry[word]
+					entry['what'] = entry['what'].replace(word,entry[word])
+			
+			_out.write(str(entry)+'\n')
+		_out.close()
+	
 	def finalize(self):
 		for seen in self.seen:
 			seen['who'] = functions.get_alife_by_id(seen['who'])
@@ -274,7 +290,7 @@ class life:
 		
 		_in_building = self.in_building()
 		if _in_building:
-			_broadcast['where'] = _in_building
+			_broadcast['where'] = _in_building['name']
 		
 		self.history.append(_broadcast)
 		
@@ -324,9 +340,9 @@ class life:
 					_i = self.add_item_raw(_item['tile'])
 					logging.debug('[ALife.%s] Bought %s from %s' %
 						(self.name,_i['name'],where))
-					self.announce({'what':'bought item from',
-						'item':functions.get_item_name(_i),
-						'from':where})
+		
+					self.announce({'what':'bought item from where',
+						'item':item})
 		
 		return False
 	
@@ -515,6 +531,14 @@ class life:
 				
 				if self.weapon and self.weapon['name']=='hoe':
 					self.weapon['status']='dirt'
+					self.announce({'what':'tilled earth with hoe for item',
+						'item':var.items[str(item)]['name'],
+						'hoe':functions.get_item_name(self.weapon)})
+				else:
+					self.announce({'what':'tilled earth for item',
+						'item':var.items[str(item)]['name'],})
+				
+				self.announce({'what':'planted item','item':var.items[str(item)]['name']})
 				
 				return False
 			_item['planted_by'] = self
@@ -2204,7 +2228,9 @@ class human(life):
 				_score-=10
 			
 			for match in self.get_past_event({'from':who.id,'what':'vomited'}):
-				_score-=3
+				if 'vomit' in self.dislikes: _score-=6
+				elif 'vomit' in self.likes: _score+=3
+				else: _score-=3
 			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?

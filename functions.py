@@ -187,7 +187,7 @@ def generate_human(job):
 	#"Low" attractions are the negative things
 	_low_attractions = ['brash']
 	
-	_likes = ['dogs','pets','animals','food','cooked food','ale','cup','weapon']
+	_likes = ['dogs','pets','animals','food','cooked food','ale','cup','weapon','vomit']
 	
 	_rand_value = random.randint(0,10)
 	if _rand_value>7:

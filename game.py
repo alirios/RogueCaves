@@ -660,6 +660,7 @@ def get_input():
 							for event in life.events:
 								print event['what'],event['score']
 							print '='*8
+							life.build_history()
 							#print 'Inventory: '
 							#for item in life.items:
 							#	print item
