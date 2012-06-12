@@ -95,6 +95,7 @@ color_codes = {'black':(0,0,0),
 	'green':(0,130,0),
 	'blue':(0,0,255),
 	'purple':(128,0,128),
+	'silver':(192, 192, 192),
 	'darkgray':(86, 86, 86),
 	'darkergray':(46, 46, 46),
 	'altgray':(148, 148, 148),
@@ -287,7 +288,7 @@ def draw_screen(refresh=False):
 	_starttime = time.time()
 	#var.view.fill('black','black',region=region)
 	if not var.player.level.outside:
-		var.view.setbrightness(0, region=region)
+		if var.output=='pygame': var.view.setbrightness(0, region=region)
 	
 	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
@@ -691,6 +692,16 @@ def get_input():
 		else:
 			var.input['right']=False
 		
+		if key.vk == libtcod.KEY_ENTER:
+			if var.in_menu:
+				functions.menu_select()
+			else:
+				var.player.enter()
+				var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+				region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
+				libtcod.console_clear(var.view)
+				draw_screen(refresh=True)
+		
 		if key.c == ord('x'):
 			var.max_fps=60
 			libtcod.sys_set_fps(var.max_fps)
@@ -708,7 +719,7 @@ def get_input():
 #if not var.server: draw_screen()
 if var.server or var.output=='pygame':
 	while 1:
-		if var.server:
+		if var.server:			
 			try:
 				tick()
 			except KeyboardInterrupt:

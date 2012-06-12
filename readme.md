@@ -38,7 +38,8 @@ Current Version: 06.12.2012A
 ----------------------------
 Changed
 -------
-* Added forging
+* Caves work with libtcod
+* Added forging task
 * life.get_done_forges()
 * life.get_open_forges()
 * Tilled tiles now refresh
