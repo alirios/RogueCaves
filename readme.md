@@ -5,6 +5,8 @@ Current Milestone: Athletic Alpaca
 ----------------------------------
 Todo
 ----
+* React to things like vomit, etc
+* Tint ground where liquid is spilled
 * Accept unfinished A* paths
 * ALife should flee at some point during combat
 * Need animal class
@@ -36,6 +38,10 @@ Current Version: 06.12.2012A
 ----------------------------
 Changed
 -------
+* Added forging
+* life.get_done_forges()
+* life.get_open_forges()
+* Tilled tiles now refresh
 * life.build_history()
 * Added more detail to histories
 * Announces

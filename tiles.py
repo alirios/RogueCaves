@@ -13,14 +13,17 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 		'images':['i','I','Y'],'makes':22},
 	'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10,\
 		'makes':25},
-	'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,\
+	'23':{'name':'hoe','solid':False,'type':'weapon','damage':1,'recipe':['iron'],\
 		'status':None,'material':'iron','speed':6,'rank':1,'sharp':True,'tile':23,'price':9},
 	'24':{'name':'stove','solid':False,'type':'stove','tile':24,'price':50,'cooking':None},
 	'25':{'name':'steamed carrot','solid':False,'type':'cooked food','tile':25,'price':8},
 	'26':{'name':'single bed','solid':False,'type':'bed','owner':None,'tile':26,'price':35},
 	'27':{'name':'pot','solid':False,'type':'cup','contains':None,'tile':27,'price':15,
 		'volume':0,'volume_max':10,'material':'clay'},
-	'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40}}
+	'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40},
+	'30':{'name':'forge','solid':False,'type':'forge','tile':30,'price':100,'forging':None,
+		'forge_time':0},
+	'31':{'name':'iron','solid':False,'type':'ore','tile':31,'price':16}}
 
 var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
@@ -51,7 +54,9 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'26':{'icon':'#','color':['white','red']},
 	'27':{'icon':'u','color':['brown','darkbrown']},
 	'28':{'icon':'8','color':['brown','darkbrown']},
-	'29':{'icon':'.','color':['sand','darkishbrown']}}
+	'29':{'icon':'.','color':['sand','darkishbrown']},
+	'30':{'icon':'#','color':['white','black']},
+	'31':{'icon':'i','color':['gray','darkgray']}}
 
 var.DIRT = [28,29]
 var.GRASS = [6,7,9]

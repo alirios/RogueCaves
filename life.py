@@ -258,7 +258,7 @@ class life:
 				event['score'] = score
 				return False
 		
-		logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
+		#logging.debug('[ALife.%s.Event] Added: %s, score %s' % (self.name,what,score))
 		self.events.append({'what':what,'score':score,'who':who,'where':where,'delay':delay,\
 			'items':items})
 		return True
@@ -527,6 +527,7 @@ class life:
 		
 		if _item['type'] == 'seed':
 			if not self.level.map[_pos[0]][_pos[1]] in var.DIRT:
+				var.buffer[_pos[0]][_pos[1]] = None
 				self.level.map[_pos[0]][_pos[1]] = random.choice(var.DIRT)
 				
 				if self.weapon and self.weapon['name']=='hoe':
@@ -602,13 +603,15 @@ class life:
 				
 				break
 	
-	def get_item_name(self,name):
-		"""Helper function. Returns item with name 'name'"""
+	def get_all_items_of_name(self,name):
+		"""Helper function. Returns items with name 'name'"""
+		_ret = []
+		
 		for item in self.items:
 			if item['name'] == name:
-				return item
+				_ret.append(item)
 		
-		return False
+		return _ret
 	
 	def get_all_items_of_id(self,id):
 		"""Returns items of id 'id'"""
@@ -834,6 +837,27 @@ class life:
 		
 		return _ret
 	
+	def get_open_forges(self,where):
+		"""Returns all forges in 'where' that are empty"""
+		_ret = []
+		_forges = self.level.get_all_items_in_building_of_type(where,'forge')
+		
+		for forge in _forges:
+			if not forge['forging']: _ret.append(forge)
+		
+		return _ret
+	
+	def get_done_forges(self,where):
+		"""Returns all forges in 'where' that are done"""
+		_ret = []
+		_forges = self.level.get_all_items_in_building_of_type(where,'forge')
+		
+		for forge in _forges:
+			if forge['forge_time']==-1:
+				_ret.append(forge)
+		
+		return _ret
+	
 	def get_open_beds(self,where):
 		"""Returns all empty beds in 'where'"""
 		_ret = []
@@ -924,6 +948,19 @@ class life:
 				return entry
 		
 		return False
+	
+	def claim_work_at(self,type):
+		if self.task.has_key('where'):
+			_owner = self.level.get_room(self.task['where'])['owner']
+			if _owner and not _owner == self:
+				self.remove_event('run_shop')
+				_building = self.level.get_open_buildings_of_type(type)[0]['name']
+			else:
+				_building = self.level.get_open_buildings_of_type(type)[0]['name']
+		else:
+			_building = self.level.get_open_buildings_of_type(type)[0]['name']
+		
+		return _building
 	
 	def claim_building(self,where,label):
 		_temp = {'where':where,'label':label}
@@ -1399,6 +1436,8 @@ class life:
 					self.lowest = {'who':None,'score':0}
 		elif self.task['what'] == 'run_shop':
 			self.run_shop(self.task['where'])
+		elif self.task['what'] == 'run_forge':
+			self.run_forge(self.task['where'])
 		elif self.task['what'] == 'run_bar':
 			self.run_bar(self.task['where'])
 		elif self.task['what'] == 'serve_item_to':
@@ -1700,21 +1739,21 @@ class life:
 			first=item,\
 			second=_building_owner)
 	
-	def pick_up_item_at(self,pos,want,count=1):
+	def pick_up_item_at(self,pos,want,count=1,tag='type'):
 		"""Go to 'pos' and pick up item type 'want'"""
 		if not want: want=item['type']
 		
 		if tuple(self.pos) == pos:
 			for i in range(count):
 				for item in self.level.items[pos[0]][pos[1]]:
-					if item['type'] == want:
+					if item[tag] == want:
 						self.level.items[pos[0]][pos[1]].remove(item)
 						self.add_item(item)
 						break
 					elif item['type'] == 'storage':
 						_found = False
 						for _item in item['items']:
-							if _item['type'] == want:
+							if _item[tag] == want:
 								item['items'].remove(_item)
 								self.add_item(_item)
 								logging.debug('[ALife.%s] Removed %s from storage at %s' %
@@ -1769,18 +1808,64 @@ class life:
 		else:
 			self.go_to_and_claim_building(where,'work')
 	
+	def run_forge(self,where):
+		_building = self.get_claimed('work')
+		if _building:
+			_storage = self.level.get_all_items_in_building_of_type(where,'storage')
+			_forge = self.get_open_forges(_building)
+			_done_forges = self.get_done_forges(_building)
+			_in_storage = []
+			_job = None
+			
+			if _done_forges:
+				if self.go_to(_done_forges[0]['pos']):
+					self.add_item(_done_forges[0]['forging'])
+					logging.debug('[ALife.%s] Removed %s from forge at %s' %
+						(self.name,_done_forges[0]['forging']['name'],_done_forges[0]['pos']))
+					_done_forges[0]['forging'] = None
+					_done_forges[0]['forge_time'] = 0
+			
+			if self.level.get_room(_building)['orders'] and _forge:
+				for order in self.level.get_room(_building)['orders']:
+					_needs = var.items[order]['recipe'][:]
+					for need in _needs:
+						for item in self.level.get_all_items_in_building(_building):
+							if item['name'] == need:
+								_needs.remove(need)
+								_in_storage.append(item)
+								break
+						for item in self.get_all_items_of_name(need):
+							_needs.remove(need)
+							break
+					
+					if not _needs:
+						if not _in_storage:
+							_needs = var.items[order]['recipe'][:]
+							_job = order
+							if self.go_to(_forge[0]['pos']):
+								self.level.get_room(_building)['orders'].remove(_job)
+								_forge[0]['forging'] = _job
+								_forge[0]['forge_time'] = len(_needs)*20
+								logging.debug('[ALife.%s] Placed materials for %s in forge at %s' %
+									(self.name,var.items[_job]['name'],_forge[0]['pos']))
+						else:
+							_item = _in_storage[0]
+							self.pick_up_item_at(_item['pos'],_item['name'],tag='name')
+							#print 'Getting item from storage'
+						
+						break
+			
+			if not _job:
+				if not self.task_delay:
+					self.guard_building(where)
+					self.task_delay = self.task['delay']
+				elif self.task_delay>0:
+					self.task_delay-=1
+		else:
+			self.go_to_and_claim_building(where,'work')
+	
 	def run_bar(self,where):
 		if self.get_claimed('work'):
-			pass
-			#_storage = self.level.get_all_items_in_building_of_type(where,'storage')
-			#_dump = self.get_all_items_tagged('traded')
-			#
-			#if _dump and _storage:
-			#	self.go_to_and_do(_storage[0]['pos'],\
-			#		self.put_all_items_tagged,\
-			#		first='traded',
-			#		second=_storage[0]['pos'])
-			#else:
 			if not self.task_delay:
 				self.guard_building(where)
 				self.task_delay = self.task['delay']
@@ -2323,16 +2408,17 @@ class human(life):
 			if self.get_claimed('work'):
 				self.add_event('run_shop',_trade_score,where=self.get_claimed('work'),delay=20)
 			else:
-				if self.task.has_key('where'):
-					_owner = self.level.get_room(self.task['where'])['owner']
-					if _owner and not _owner == self:
-						self.remove_event('run_shop')
-						_building = self.level.get_open_buildings_of_type('store')[0]['name']
-					else:
-						_building = self.level.get_open_buildings_of_type('store')[0]['name']
-				else:
-					_building = self.level.get_open_buildings_of_type('store')[0]['name']
+				_building = self.claim_work_at('store')
 				self.add_event('run_shop',_trade_score-self.fatigue,where=_building,delay=20)
+		elif 'blacksmith' in self.skills:
+			_smith_score = 25
+			
+			if self.get_claimed('work'):
+				self.add_event('run_forge',_smith_score,where=self.get_claimed('work'),delay=20)
+			else:
+				_building = self.claim_work_at('forge')
+				self.add_event('run_forge',_smith_score-self.fatigue,where=_building,delay=20)
+			
 		elif 'barkeep' in self.skills:
 			_barkeep_score = 25
 			

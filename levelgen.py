@@ -441,7 +441,7 @@ class LevelGen:
 			i+=1
 	
 	def tick(self):
-		for item in self.get_all_items_of_type(['seed','stove'],check_storage=False):
+		for item in self.get_all_items_of_type(['seed','stove','forge'],check_storage=False):
 			if item['type'] == 'seed':
 				if item.has_key('planted_by') and item['growth']==item['growth_max']:
 					self.items[item['pos'][0]][item['pos'][1]].remove(item)
@@ -459,6 +459,12 @@ class LevelGen:
 						item['cooking']['cook_time']: item['cooking']['cook_time']-=1
 					else:
 						item['cooking'] = self.add_item(item['cooking']['makes'],item['pos'],no_place=True)
+			elif item['type'] == 'forge':
+				if item['forging']:
+					if item['forge_time']>0: item['forge_time']-=1
+					elif not item['forge_time']:
+						item['forging'] = self.add_item(item['forging'],item['pos'],no_place=True)
+						item['forge_time'] = -1
 	
 	def tick_lights(self):
 		for _l in self.lights:
@@ -917,7 +923,7 @@ class LevelGen:
 		_room_size = (6,6)
 		
 		for _room_type in ['home','home','home','home','home','home','home','home','home',
-			'store','store','bar','store','store','store']:
+			'store','store','bar','store','store','store','forge']:
 			_room = []
 			_zone = _town.get_random_zone()
 			_pos = (1+(_zone['pos'][0])*_room_size[0],1+(_zone['pos'][1])*_room_size[1])
@@ -999,6 +1005,9 @@ class LevelGen:
 			_needs = [18,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
 		elif room['type'] == 'bar':
 			_needs = [28,18,27,27,27]
+		elif room['type'] == 'forge':
+			_needs = [30,18,31]
+			room['orders'] = ['23']
 		
 		room['name'] += str(functions.get_id())
 		

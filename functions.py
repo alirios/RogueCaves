@@ -235,8 +235,7 @@ def generate_human(job):
 		_likes.remove(like)
 	
 	#and dislikes
-	#_ret.dislikes = random.sample(_likes,random.randint(2,4))
-	_ret.dislikes = ['ale']
+	_ret.dislikes = random.sample(_likes,random.randint(2,4))
 	
 	if job=='trade':
 		if _male:
@@ -245,8 +244,14 @@ def generate_human(job):
 			_ret.icon['color'][0] = 'purple'
 		_ret.skills = ['trade']
 		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
+	elif job=='blacksmith':
+		if _male:
+			_ret.icon['color'][0] = 'blue'
+		else:
+			_ret.icon['color'][0] = 'purple'
+		_ret.skills = ['blacksmith']
+		_ret.pos = list(_ret.level.get_open_buildings_of_type('forge')[0]['door'])
 	elif job=='farmer':
-		_ret.level = var.world.get_level(_ret.z)
 		_building = _ret.level.get_open_buildings_with_items(['storage','stove'])[0]['name']
 		_ret.claim_building(_building,'home')
 		if _male:
