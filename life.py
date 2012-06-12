@@ -527,7 +527,7 @@ class life:
 		
 		if _item['type'] == 'seed':
 			if not self.level.map[_pos[0]][_pos[1]] in var.DIRT:
-				var.buffer[_pos[0]][_pos[1]] = None
+				if not var.server: var.buffer[_pos[0]][_pos[1]] = None
 				self.level.map[_pos[0]][_pos[1]] = random.choice(var.DIRT)
 				
 				if self.weapon and self.weapon['name']=='hoe':
