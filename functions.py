@@ -235,7 +235,8 @@ def generate_human(job):
 		_likes.remove(like)
 	
 	#and dislikes
-	_ret.dislikes = random.sample(_likes,random.randint(2,4))
+	#_ret.dislikes = random.sample(_likes,random.randint(2,4))
+	_ret.dislikes = ['ale']
 	
 	if job=='trade':
 		if _male:

@@ -29,6 +29,7 @@ drink:takes a drink from <self.gender> <item.name>.
 vomit_brash:spews <item.contains> everywhere!
 vomit:spits up the <item.contains>!
 vomit:throws up the <item.contains>!
+curse_brash:Curse you, <other.name>!
 dog_happy:wags <self.gender> tail.
 dog_happy:woofs!
 dog_happy_owner:wags <self.gender> tail at <other.name>!

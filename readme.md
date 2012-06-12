@@ -32,10 +32,20 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.11.2012A
+Current Version: 06.12.2012A
 ----------------------------
 Changed
 -------
+* Announces
+
+Previous Version: 06.11.2012A
+----------------------------
+Changed
+-------
+* life.destroy_item()
+* life.get_past_event()
+* life.announce()
+* life.receive_announce()
 * life.get_farm_speed()
 * Fixed error in farming task that caused ALife to freeze in stores out of the item they need
 * Fixed logic in pathfinding.getadj() that caused negative x,y positions to pass the check
@@ -43,7 +53,7 @@ Changed
 * Added libtcod output (default)
 * Increased level size a bit
 
-Current Version: 06.10.2012A
+Previous Version: 06.10.2012A
 ----------------------------
 Changed
 -------

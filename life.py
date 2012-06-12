@@ -30,6 +30,7 @@ class life:
 		
 		self.atk = 1
 		self.defe = 1
+		self.dislike_at = 15
 		
 		self.weapon = None
 		self.claims = []
@@ -38,6 +39,7 @@ class life:
 		self.attracted_to = []
 		self.likes = []
 		self.dislikes = []
+		self.history = []
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -108,6 +110,7 @@ class life:
 			_keys['owner'] = self.owner
 		_keys['atk'] = self.atk
 		_keys['defe'] = self.defe
+		_keys['dislike_at'] = self.dislike_at
 		##TODO: Save weapon
 		_keys['task_delay'] = self.task_delay
 		_keys['thirst'] = self.thirst
@@ -122,6 +125,7 @@ class life:
 		_keys['fatigue_timer'] = self.fatigue_timer
 		_keys['fatigue_timer_max'] = self.fatigue_timer_max
 		_keys['fatigued_at'] = self.fatigued_at
+		_keys['history'] = self.history
 		
 		_items = copy.deepcopy(self.items)
 		for item in _items:
@@ -186,6 +190,7 @@ class life:
 		self.owner = keys['owner']
 		self.atk = keys['atk']
 		self.defe = keys['defe']
+		self.dislike_at = keys['dislike_at']
 		##TODO: Save weapon
 		self.task_delay = keys['task_delay']
 		self.thirst = keys['thirst']
@@ -196,6 +201,11 @@ class life:
 		self.hunger_timer = keys['hunger_timer']
 		self.hunger_timer_max = keys['hunger_timer_max']
 		self.hungry_at = keys['hungry_at']
+		self.fatigue = keys['fatigue']
+		self.fatigue_timer = keys['fatigue_timer']
+		self.fatigue_timer_max = keys['fatigue_timer_max']
+		self.fatigued_at = keys['fatigued_at']
+		self.history = keys['history'] 
 		self.items = keys['items']
 		self.talents = keys['talents']
 		self.traits = keys['traits']
@@ -228,6 +238,7 @@ class life:
 			if event['what'] == what and event['who'] == who:
 				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
 				#	(self.name,event['what'],event['score'],score))
+				if where: event['where'] = where
 				event['score'] = score
 				return False
 		
@@ -257,6 +268,24 @@ class life:
 		
 		return False
 	
+	def announce(self,*kargv):
+		_broadcast = {'from':self.id}
+		_broadcast.update(kargv[0])
+		
+		_in_building = self.in_building()
+		if _in_building:
+			_broadcast['where'] = _in_building
+		
+		self.history.append(_broadcast)
+		
+		for who in var.life:
+			if who == self: continue
+			if self.z == who.z and self.can_see(who.pos):
+				who.receive_announce(_broadcast)
+	
+	def receive_announce(self,what):
+		self.history.append(what)
+	
 	def add_item(self,item):
 		"""Helper function. Originally copied the item, added it to the items
 		array, and returned itself. No longer copies."""
@@ -284,17 +313,20 @@ class life:
 		self.level.remove_item_at(item['item'],item['item']['pos'])
 		self.add_item(item['item'])
 
-	def buy_item_from_shop_alife(self,item,where):
+	def buy_item_from_shop_alife(self,items,where):
 		"""Helper function for ALife. Buy 'item' from 'where'"""
 		##TODO: We aren't adding the original object to the buyer's item array
 		
-		for _item in self.level.get_all_items_in_building(where):
-			if _item['tile'] == item:
-				self.level.remove_item_from_building(_item,where)
-				_i = self.add_item_raw(item)
-				logging.debug('[ALife.%s] Bought %s from %s' %
-					(self.name,_i['name'],where))
-				return True
+		for item in items:
+			for _item in self.level.get_all_items_in_building(where):
+				if _item['tile'] == item or _item['type'] == item:
+					self.level.remove_item_from_building(_item,where)
+					_i = self.add_item_raw(_item['tile'])
+					logging.debug('[ALife.%s] Bought %s from %s' %
+						(self.name,_i['name'],where))
+					self.announce({'what':'bought item from',
+						'item':functions.get_item_name(_i),
+						'from':where})
 		
 		return False
 	
@@ -330,6 +362,9 @@ class life:
 				
 				if self.pos == who.pos:
 					self.remove_event('serve_item_to')
+					self.announce({'what':'served item to',
+						'item':functions.get_item_name(_give_cup),
+						'to':who.id})
 				
 			elif _fill_cup and _stored_drinks:
 				self.go_to_and_do(_stored_drinks[0]['pos'],
@@ -347,58 +382,62 @@ class life:
 			(self.name,item['name'],who.name))
 		
 		_person = self.get_relationship_with(who)
+		
 		_likes = who.does_like_item(item)
 		_dislikes = who.does_dislike_item(item)
 		
 		self.say_phrase('give_item',item=item,other=who,action=True)
 		
-		if _likes:
-			if 'brash' in who.traits:
-				who.say_phrase('receive_item_positive_brash',item=item,other=self)
+		if _person['score']>self.dislike_at:
+			if _likes:
+				if 'brash' in who.traits:
+					who.say_phrase('receive_item_positive_brash',item=item,other=self)
+					
+					for like in _likes:
+						if not like in _person['likes']:
+							_person['likes'].append(like)
+							logging.debug('[ALife.%s] Learned that %s likes %s.' %
+								(self.name,who.name,like))
 				
-				for like in _likes:
-					if not like in _person['likes']:
-						_person['likes'].append(like)
-						logging.debug('[ALife.%s] Learned that %s likes %s.' %
-							(self.name,who.name,like))
-			
-			elif 'shy' in who.traits:
-				who.say_phrase('receive_item_positive_shy',item=item,other=self)
-			else:
-				who.say_phrase('receive_item_positive',item=item)
-				
-			logging.debug('[ALife.%s] Took the %s from %s gladly!' %
-				(who.name,item['name'],self.name))
-		elif _dislikes:
-			if 'brash' in who.traits:
-				who.say_phrase('receive_item_negative_brash',item=item)
-				
-				for dislike in _dislikes:
-					if not dislike in _person['dislikes']:
-						if not item['type'] in _person['dislikes']:
-							_person['dislikes'].append(dislike)
-							logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
-								(self.name,who.name,dislike))
-				
-			elif 'honest' in who.traits:
-				who.say_phrase('receive_item_negative_honest',item=item)
-				
-				for dislike in _dislikes:
-					if not dislike in _person['dislikes']:
+				elif 'shy' in who.traits:
+					who.say_phrase('receive_item_positive_shy',item=item,other=self)
+				else:
+					who.say_phrase('receive_item_positive',item=item)
+					
+				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
+					(who.name,item['name'],self.name))
+			elif _dislikes:
+				if 'brash' in who.traits:
+					who.say_phrase('receive_item_negative_brash',item=item)
+					
+					for dislike in _dislikes:
 						if not dislike in _person['dislikes']:
-							_person['dislikes'].append(dislike)
-							logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
-								(self.name,who.name,dislike))
+							if not item['type'] in _person['dislikes']:
+								_person['dislikes'].append(dislike)
+								logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
+									(self.name,who.name,dislike))
+					
+				elif 'honest' in who.traits:
+					who.say_phrase('receive_item_negative_honest',item=item)
+					
+					for dislike in _dislikes:
+						if not dislike in _person['dislikes']:
+							if not dislike in _person['dislikes']:
+								_person['dislikes'].append(dislike)
+								logging.debug('[ALife.%s] Learned that %s dislikes %s.' %
+									(self.name,who.name,dislike))
+					
+				elif 'shy' in who.traits:
+					who.say_phrase('receive_item_negative_shy',item=item)
+				else:
+					who.say_phrase('receive_item_negative_fake',item=item,other=self)
 				
-			elif 'shy' in who.traits:
-				who.say_phrase('receive_item_negative_shy',item=item)
+				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
+					(who.name,item['name'],self.name))
 			else:
-				who.say_phrase('receive_item_negative_fake',item=item,other=self)
-			
-			logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
-				(who.name,item['name'],self.name))
+				who.say_phrase('thank_you',item=item,other=self)
 		else:
-			who.say_phrase('thank_you',item=item,other=self)
+			print 'DISLIKEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
 		
 		logging.debug('[ALife.%s] Relationship with %s: %s' %
 			(self.name,who.name,_person['score']))
@@ -430,6 +469,20 @@ class life:
 		
 		logging.debug('[ALife.%s] Sold %s to %s' %
 			(self.name,item['name'],who.name))
+	
+	def destroy_item(self,item):
+		_str = 'smashes the %s.' % functions.get_item_name(item)
+		if item.has_key('material'):
+			if item['material']=='clay': _str += ' Bits of clay fall everywhere!'
+		#else:
+		#	#self.say('smashes the %s!' % functions.get_item_name(item),action=True)
+		
+		if item.has_key('contains'): _str += ' %s stains the ground!' % item['contains']
+		
+		self.say(_str,action=True)
+		self.items.remove(item)		
+		logging.debug('[ALife.%s] Destroys the %s' % (self.name,functions.get_item_name(item)))
+		self.announce({'what':'destroyed item','item':functions.get_item_name(item)})
 	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
@@ -732,7 +785,7 @@ class life:
 		"""Returns speed this ALife can farm at."""
 		if self.weapon and self.weapon['name']=='hoe': return self.weapon['speed']
 		
-		return 8
+		return 1#8
 		
 	def get_open_stoves(self,where):
 		"""Returns all stoves in 'where' either done cooking or empty"""
@@ -765,6 +818,29 @@ class life:
 		for bed in _beds:
 			if not bed['owner']:
 				_ret.append(bed)
+		
+		return _ret
+	
+	def get_past_event(self,*kargv):
+		"""Gets historic event that matches the keys/values in kargv"""
+		_ret = []
+		search = kargv[0]
+		
+		for event in self.history:
+			_matches = []
+			for key in search:
+				if event.has_key(key):
+					if event[key]==search[key]:
+						_matches.append(key)
+					else:
+						_matches = []
+						break
+				else:
+					_matches = []
+					break
+				
+			if len(_matches)==len(search):
+				_ret.append(event)
 		
 		return _ret
 	
@@ -851,6 +927,8 @@ class life:
 	
 	def say(self,what,action=False):
 		if not what: return False
+		logging.debug('[ALife.%s.say] %s' %(self.name,what))
+		
 		"""Sends a string prefixed with the ALife's name to the log."""
 		if self.z == var.player.z and self.can_see(var.player.pos):
 			if action:
@@ -1097,6 +1175,9 @@ class life:
 		item['volume'] = item['volume_max']
 		logging.debug('[ALife.%s] Filled the %s with %s' %
 			(self.name,item['name'],what['contains']))
+		self.announce({'what':'filled item with',
+			'item':functions.get_item_name(item),
+			'with':what['contains']})
 	
 	def drink(self,what):
 		##TODO: How much can they drink at one time?
@@ -1119,8 +1200,31 @@ class life:
 		if what['contains'] in self.dislikes:
 			if 'brash' in self.traits:
 				self.say_phrase('vomit_brash',action=True,item=what)
+				self.announce({'what':'vomited',
+					'why':'disliked contains in item',
+					'contains':what['contains'],
+					'item':functions.get_item_name(what)})
+				
+				#If this item is from somebody, we can get mad at them!
+				if what.has_key('from'):
+					self.say_phrase('curse_brash',other=what['from'])
+					self.announce({'what':'cursed',
+						'why':'disliked contains in item from person',
+						'contains':what['contains'],
+						'item':functions.get_item_name(what),
+						'person':what['from'].id})
+				
+				if self.get_relationship_with(what['from'])['score']<=self.dislike_at:
+					self.destroy_item(what)
 			else:
 				self.say_phrase('vomit',action=True,item=what)
+				self.announce({'what':'vomited',
+					'why':'disliked contains in item',
+					'contains':what['contains'],
+					'item':functions.get_item_name(what)})
+			
+			self.thirst+=3
+			self.hunger+=2
 		#else:
 		#	self.say_phrase('drink',action=True,item=what)
 		
@@ -1308,7 +1412,8 @@ class life:
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
 		elif self.task['what'] == 'buy':
-			self.buy_items(self.task['items'])
+			#self.buy_items(self.task['items'])
+			self.go_to_building_and_buy(self.task['items'],self.task['where'])
 		elif self.task['what'] == 'follow':
 			self.follow_person(self.task['who'])
 		elif self.task['what'] == 'store_items':
@@ -1539,7 +1644,7 @@ class life:
 				self.claim_building(where,label)
 				functions.log('%s has claimed \'%s\'!' % (self.name,where))
 	
-	def go_to_building_and_buy(self,item,building):
+	def go_to_building_and_buy(self,items,building):
 		"""Go to 'building' and buy 'item'"""
 		_building_owner = self.level.get_room(building)['owner']
 		if not self.in_building(pos=self.path_dest,name=building):
@@ -1552,7 +1657,7 @@ class life:
 		
 		return self.go_to_and_do(_pos,\
 			self.buy_item_from_shop_alife,\
-			first=item,\
+			first=items,\
 			second=building)
 	
 	def go_to_building_and_sell(self,item,building):
@@ -1791,16 +1896,12 @@ class life:
 		_has_food = self.get_all_items_of_type(what)
 		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
 		
-		if _has_food:
+		if not self.get_nearest_store():
+			return False
+		elif _has_food:
 			self.go_to_building_and_sell(_has_food[0],self.get_nearest_store())
 		elif _stored_food:
 			self.pick_up_item_at(_stored_food[0]['pos'],_stored_food[0]['type'])
-	
-	def buy_items(self,what):
-		if not self.get_nearest_store():
-			print 'WHAT AM I DOING IN THIS STORE?'
-			return False
-		self.go_to_building_and_buy(what,self.get_nearest_store())
 	
 	def store_items(self,what):
 		_home = self.get_claimed('home')
@@ -1856,7 +1957,8 @@ class life:
 		elif _in_storage:
 			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 		else:
-			print self.can_build_relationship_with(who),'This happens in build_relationship_with'
+			#print self.can_build_relationship_with(who),'This happens in build_relationship_with'
+			pass
 	
 	def socialize(self):
 		"""ALife attends social functions to relieve stress"""
@@ -1879,6 +1981,7 @@ class life:
 				self.drink(_has_drink[0])
 			else:
 				_building_owner = self.level.get_room(_building)['owner']
+				#_relationship = self.get_relationship_with(_building_owner)
 				self.buy_item_type_from_alife('drink',_building_owner)
 	
 	def enter(self):
@@ -2094,6 +2197,15 @@ class human(life):
 			if 'skill' in self.attracted_to:
 				_score+=(len(who.skills))*2
 			
+			for match in self.get_past_event({'from':self.id,'person':who.id,'what':'cursed'}):
+				_score-=10
+			
+			for match in self.get_past_event({'from':who.id,'person':self.id,'what':'cursed'}):
+				_score-=10
+			
+			for match in self.get_past_event({'from':who.id,'what':'vomited'}):
+				_score-=3
+			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?
 			if self.married == who:
@@ -2140,8 +2252,7 @@ class human(life):
 				_farm_score = 75
 			
 			if self.get_all_grown_crops():
-				_farm_score = 75
-			#else:			
+				_farm_score = 75			
 				
 			#Cooking
 			if self.get_open_stoves(self.get_claimed('home')):
@@ -2155,11 +2266,11 @@ class human(life):
 			if not self.get_nearest_store(): _sell_score = -1
 			
 			_farm = self.get_owned_land('farm')
-			if self.get_nearest_store(items=['seed']) and _farm:# and self.get_money():
+			_store = self.get_nearest_store(items=['seed'])
+			if _store and _farm:# and self.get_money():
 				_farm_size = _farm['size'][0]*_farm['size'][1]
 				_seeds = len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))
 				_seeds += len(self.get_all_items_of_type('seed'))
-				#print _seeds
 				
 				_open_can_seed = _farm_size-_seeds
 				
@@ -2168,7 +2279,7 @@ class human(life):
 				else:
 					_buy_score = int((_open_can_seed/float(_farm_size))*100)/2
 			
-			_buy_what = 21
+			_buy_what = ['seed']
 			
 			#Store away extra food
 			_store_items_score +=\
@@ -2178,7 +2289,7 @@ class human(life):
 			self.add_event('farm',_farm_score-self.fatigue,delay=5)
 			self.add_event('cook',_cook_score-self.fatigue,delay=5)
 			self.add_event('sell',_sell_score-self.fatigue,items=_sell_what,delay=5)
-			self.add_event('buy',_buy_score-self.fatigue,items=_buy_what,delay=5)
+			self.add_event('buy',_buy_score-self.fatigue,items=_buy_what,where=_store,delay=5)
 			self.add_event('store_items',_store_items_score-self.fatigue,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
 			_trade_score = 25
@@ -2239,8 +2350,15 @@ class human(life):
 		else:
 			self.add_event('stay_home',self.fatigue*.8,delay=15)
 		
-		if self.get_nearest_building_of_type('bar'):
-			self.add_event('socialize',self.fatigue,delay=20)
+		_bar = self.get_nearest_building_of_type('bar')
+		if _bar:
+			_has_relationship = self.get_relationship_with(self.level.get_room(_bar)['owner'])
+			if not _has_relationship or _has_relationship['score']>self.dislike_at:
+				self.add_event('socialize',self.fatigue,delay=20)
+			else:
+				#print 'Refusing to socialize'
+				#print _has_relationship
+				self.add_event('socialize',0,delay=20)
 		
 		return life.think_finalize(self)
 	

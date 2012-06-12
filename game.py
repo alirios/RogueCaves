@@ -171,6 +171,8 @@ if not var.server and var.output=='pygame':
 		x=(var.window_size[0]/2)-(len(__version__)/2),
 		y=20,
 		fgcolor='white')
+	
+	var.view.update()
 elif not var.server and var.output=='libtcod':
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
 	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
@@ -179,6 +181,18 @@ elif not var.server and var.output=='libtcod':
 	var.log = libtcod.console_new(var.window_size[0], 6)
 	libtcod.console_set_keyboard_repeat(100,1)
 	libtcod.sys_set_fps(var.max_fps)
+	
+	_logofile = open(os.path.join('data','logo.txt'),'r')
+	_y=14
+	for line in _logofile.readlines():
+		libtcod.console_print_left(0, 1, _y, libtcod.BKGND_NONE, line)
+		_y+=1
+	libtcod.console_print_left(0,(var.window_size[0]/2)-(len(__version__)/2),
+		23,
+		libtcod.BKGND_NONE,
+		str(__version__))
+	_logofile.close()
+	libtcod.console_flush()
 
 #Load dictionary files
 logging.debug('Loading dictionaries')
@@ -250,14 +264,10 @@ def draw_tile(tile,pos,color):
 
 	if tile.has_key('id'):
 		if var.buffer[pos[0]][pos[1]] == tile['id'] and var.player.level.outside: return
-		else:
-			#print var.buffer[pos[0]][pos[1]],tile['id']
-			var.buffer[pos[0]][pos[1]] = tile['id']
+		else: var.buffer[pos[0]][pos[1]] = tile['id']
 	elif tile.has_key('icon'):
 		if var.buffer[pos[0]][pos[1]] == tile['icon'] and var.player.level.outside: return
-		else:
-			#print var.buffer[pos[0]][pos[1]],tile['id']
-			var.buffer[pos[0]][pos[1]] = tile['icon']
+		else: var.buffer[pos[0]][pos[1]] = tile['icon']
 	
 	var.dirty.append(pos)
 	
