@@ -38,6 +38,7 @@ Current Version: 06.13.2012A
 ----------------------------
 Changed
 -------
+* levegen.get_all_items_in_building_tagged()
 * Blacksmiths now sell what they forge
 
 Previous Version: 06.12.2012A

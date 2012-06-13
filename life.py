@@ -486,10 +486,6 @@ class life:
 		self.items.remove(item)
 		item['traded'] = True
 		
-		if self.task.has_key('items') and item in self.task['items']:
-			self.task['items'].remove(item)
-			print 'took it out bro'
-		
 		for price in range(item['price']):
 			self.add_item_raw(20)
 		
@@ -2030,6 +2026,10 @@ class life:
 		#	return False
 		if not _in_storage and what:
 			self.go_to_building_and_sell(what[0],self.task['where'])
+			
+			if not what[0] in self.items:
+				self.task['items'].remove(item)
+			
 		elif _in_storage:
 			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
 	
