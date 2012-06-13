@@ -73,7 +73,7 @@ class World:
 		logging.debug('[World.ALife] Creating ALife...')
 		
 		for r in range(2): functions.generate_human('trade')
-		for r in range(0): functions.generate_human('farmer')
+		for r in range(1): functions.generate_human('farmer')
 		for r in range(1): functions.generate_human('blacksmith')
 		for r in range(1): functions.generate_human('barkeep')
 	

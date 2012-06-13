@@ -58,5 +58,8 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'30':{'icon':'#','color':['white','black']},
 	'31':{'icon':'i','color':['gray','darkgray']}}
 
+var.solid = [0,11,15]
+var.blocking = [10]
+
 var.DIRT = [28,29]
 var.GRASS = [6,7,9]

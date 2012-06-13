@@ -344,8 +344,10 @@ class life:
 		for item in items:
 			for _item in self.level.get_all_items_in_building(where):
 				if _item['tile'] == item or _item['type'] == item:
-					self.level.remove_item_from_building(_item,where)
-					_i = self.add_item_raw(_item['tile'])
+					if not self.level.remove_item_from_building(_item,where):
+						print 'STOP'
+						sys.exit()
+					_i = self.add_item(_item)
 					logging.debug('[ALife.%s] Bought %s from %s' %
 						(self.name,_i['name'],where))
 		
@@ -403,7 +405,7 @@ class life:
 		self.items.remove(item)
 		
 		logging.debug('[ALife.%s] Gave %s to %s' %
-			(self.name,item['name'],who.name))
+			(self.name,functions.get_item_name(item),who.name))
 		
 		_person = self.get_relationship_with(who)
 		
@@ -429,7 +431,7 @@ class life:
 					who.say_phrase('receive_item_positive',item=item)
 					
 				logging.debug('[ALife.%s] Took the %s from %s gladly!' %
-					(who.name,item['name'],self.name))
+					(who.name,functions.get_item_name(item),self.name))
 			elif _dislikes:
 				if 'brash' in who.traits:
 					who.say_phrase('receive_item_negative_brash',item=item)
@@ -457,15 +459,19 @@ class life:
 					who.say_phrase('receive_item_negative_fake',item=item,other=self)
 				
 				logging.debug('[ALife.%s] Reluctantly took the %s from %s.' %
-					(who.name,item['name'],self.name))
+					(who.name,functions.get_item_name(item),self.name))
 			else:
 				who.say_phrase('thank_you',item=item,other=self)
 		else:
-			print 'DISLIKEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
+			#if 'brash' in who.traits:
+			#	who.
+			logging.debug('[ALife.%s] Did not like the %s from %s.' %
+				(who.name,functions.get_item_name(item),self.name))
+			#who.destroy_item(item)
+			who.throw_item(item,self.pos)
 		
 		logging.debug('[ALife.%s] Relationship with %s: %s' %
 			(self.name,who.name,_person['score']))
-		
 		
 		return			
 	
@@ -508,6 +514,39 @@ class life:
 		logging.debug('[ALife.%s] Destroys the %s' % (self.name,functions.get_item_name(item)))
 		self.announce({'what':'destroyed item','item':functions.get_item_name(item)})
 	
+	def throw_item(self,item,at):
+		self.items.remove(item)
+		_str = 'throws the %s! ' % functions.get_item_name(item)
+		
+		print self.pos,at
+		
+		_i = 0
+		_last_pos = tuple(item['pos'])
+		for pos in draw.draw_diag_line(self.pos,at):
+			print 'travel'
+			if self.level.map[pos[0]][pos[1]] in var.solid:
+				self.level.items[_last_pos[0]][_last_pos[1]].append(item)
+				_str += 'It hits the wall and falls to the ground.'
+				break
+			
+			if _i>=6:
+				self.level.items[pos[0]][pos[1]].append(item)
+				_str += 'It falls to the ground'
+				self.level.items[pos[0]][pos[1]].append(item)
+				break
+			
+			for life in var.life:
+				if not life.z==self.z or life==self: continue
+				if pos == tuple(life.pos):
+					_str += 'It hits %s! The %s falls to the ground.' % (life.name,item['name'])
+					self.level.items[pos[0]][pos[1]].append(item)
+					break
+			
+			_last_pos = pos
+			_i+=1
+		
+		self.say(_str,action=True)
+	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
 		if item.has_key('item'): item=item['item']
@@ -528,7 +567,7 @@ class life:
 		if 0>_pos[1] or _pos[1]>=self.level.size[1]: return
 		if len(self.level.items[_pos[0]][_pos[1]]): return
 		
-		_items = self.get_items(id=item)
+		_items = self.get_items(tile=item)
 		
 		if len(_items): _item=_items[0]
 		else: return False
@@ -585,7 +624,7 @@ class life:
 	def put_all_items_of_type(self,type,pos):
 		"""Dumps items of 'type' into a container at 'pos'"""
 		#TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
-		for _item in self.level.get_all_items_of_type('storage'):
+		for _item in self.level.get_tems('storage'):
 			_found = False
 			if tuple(_item['pos']) == tuple(pos):
 				_found = True
@@ -627,6 +666,22 @@ class life:
 		
 		return _ret
 	
+	def get_items_ext(self,**kargv):
+		"""Returns items matching all values in kargv. Assumes each arg is a list"""
+		_ret = []
+		
+		for item in self.items:
+			_match = kargv.keys()
+			for key in kargv:
+				if item.has_key(key) and item[key] in kargv[key]:
+					_match.remove(key)
+					
+					if not _match:
+						_ret.append(item)
+						break
+		
+		return _ret
+	
 	def get_items_in_building(self,building,**kargv):
 		"""Returns items matching all values in kargv"""
 		_ret = []
@@ -642,31 +697,6 @@ class life:
 						break
 		
 		return _ret
-	
-		#def get_all_items_of_type(self,type,check_storage=False):
-		#"""Returns items of type 'type'"""
-		#_ret = []
-		#if isinstance(type,list): _list = True
-		#else: _list = False
-		#
-		#for item in self.items:
-		#	if item['type'] == 'storage' and check_storage:
-		#		for _item in item['items']:
-		#			if _list:
-		#				if _item['type'] in type:
-		#					_ret.append(_item)
-		#			else:
-		#				if _item['type'] == type:
-		#					_ret.append(_item)
-		#			
-		#	if _list:
-		#		if item['type'] in type:
-		#			_ret.append(item)
-		#	else:
-		#		if item['type'] == type:
-		#			_ret.append(item)
-		#
-		#return _ret
 	
 	def get_all_items_tagged(self,tag):
 		"""Returns items with flag 'tag'."""
@@ -1275,13 +1305,19 @@ class life:
 						'person':what['from'].id})
 				
 				if self.get_relationship_with(what['from'])['score']<=self.dislike_at:
-					self.destroy_item(what)
+					if self.can_see(what['from']['pos']):
+						self.throw_item(what,what['from'].pos)
+					else:
+						self.destroy_item(what)
+				
 			else:
 				self.say_phrase('vomit',action=True,item=what)
 				self.announce({'what':'vomited',
 					'why':'disliked contains in item',
 					'contains':what['contains'],
 					'item':functions.get_item_name(what)})
+			
+			self.throw_item(what,what['from'].pos)
 			
 			self.thirst+=3
 			self.hunger+=2
@@ -2025,7 +2061,8 @@ class life:
 	
 	def sell_items_of_type(self,what):
 		##TODO: Sort these eventually...
-		_has_food = self.get_all_items_of_type(what)
+		#_has_food = self.get_all_items_of_type(what)
+		_has_food = self.get_items_ext(type=what)
 		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
 		
 		if not self.get_nearest_store():
@@ -2038,7 +2075,7 @@ class life:
 	def store_items(self,what):
 		_home = self.get_claimed('home')
 		_storage = self.level.get_all_items_in_building_of_type(_home,'storage')
-		_has = self.get_all_items_of_type(what)
+		_has = self.get_items_ext(type=what)
 
 		if len(_storage):	
 			if _has:
@@ -2068,14 +2105,15 @@ class life:
 		_has = None
 		
 		if _likes:
-			_in_storage  = self.get_all_items_of_type(_likes,check_storage=True)
-			_has = self.get_all_items_of_type(_likes)
+			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_likes)
+			_has = self.get_items_ext(type=_likes)
 		elif not _in_storage and not _has:
-			_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
-			_has = self.get_all_items_of_type(['food','cooked food'])
+			_tlikes = ['food','cooked food']
+			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
+			_has = self.get_items_ext(type=['food','cooked food'])
 		else:
-			_in_storage  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
-			_has = self.get_all_items_of_type(['food','cooked food'])
+			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
+			_has = self.get_items_ext(type=['food','cooked food'])
 		
 		for item in _has:
 			if item.has_key('from'): _has.remove(item)
@@ -2423,7 +2461,7 @@ class human(life):
 			
 			#Store away extra food
 			_store_items_score +=\
-				len(self.get_all_items_of_type(['seed','food','cooked food']))*3
+				len(self.get_items_ext(type=['seed','food','cooked food']))*3
 			_store_what = ['seed','food','cooked food']
 			
 			self.add_event('farm',_farm_score-self.fatigue,delay=5)

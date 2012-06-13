@@ -170,6 +170,40 @@ class LevelGen:
 		
 		return _ret		
 	
+	def get_items(self,**kargv):
+		_ret = []
+		
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					_match = kargv.keys()
+					for key in kargv:
+						if item.has_key(key) and item[key]==kargv[key]:
+							_match.remove(key)
+							
+							if not _match:
+								_ret.append(item)
+								break
+		
+		return _ret
+	
+	def get_items_ext(self,**kargv):
+		_ret = []
+		
+		for y in range(self.size[1]):
+			for x in range(self.size[0]):
+				for item in self.items[x][y]:
+					_match = kargv.keys()
+					for key in kargv:
+						if item.has_key(key) and item[key] in kargv[key]:
+							_match.remove(key)
+							
+							if not _match:
+								_ret.append(item)
+								break
+		
+		return _ret
+	
 	def get_items_in_building(self,building,**kargv):
 		_ret = []
 		
@@ -182,6 +216,34 @@ class LevelGen:
 								_match = kargv.keys()
 								for key in kargv:
 									if _item.has_key(key) and _item[key]==kargv[key]:
+										_match.remove(key)
+										
+										if not _match:
+											_ret.append(_item)
+											break
+						_match = kargv.keys()
+						for key in kargv:
+							if item.has_key(key) and item[key]==kargv[key]:
+								_match.remove(key)
+								
+								if not _match:
+									_ret.append(item)
+									break
+		
+		return _ret
+	
+	def get_items_in_building_ext(self,building,**kargv):
+		_ret = []
+		
+		for room in self.rooms:
+			if room['name'].lower() == building.lower():
+				for pos in room['walking_space']:
+					for item in self.items[pos[0]][pos[1]]:
+						if item['type'] == 'storage':
+							for _item in item['items']:
+								_match = kargv.keys()
+								for key in kargv:
+									if _item.has_key(key) and _item[key] in kargv[key]:
 										_match.remove(key)
 										
 										if not _match:
