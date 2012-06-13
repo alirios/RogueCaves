@@ -176,6 +176,7 @@ if not var.server and var.output=='pygame':
 	var.view.update()
 elif not var.server and var.output=='libtcod':
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
+	#var.console_buffer = libtcod.ConsoleBuffer(var.window_size[0],var.window_size[1])
 	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
 	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
@@ -186,11 +187,10 @@ elif not var.server and var.output=='libtcod':
 	_logofile = open(os.path.join('data','logo.txt'),'r')
 	_y=14
 	for line in _logofile.readlines():
-		libtcod.console_print_left(0, 1, _y, libtcod.BKGND_NONE, line)
+		libtcod.console_print(0, 1, _y, line)
 		_y+=1
-	libtcod.console_print_left(0,(var.window_size[0]/2)-(len(__version__)/2),
+	libtcod.console_print(0,(var.window_size[0]/2)-(len(__version__)/2),
 		23,
-		libtcod.BKGND_NONE,
 		str(__version__))
 	_logofile.close()
 	libtcod.console_flush()
@@ -262,7 +262,6 @@ else:
 		test.owner = var.player
 
 def draw_tile(tile,pos,color):
-
 	if tile.has_key('id'):
 		if var.buffer[pos[0]][pos[1]] == tile['id'] and var.player.level.outside: return
 		else: var.buffer[pos[0]][pos[1]] = tile['id']
@@ -279,9 +278,9 @@ def draw_tile(tile,pos,color):
 		var.view.putchar(tile['icon'],x=pos[0],y=pos[1],fgcolor=color[0],bgcolor=color[1])
 	else:
 		_color = (color_codes[color[0]],color_codes[color[1]])
-		libtcod.console_set_foreground_color(var.view, libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
-		libtcod.console_set_back(var.view, pos[0], pos[1], libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), libtcod.BKGND_SET )
-		libtcod.console_print_left(var.view, pos[0], pos[1], libtcod.BKGND_NONE, tile['icon'])
+		libtcod.console_set_char_foreground(var.view, pos[0], pos[1], libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
+		libtcod.console_set_char_background(var.view, pos[0], pos[1], libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
+		libtcod.console_set_char(var.view, pos[0], pos[1], tile['icon'])
 
 def draw_screen(refresh=False):	
 	region = (0,0,var.window_size[0]+1,var.window_size[1]+1)
@@ -381,21 +380,22 @@ def draw_screen(refresh=False):
 		var.log.putchars(_hunger,x=len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,y=var.window_size[1]-6,fgcolor='maroon',bgcolor='black')
 		var.log.putchars('FPS: %s' % str(var.fps),x=var.window_size[0]-7,y=var.window_size[1]-6,fgcolor='white')
 	else:
+		pass
 		libtcod.console_clear(var.log)
-		libtcod.console_set_foreground_color(var.log, libtcod.white)
-		libtcod.console_print_left(var.log, 0, 0, libtcod.BKGND_NONE, _char)
-		libtcod.console_set_foreground_color(var.log, libtcod.green)
-		libtcod.console_print_left(var.log, len(_char)+1, 0, libtcod.BKGND_NONE, _health)
-		libtcod.console_set_foreground_color(var.log, libtcod.grey)
-		libtcod.console_print_left(var.log, len(_char)+len(_health)+2, 0, libtcod.BKGND_NONE, _depth)
-		libtcod.console_set_foreground_color(var.log, libtcod.white)
-		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+3, 0, libtcod.BKGND_NONE, _skill)
-		libtcod.console_set_foreground_color(var.log, libtcod.blue)
-		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+len(_skill)+4, 0, libtcod.BKGND_NONE, _thirst)
-		libtcod.console_set_foreground_color(var.log, libtcod.dark_red)
-		libtcod.console_print_left(var.log, len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5, 0, libtcod.BKGND_NONE, _hunger)
-		libtcod.console_set_foreground_color(var.log, libtcod.white)
-		libtcod.console_print_left(var.log, var.window_size[0]-7, 0, libtcod.BKGND_NONE, 'FPS: %s' % str(var.fps))
+		libtcod.console_set_default_foreground(var.log, libtcod.white)
+		libtcod.console_print(var.log, 0, 0,_char)
+		libtcod.console_set_default_foreground(var.log, libtcod.green)
+		libtcod.console_print(var.log, len(_char)+1,0,_health)
+		libtcod.console_set_default_foreground(var.log, libtcod.grey)
+		libtcod.console_print(var.log, len(_char)+len(_health)+2,0,_depth)
+		libtcod.console_set_default_foreground(var.log, libtcod.white)
+		libtcod.console_print(var.log, len(_char)+len(_health)+len(_depth)+3,0,_skill)
+		libtcod.console_set_default_foreground(var.log, libtcod.blue)
+		libtcod.console_print(var.log, len(_char)+len(_health)+len(_depth)+len(_skill)+4,0,_thirst)
+		libtcod.console_set_default_foreground(var.log, libtcod.dark_red)
+		libtcod.console_print(var.log,len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,0,_hunger)
+		libtcod.console_set_default_foreground(var.log, libtcod.white)
+		libtcod.console_print(var.log,var.window_size[0]-7,0,'FPS: %s' % str(var.fps))
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
@@ -429,8 +429,8 @@ def draw_screen(refresh=False):
 				fgcolor=_fgcolor,
 				bgcolor='black')
 		else:
-			libtcod.console_set_foreground_color(var.log, libtcod.white)
-			libtcod.console_print_left(var.log, 0, 1+_i, libtcod.BKGND_NONE, entry)
+			libtcod.console_set_default_foreground(var.log, libtcod.white)
+			libtcod.console_print(var.log,0,1+_i,entry)
 		_i+=1
 	
 	if var.output=='pygame':
@@ -497,6 +497,7 @@ def tick():
 				life.tick()
 				if life.player: continue
 				life.walk(None)
+				
 		elif not var.player.in_danger:
 			if _key: var.player.walk(_key)
 			
@@ -523,6 +524,8 @@ def tick():
 	
 	if var.mouse_pos == (None,None):
 		var.mouse_pos = (0,0)
+	
+	#if not var.player.speed:
 	if var.player.level.outside:
 		draw_screen(refresh=True)
 	else:

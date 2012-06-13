@@ -215,18 +215,25 @@ class life:
 	
 	def build_history(self):
 		logging.debug('[ALife.%s.HistoryGen] Starting...' % (self.name))
+		_history = copy.deepcopy(self.history)
 		
 		_out = open(os.path.join('data','history.txt'),'w')
-		for entry in self.history:
+		for entry in _history:
 			if entry.has_key('to'):
 				entry['to'] = functions.get_alife_by_id(entry['to']).name
 			for word in entry['what'].split(' '):
 				if word == 'from': continue
 				if entry.has_key(word):
-					print entry,entry[word]
 					entry['what'] = entry['what'].replace(word,entry[word])
 			
-			_out.write(str(entry)+'\n')
+			if entry['from']==self.id:
+				_out_string = self.name+' '
+			else:
+				_out_string = '%s saw %s ' % (self.name,functions.get_alife_by_id(entry['from']).name)
+				entry['what'] = entry['what'].replace('ed ',' ')
+			
+			_out_string += entry['what']
+			_out.write(_out_string+'\n')
 		_out.close()
 	
 	def finalize(self):
@@ -255,6 +262,7 @@ class life:
 				#logging.debug('[ALife.%s.Event] Updated %s: %s -> %s' %
 				#	(self.name,event['what'],event['score'],score))
 				if where: event['where'] = where
+				event['items'] = items
 				event['score'] = score
 				return False
 		
@@ -477,6 +485,10 @@ class life:
 		"""Helper function for ALife. Sells 'item' to 'who'"""
 		self.items.remove(item)
 		item['traded'] = True
+		
+		if self.task.has_key('items') and item in self.task['items']:
+			self.task['items'].remove(item)
+			print 'took it out bro'
 		
 		for price in range(item['price']):
 			self.add_item_raw(20)
@@ -1474,6 +1486,8 @@ class life:
 			self.socialize()
 		elif self.task['what'] == 'sell':
 			self.sell_items(self.task['items'])
+		elif self.task['what'] == 'sell items of type':
+			self.sell_items_of_type(self.task['items'])
 		elif self.task['what'] == 'buy':
 			#self.buy_items(self.task['items'])
 			self.go_to_building_and_buy(self.task['items'],self.task['where'])
@@ -1819,9 +1833,12 @@ class life:
 			
 			if _done_forges:
 				if self.go_to(_done_forges[0]['pos']):
-					self.add_item(_done_forges[0]['forging'])
+					_i = self.add_item(_done_forges[0]['forging'])
 					logging.debug('[ALife.%s] Removed %s from forge at %s' %
-						(self.name,_done_forges[0]['forging']['name'],_done_forges[0]['pos']))
+						(self.name,_i['name'],_done_forges[0]['pos']))
+					self.announce({'what':'removed a freshly forged product from where',
+						'product':functions.get_item_name(_i)})
+					_i['forged'] = True
 					_done_forges[0]['forging'] = None
 					_done_forges[0]['forge_time'] = 0
 			
@@ -1848,10 +1865,11 @@ class life:
 								_forge[0]['forge_time'] = len(_needs)*20
 								logging.debug('[ALife.%s] Placed materials for %s in forge at %s' %
 									(self.name,var.items[_job]['name'],_forge[0]['pos']))
+								self.announce({'what':'put materials in forge at where to make a product',
+									'product':functions.get_item_name(var.items[_job])})
 						else:
 							_item = _in_storage[0]
 							self.pick_up_item_at(_item['pos'],_item['name'],tag='name')
-							#print 'Getting item from storage'
 						
 						break
 			
@@ -2001,6 +2019,21 @@ class life:
 			self.on_sleep()
 	
 	def sell_items(self,what):
+		##TODO: Sort these eventually...
+		#_has_food = self.get_all_items_of_type(what)
+		#_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
+		_in_storage = []
+		for item in what:
+			if not item in self.items: _in_storage.append(item)
+		
+		#if not self.get_nearest_store():
+		#	return False
+		if not _in_storage and what:
+			self.go_to_building_and_sell(what[0],self.task['where'])
+		elif _in_storage:
+			self.pick_up_item_at(_in_storage[0]['pos'],_in_storage[0]['type'])
+	
+	def sell_items_of_type(self,what):
 		##TODO: Sort these eventually...
 		_has_food = self.get_all_items_of_type(what)
 		_stored_food = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),what)
@@ -2399,7 +2432,7 @@ class human(life):
 			
 			self.add_event('farm',_farm_score-self.fatigue,delay=5)
 			self.add_event('cook',_cook_score-self.fatigue,delay=5)
-			self.add_event('sell',_sell_score-self.fatigue,items=_sell_what,delay=5)
+			self.add_event('sell items of type',_sell_score-self.fatigue,items=_sell_what,delay=5)
 			self.add_event('buy',_buy_score-self.fatigue,items=_buy_what,where=_store,delay=5)
 			self.add_event('store_items',_store_items_score-self.fatigue,items=_store_what,delay=5)
 		elif 'trade' in self.skills:
@@ -2412,12 +2445,20 @@ class human(life):
 				self.add_event('run_shop',_trade_score-self.fatigue,where=_building,delay=20)
 		elif 'blacksmith' in self.skills:
 			_smith_score = 25
+			_items = []
 			
 			if self.get_claimed('work'):
+				_items = self.level.get_all_items_in_building_tagged(self.get_claimed('work'),'forged')
+				_items.extend(self.get_all_items_tagged('forged'))
 				self.add_event('run_forge',_smith_score,where=self.get_claimed('work'),delay=20)
 			else:
 				_building = self.claim_work_at('forge')
 				self.add_event('run_forge',_smith_score-self.fatigue,where=_building,delay=20)
+			
+			if _items and self.get_nearest_store():
+				self.add_event('sell',50,items=_items,where=self.get_nearest_store(),delay=5)
+			else:
+				self.add_event('sell',0,items=_items,where=self.get_nearest_store(),delay=5)
 			
 		elif 'barkeep' in self.skills:
 			_barkeep_score = 25

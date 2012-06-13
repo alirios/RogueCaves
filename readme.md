@@ -7,13 +7,6 @@ Todo
 ----
 * React to things like vomit, etc
 * Tint ground where liquid is spilled
-* Accept unfinished A* paths
-* ALife should flee at some point during combat
-* Need animal class
-* Need "tilling" task for farming
-* Relationships (would probably get rid of life.owner)
-* Relationship flags: Likes pets
-* Save var.id
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -23,6 +16,13 @@ Todo
 * Random quests
 * Tricky ALife
 * Audio
+* Accept unfinished A* paths
+* ALife should flee at some point during combat
+* Need animal class
+* Need "tilling" task for farming
+* Relationships (would probably get rid of life.owner)
+* Relationship flags: Likes pets
+* Save var.id
 
 Bugs
 ----
@@ -34,10 +34,17 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.12.2012A
+Current Version: 06.13.2012A
 ----------------------------
 Changed
 -------
+* Blacksmiths now sell what they forge
+
+Previous Version: 06.12.2012A
+----------------------------
+Changed
+-------
+* Upgraded libtcod
 * Caves work with libtcod
 * Added forging task
 * life.get_done_forges()

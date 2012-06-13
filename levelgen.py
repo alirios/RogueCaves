@@ -226,6 +226,24 @@ class LevelGen:
 		
 		return _ret
 	
+	def get_all_items_in_building_tagged(self,building,tag):
+		"""Returns all items in 'building' with 'tag'"""
+		_ret = []
+		
+		for room in self.rooms:
+			if room['name'].lower() == building.lower():
+				for pos in room['walking_space']:
+					for item in self.items[pos[0]][pos[1]]:
+						if item['type'] == 'storage':
+							for _item in item['items']:
+								if _item.has_key(tag) and _item[tag]:
+									_ret.append(_item)
+						else:
+							if item.has_key(tag) and item[tag]:
+								_ret.append(item)
+		
+		return _ret
+	
 	def get_all_items_in_building_of_type(self,building,type):
 		"""Returns all items in 'building' of 'type'"""
 		_ret = []
