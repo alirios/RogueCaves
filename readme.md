@@ -38,6 +38,7 @@ Current Version: 06.13.2012A
 ----------------------------
 Changed
 -------
+* Getting rid of a bunch of helper functions
 * levegen.get_all_items_in_building_tagged()
 * Blacksmiths now sell what they forge
 

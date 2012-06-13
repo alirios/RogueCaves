@@ -292,9 +292,9 @@ class life:
 		
 		return False
 	
-	def announce(self,*kargv):
+	def announce(self,what):
 		_broadcast = {'from':self.id}
-		_broadcast.update(kargv[0])
+		_broadcast.update(what)
 		
 		_in_building = self.in_building()
 		if _in_building:
@@ -361,7 +361,7 @@ class life:
 		if type == 'drink' and 'barkeep' in self.skills:
 			_give_cup = None
 			_fill_cup = None
-			_has_cups = self.get_all_items_of_type('cup')
+			_has_cups = self.get_items(type='cup')
 			_stored_cups = self.level.get_all_items_in_building_of_type(self.get_claimed('work'),'cup')
 			_stored_drinks =\
 				self.level.get_all_items_in_building_of_type(self.get_claimed('work'),'container')
@@ -528,7 +528,7 @@ class life:
 		if 0>_pos[1] or _pos[1]>=self.level.size[1]: return
 		if len(self.level.items[_pos[0]][_pos[1]]): return
 		
-		_items = self.get_all_items_of_id(item)
+		_items = self.get_items(id=item)
 		
 		if len(_items): _item=_items[0]
 		else: return False
@@ -568,7 +568,7 @@ class life:
 		"""Dumps a single item of 'type' in a container at 'pos'"""
 		##TODO: Could probably merge this with the below function
 		##TODO: Would calling self.level.items[pos[0]][pos[1]] be easier/safer?
-		for _item in self.level.get_all_items_of_type('storage'):
+		for _item in self.level.get_items(type='storage'):
 			_found = False
 			if tuple(_item['pos']) == tuple(pos):
 				_found = True
@@ -611,50 +611,62 @@ class life:
 				
 				break
 	
-	def get_all_items_of_name(self,name):
-		"""Helper function. Returns items with name 'name'"""
+	def get_items(self,**kargv):
+		"""Returns items matching all values in kargv"""
 		_ret = []
 		
 		for item in self.items:
-			if item['name'] == name:
-				_ret.append(item)
-		
-		return _ret
-	
-	def get_all_items_of_id(self,id):
-		"""Returns items of id 'id'"""
-		_ret = []
-		
-		for item in self.items:
-			if item['tile'] == id:
-				_ret.append(item)
-		
-		return _ret
-	
-	def get_all_items_of_type(self,type,check_storage=False):
-		"""Returns items of type 'type'"""
-		_ret = []
-		if isinstance(type,list): _list = True
-		else: _list = False
-		
-		for item in self.items:
-			if item['type'] == 'storage' and check_storage:
-				for _item in item['items']:
-					if _list:
-						if _item['type'] in type:
-							_ret.append(_item)
-					else:
-						if _item['type'] == type:
-							_ret.append(_item)
+			_match = kargv.keys()
+			for key in kargv:
+				if item.has_key(key) and item[key]==kargv[key]:
+					_match.remove(key)
 					
-			if _list:
-				if item['type'] in type:
-					_ret.append(item)
-			else:
-				if item['type'] == type:
-					_ret.append(item)
+					if not _match:
+						_ret.append(item)
+						break
 		
 		return _ret
+	
+	def get_items_in_building(self,building,**kargv):
+		"""Returns items matching all values in kargv"""
+		_ret = []
+		
+		for item in self.items:
+			_match = kargv.keys()
+			for key in kargv:
+				if item.has_key(key) and item[key]==kargv[key]:
+					_match.remove(key)
+					
+					if not _match:
+						_ret.append(item)
+						break
+		
+		return _ret
+	
+		#def get_all_items_of_type(self,type,check_storage=False):
+		#"""Returns items of type 'type'"""
+		#_ret = []
+		#if isinstance(type,list): _list = True
+		#else: _list = False
+		#
+		#for item in self.items:
+		#	if item['type'] == 'storage' and check_storage:
+		#		for _item in item['items']:
+		#			if _list:
+		#				if _item['type'] in type:
+		#					_ret.append(_item)
+		#			else:
+		#				if _item['type'] == type:
+		#					_ret.append(_item)
+		#			
+		#	if _list:
+		#		if item['type'] in type:
+		#			_ret.append(item)
+		#	else:
+		#		if item['type'] == type:
+		#			_ret.append(item)
+		#
+		#return _ret
 	
 	def get_all_items_tagged(self,tag):
 		"""Returns items with flag 'tag'."""
@@ -668,8 +680,8 @@ class life:
 	
 	def get_all_cookable_items(self,where):
 		_ret = []
-		_food = self.level.get_all_items_in_building_of_type(where,'food')
-		_food.extend(self.get_all_items_of_type('food'))
+		_food = self.level.get_items_in_building(where,type='food')
+		_food.extend(self.get_items(type='food'))
 		
 		_ret.extend(_food)
 		
@@ -811,7 +823,7 @@ class life:
 		"""Returns amount of money the ALife has."""
 		_ret = 0
 		
-		for ore in self.get_all_items_of_type('ore'):
+		for ore in self.get_items(type='ore'):
 			_ret+=ore['price']
 		
 		return _ret
@@ -844,28 +856,7 @@ class life:
 				_ret.append(stove)
 		
 		return _ret
-	
-	def get_open_forges(self,where):
-		"""Returns all forges in 'where' that are empty"""
-		_ret = []
-		_forges = self.level.get_all_items_in_building_of_type(where,'forge')
 		
-		for forge in _forges:
-			if not forge['forging']: _ret.append(forge)
-		
-		return _ret
-	
-	def get_done_forges(self,where):
-		"""Returns all forges in 'where' that are done"""
-		_ret = []
-		_forges = self.level.get_all_items_in_building_of_type(where,'forge')
-		
-		for forge in _forges:
-			if forge['forge_time']==-1:
-				_ret.append(forge)
-		
-		return _ret
-	
 	def get_open_beds(self,where):
 		"""Returns all empty beds in 'where'"""
 		_ret = []
@@ -902,7 +893,7 @@ class life:
 	
 	def is_in_bed(self):
 		"""Helper function. Is this ALife sleeping?"""
-		_beds = self.level.get_all_items_of_type('bed',check_storage=False)
+		_beds = self.level.get_all_items_of_type('bed')
 		
 		for bed in _beds:
 			if bed['owner'] == self:
@@ -961,7 +952,7 @@ class life:
 		if self.task.has_key('where'):
 			_owner = self.level.get_room(self.task['where'])['owner']
 			if _owner and not _owner == self:
-				self.remove_event('run_shop')
+				self.remove_event(self.task['what'])
 				_building = self.level.get_open_buildings_of_type(type)[0]['name']
 			else:
 				_building = self.level.get_open_buildings_of_type(type)[0]['name']
@@ -1389,7 +1380,8 @@ class life:
 	def think_finalize(self):
 		if self.task['what'] == 'food':
 			##TODO: Eventually sort this array by how good the food is
-			_item = self.get_all_items_of_type(['food','cooked food'])
+			_item = self.get_items(type='food')
+			_item.extend(self.get_items(type='cooked food'))
 			
 			if _item:
 				self.hunger = 0
@@ -1413,7 +1405,7 @@ class life:
 		elif self.task['what'] == 'mine':
 			self.mine()
 		elif self.task['what'] == 'deliver':
-			if len(self.get_all_items_of_type('ore')):
+			if len(self.get_items(type='ore')):
 				_pos = None
 				_room = var.world.get_level(1).get_room('storage')
 				_chest = None
@@ -1819,11 +1811,10 @@ class life:
 			self.go_to_and_claim_building(where,'work')
 	
 	def run_forge(self,where):
-		_building = self.get_claimed('work')
-		if _building:
-			_storage = self.level.get_all_items_in_building_of_type(where,'storage')
-			_forge = self.get_open_forges(_building)
-			_done_forges = self.get_done_forges(_building)
+		if self.get_claimed('work'):
+			_storage = self.level.get_items_in_building(where,type='storage')
+			_forge = self.level.get_items_in_building(where,name='forge',forging=None)
+			_done_forges = self.level.get_items_in_building(where,name='forge',forge_time=-1)
 			_in_storage = []
 			_job = None
 			
@@ -1838,16 +1829,15 @@ class life:
 					_done_forges[0]['forging'] = None
 					_done_forges[0]['forge_time'] = 0
 			
-			if self.level.get_room(_building)['orders'] and _forge:
-				for order in self.level.get_room(_building)['orders']:
+			if self.level.get_room(where)['orders'] and _forge:
+				for order in self.level.get_room(where)['orders']:
 					_needs = var.items[order]['recipe'][:]
 					for need in _needs:
-						for item in self.level.get_all_items_in_building(_building):
-							if item['name'] == need:
-								_needs.remove(need)
-								_in_storage.append(item)
-								break
-						for item in self.get_all_items_of_name(need):
+						for item in self.level.get_items_in_building(where,name=need):
+							_needs.remove(need)
+							_in_storage.append(item)
+							break
+						for item in self.get_items(name=need):
 							_needs.remove(need)
 							break
 					
@@ -1856,7 +1846,7 @@ class life:
 							_needs = var.items[order]['recipe'][:]
 							_job = order
 							if self.go_to(_forge[0]['pos']):
-								self.level.get_room(_building)['orders'].remove(_job)
+								self.level.get_room(where)['orders'].remove(_job)
 								_forge[0]['forging'] = _job
 								_forge[0]['forge_time'] = len(_needs)*20
 								logging.debug('[ALife.%s] Placed materials for %s in forge at %s' %
@@ -1940,13 +1930,13 @@ class life:
 			self.task_delay = self.task['delay']
 			_stored_seed = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed')
 			
-			if not _open or (not len(self.get_all_items_of_type('seed')) and not _stored_seed):
+			if not _open or (not len(self.get_items(type='seed')) and not _stored_seed):
 				self.task['delay'] = 5
 				_get = self.get_all_grown_crops()
 				
 				if _get:
 					self.pick_up_item_at(_get[0]['pos'],_get[0]['type'])
-			elif _open and len(self.get_all_items_of_type('seed')):
+			elif _open and len(self.get_items(type='seed')):
 				if not self.go_to_and_do(_open[0],self.place_item,first=21,second=_open[0]):
 					self.task_delay = self.get_farm_speed()
 				
@@ -1958,7 +1948,7 @@ class life:
 	
 	def cook(self):
 		_stoves = self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'stove')
-		_has_food = self.get_all_items_of_type('food')
+		_has_food = self.get_items(type='food')
 		
 		if not _stoves: return False
 		
@@ -2059,8 +2049,10 @@ class life:
 	
 	def can_build_relationship_with(self,who):
 		"""Sees if the ALife can develop a relationship with 'who'"""
-		_ret  = self.get_all_items_of_type(['food','cooked food'],check_storage=True)
-		_ret.extend(self.get_all_items_of_type(['food','cooked food']))
+		##TODO: Go and fetch items in home
+		#_ret = self.get_all_items_of_type(['food','cooked food'])
+		_ret = self.get_items(type='food')
+		_ret.extend(self.get_items(type='cooked food'))
 		
 		for item in _ret:
 			if item.has_key('from'): _ret.remove(item)
@@ -2107,7 +2099,7 @@ class life:
 		_building = self.get_nearest_building_of_type('bar')
 		if not _building: return
 		
-		_has_drink = self.get_all_items_of_type('cup')
+		_has_drink = self.get_items(type='cup')
 		
 		for drink in _has_drink:
 			if not drink['volume'] or not drink['contains']: _has_drink.remove(drink)
@@ -2391,7 +2383,7 @@ class human(life):
 			if self.can_farm() and not self.task['what']=='farm':
 				_farm_score+=\
 					len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))*10
-				_farm_score+=len(self.get_all_items_of_type('seed'))*10
+				_farm_score+=len(self.get_items(type='seed'))*10
 			elif self.can_farm() and self.task['what']=='farm':
 				_farm_score = 75
 			
@@ -2404,7 +2396,11 @@ class human(life):
 				_cook_score+=len(self.get_done_stoves(self.get_claimed('home')))*15
 			
 			##TODO: Find out how much money is needed to buy more seed
-			_sell_score = len(self.get_all_items_of_type(['food','cooked food'],check_storage=True))*10
+			_sell_score = len(self.get_items(type='food'))*10
+			_sell_score += len(self.get_items(type='cooked food'))*10
+			_sell_score += len(self.level.get_items_in_building(self.get_claimed('home'),type='food'))
+			_sell_score +=\
+				len(self.level.get_items_in_building(self.get_claimed('home'),type='cooked food'))
 			_sell_what = ['food','cooked food']
 			_sell_score -= self.get_money()*2
 			if not self.get_nearest_store(): _sell_score = -1
@@ -2414,7 +2410,7 @@ class human(life):
 			if _store and _farm:# and self.get_money():
 				_farm_size = _farm['size'][0]*_farm['size'][1]
 				_seeds = len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))
-				_seeds += len(self.get_all_items_of_type('seed'))
+				_seeds += len(self.get_items(type='seed'))
 				
 				_open_can_seed = _farm_size-_seeds
 				
@@ -2445,13 +2441,13 @@ class human(life):
 				self.add_event('run_shop',_trade_score-self.fatigue,where=_building,delay=20)
 		elif 'blacksmith' in self.skills:
 			_smith_score = 25
-			_items = []
 			
 			if self.get_claimed('work'):
 				_items = self.level.get_all_items_in_building_tagged(self.get_claimed('work'),'forged')
 				_items.extend(self.get_all_items_tagged('forged'))
 				self.add_event('run_forge',_smith_score,where=self.get_claimed('work'),delay=20)
 			else:
+				_items = []
 				_building = self.claim_work_at('forge')
 				self.add_event('run_forge',_smith_score-self.fatigue,where=_building,delay=20)
 			
