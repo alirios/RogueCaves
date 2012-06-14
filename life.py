@@ -222,7 +222,7 @@ class life:
 			if entry.has_key('to'):
 				entry['to'] = functions.get_alife_by_id(entry['to']).name
 			for word in entry['what'].split(' '):
-				if word == 'from': continue
+				if word in ['with','from']: continue
 				if entry.has_key(word):
 					entry['what'] = entry['what'].replace(word,entry[word])
 			
@@ -292,9 +292,9 @@ class life:
 		
 		return False
 	
-	def announce(self,what):
+	def announce(self,**kargv):
 		_broadcast = {'from':self.id}
-		_broadcast.update(what)
+		_broadcast.update(kargv)
 		
 		_in_building = self.in_building()
 		if _in_building:
@@ -351,8 +351,7 @@ class life:
 					logging.debug('[ALife.%s] Bought %s from %s' %
 						(self.name,_i['name'],where))
 		
-					self.announce({'what':'bought item from where',
-						'item':item})
+					self.announce(what='bought item from where',item=item)
 		
 		return False
 	
@@ -388,9 +387,9 @@ class life:
 				
 				if self.pos == who.pos:
 					self.remove_event('serve_item_to')
-					self.announce({'what':'served item to',
-						'item':functions.get_item_name(_give_cup),
-						'to':who.id})
+					self.announce(what='served item to',
+						item=functions.get_item_name(_give_cup),
+						to=who.id)
 				
 			elif _fill_cup and _stored_drinks:
 				self.go_to_and_do(_stored_drinks[0]['pos'],
@@ -401,7 +400,7 @@ class life:
 	def give_item_to(self,item,who):
 		"""Gives item to ALife"""
 		item['from'] = self
-		who.items.append(item)
+		who.add_item(item)
 		self.items.remove(item)
 		
 		logging.debug('[ALife.%s] Gave %s to %s' %
@@ -467,7 +466,13 @@ class life:
 			#	who.
 			logging.debug('[ALife.%s] Did not like the %s from %s.' %
 				(who.name,functions.get_item_name(item),self.name))
+			
+			##TODO: Anger?
 			#who.destroy_item(item)
+			who.announce(what='threw item at person',
+				person=self.id,
+				item=functions.get_item_name(item),
+				why='did not like item')
 			who.throw_item(item,self.pos)
 		
 		logging.debug('[ALife.%s] Relationship with %s: %s' %
@@ -512,13 +517,22 @@ class life:
 		self.say(_str,action=True)
 		self.items.remove(item)		
 		logging.debug('[ALife.%s] Destroys the %s' % (self.name,functions.get_item_name(item)))
-		self.announce({'what':'destroyed item','item':functions.get_item_name(item)})
+		self.announce(what='destroyed item',item=functions.get_item_name(item))
 	
 	def throw_item(self,item,at):
 		self.items.remove(item)
 		_str = 'throws the %s! ' % functions.get_item_name(item)
 		
-		print self.pos,at
+		for life in var.life:
+			if not life.z==self.z or life==self: continue
+			if tuple(item['pos']) == tuple(life.pos):
+				_str += 'It hits %s! The %s falls to the ground.' % (life.name,item['name'])
+				self.announce(what='hit person with item',
+					person=life.id,
+					item=functions.get_item_name(item))
+				self.level.items[item['pos'][0]][item['pos'][1]].append(item)
+				self.say(_str,action=True)
+				return		
 		
 		_i = 0
 		_last_pos = tuple(item['pos'])
@@ -539,13 +553,14 @@ class life:
 				if not life.z==self.z or life==self: continue
 				if pos == tuple(life.pos):
 					_str += 'It hits %s! The %s falls to the ground.' % (life.name,item['name'])
+					self.announce(what='hit person with item',
+						person=life.id,
+						item=functions.get_item_name(item))
 					self.level.items[pos[0]][pos[1]].append(item)
 					break
 			
 			_last_pos = pos
 			_i+=1
-		
-		self.say(_str,action=True)
 	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
@@ -579,14 +594,14 @@ class life:
 				
 				if self.weapon and self.weapon['name']=='hoe':
 					self.weapon['status']='dirt'
-					self.announce({'what':'tilled earth with hoe for item',
-						'item':var.items[str(item)]['name'],
-						'hoe':functions.get_item_name(self.weapon)})
+					self.announce(what='tilled earth with hoe for item',
+						item=var.items[str(item)]['name'],
+						hoe=functions.get_item_name(self.weapon))
 				else:
-					self.announce({'what':'tilled earth for item',
-						'item':var.items[str(item)]['name'],})
+					self.announce(what='tilled earth for item',
+						item=var.items[str(item)]['name'])
 				
-				self.announce({'what':'planted item','item':var.items[str(item)]['name']})
+				self.announce(what='planted item',item=var.items[str(item)]['name'])
 				
 				return False
 			_item['planted_by'] = self
@@ -1059,6 +1074,7 @@ class life:
 		elif who.race in ['human']:
 			if self.player: functions.log('You swing at %s!' % (who.name))
 			elif who.player: functions.log('%s swings at you!' % (self.name))
+			#else: functions.log('%s swings at %s!' % (self.name,who.name))
 		else:
 			if self.player: functions.log('You swing at %s!' % (who.name))
 			elif who.player: functions.log('The %s swings at you!' % (self.race))
@@ -1089,8 +1105,10 @@ class life:
 						
 			
 			who.hp -= _dam
+			self.announce(what='attacked person',person=who.id,damage=_dam)
 		else:
 			who.hp -= self.atk
+			self.announce(what='attacked person',person=who.id,damage=self.atk)
 		
 		if who.hp<=0:
 			if who.race in ['zombie']:
@@ -1265,9 +1283,9 @@ class life:
 		item['volume'] = item['volume_max']
 		logging.debug('[ALife.%s] Filled the %s with %s' %
 			(self.name,item['name'],what['contains']))
-		self.announce({'what':'filled item with',
-			'item':functions.get_item_name(item),
-			'with':what['contains']})
+		self.announce(what='filled item with liquid',
+			item=functions.get_item_name(item),
+			liquid=what['contains'])
 	
 	def drink(self,what):
 		##TODO: How much can they drink at one time?
@@ -1290,19 +1308,19 @@ class life:
 		if what['contains'] in self.dislikes:
 			if 'brash' in self.traits:
 				self.say_phrase('vomit_brash',action=True,item=what)
-				self.announce({'what':'vomited',
-					'why':'disliked contains in item',
-					'contains':what['contains'],
-					'item':functions.get_item_name(what)})
+				self.announce(what='vomited',
+					why='disliked contains in item',
+					contains=what['contains'],
+					item=functions.get_item_name(what))
 				
 				#If this item is from somebody, we can get mad at them!
 				if what.has_key('from'):
 					self.say_phrase('curse_brash',other=what['from'])
-					self.announce({'what':'cursed',
-						'why':'disliked contains in item from person',
-						'contains':what['contains'],
-						'item':functions.get_item_name(what),
-						'person':what['from'].id})
+					self.announce(what='cursed',
+						why='disliked contains in item from person',
+						contains=what['contains'],
+						item=functions.get_item_name(what),
+						person=what['from'].id)
 				
 				if self.get_relationship_with(what['from'])['score']<=self.dislike_at:
 					if self.can_see(what['from']['pos']):
@@ -1312,12 +1330,13 @@ class life:
 				
 			else:
 				self.say_phrase('vomit',action=True,item=what)
-				self.announce({'what':'vomited',
-					'why':'disliked contains in item',
-					'contains':what['contains'],
-					'item':functions.get_item_name(what)})
+				self.announce(what='vomited',
+					why='disliked contains in item',
+					contains=what['contains'],
+					item=functions.get_item_name(what))
 			
 			self.throw_item(what,what['from'].pos)
+			#self.announce('what'='Threw item at'}
 			
 			self.thirst+=3
 			self.hunger+=2
@@ -1465,6 +1484,9 @@ class life:
 		elif self.task['what'] == 'attack':
 			if self.task['who'].hp>0:
 				self.go_to(self.task['who'].pos,z=self.task['who'].z)
+				
+				if tuple(self.pos) == tuple(self.task['who'].pos):
+					self.attack(self.task['who'])
 			else:
 				if self.remove_event(self.task['what']):
 					self.task = None
@@ -1479,7 +1501,10 @@ class life:
 		elif self.task['what'] == 'serve_item_to':
 			self.serve_item_to(self.task['items'],self.task['who'])
 		elif self.task['what'] == 'flee':
-			print 'Running away'
+			if self.get_claimed('home'):
+				self.go_to(self.level.get_items_in_building(self.get_claimed('home'),type='bed')[0]['pos'])
+			else:
+				print 'NOWHERE TO RUN'
 		elif self.task['what'] == 'farm':
 			self.farm(self.task['where'])
 		elif self.task['what'] == 'cook':
@@ -1613,7 +1638,10 @@ class life:
 			if life == self or not self.z == life.z: continue
 			
 			if self.faction == life.faction:
-				pass
+				if self.get_relationship_with(life)<0:
+					self.attack(life)
+					_found = True
+					print 'WE COLLDIN BRO'
 				##TODO: Should I do this?
 				#if life.pos == _pos:
 				#	if self.player:
@@ -1859,8 +1887,8 @@ class life:
 					_i = self.add_item(_done_forges[0]['forging'])
 					logging.debug('[ALife.%s] Removed %s from forge at %s' %
 						(self.name,_i['name'],_done_forges[0]['pos']))
-					self.announce({'what':'removed a freshly forged product from where',
-						'product':functions.get_item_name(_i)})
+					self.announce(what='removed a freshly forged product from where',
+						product=functions.get_item_name(_i))
 					_i['forged'] = True
 					_done_forges[0]['forging'] = None
 					_done_forges[0]['forge_time'] = 0
@@ -1887,8 +1915,8 @@ class life:
 								_forge[0]['forge_time'] = len(_needs)*20
 								logging.debug('[ALife.%s] Placed materials for %s in forge at %s' %
 									(self.name,var.items[_job]['name'],_forge[0]['pos']))
-								self.announce({'what':'put materials in forge at where to make a product',
-									'product':functions.get_item_name(var.items[_job])})
+								self.announce(what='put materials in forge at where to make a product',
+									product=functions.get_item_name(var.items[_job]))
 						else:
 							_item = _in_storage[0]
 							self.pick_up_item_at(_item['pos'],_item['name'],tag='name')
@@ -2375,6 +2403,34 @@ class human(life):
 			for match in self.get_past_event({'from':who.id,'person':self.id,'what':'cursed'}):
 				_score-=10
 			
+			_what = 'threw item at person'
+			for match in self.get_past_event({'from':who.id,'person':self.id,'what':_what}):
+				_score-=15
+			
+			_what = 'threw item at person'
+			for match in self.get_past_event({'from':self.id,'person':who.id,'what':_what}):
+				_score-=10
+			
+			_what = 'hit person with item'
+			for match in self.get_past_event({'from':who.id,'person':self.id,'what':_what}):
+				_score-=30
+				#print 'I was hit by someone',_score
+			
+			_what = 'hit person with item'
+			for match in self.get_past_event({'from':self.id,'person':who.id,'what':_what}):
+				_score-=25
+				#print 'I hit someone', _score
+			
+			_events = self.get_past_event({'from':self.id,'person':who.id,'what':'attacked person'})
+			for match in _events:
+				_score+=(match['damage']*2)
+				#print 'I punched this dude, now I feel better',_score
+			
+			_events = self.get_past_event({'from':who.id,'person':self.id,'what':'attacked person'})
+			for match in _events:
+				_score+=match['damage']
+				#print 'This dude punched me, better look out',_score
+			
 			for match in self.get_past_event({'from':who.id,'what':'vomited'}):
 				if 'vomit' in self.dislikes: _score-=6
 				elif 'vomit' in self.likes: _score+=3
@@ -2552,7 +2608,7 @@ class human(life):
 	def kill(self):
 		life.kill(self)
 		
-		if not self.player and self.task['who'].player:
+		if not self.player and self.task.has_key('who') and self.task['who'].player:
 			self.task['who'].in_danger = False
 
 class crazy_miner(human):

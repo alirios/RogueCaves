@@ -34,10 +34,17 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.13.2012A
+Current Version: 06.14.2012A
 ----------------------------
 Changed
 -------
+* Fixed logo
+
+Previous Version: 06.13.2012A
+----------------------------
+Changed
+-------
+* ALife will fight eachother
 * life.throw_item()
 * life.get_items()
 * life.get_items_ext()

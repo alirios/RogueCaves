@@ -183,12 +183,18 @@ elif not var.server and var.output=='libtcod':
 	libtcod.sys_set_fps(var.max_fps)
 	
 	_logofile = open(os.path.join('data','logo.txt'),'r')
-	_y=14
+	_y=18
 	for line in _logofile.readlines():
-		libtcod.console_print(0, 1, _y, line)
+		_i = 1
+		for char in line:
+			if char == '\n': continue
+			libtcod.console_set_char_foreground(0,_i,_y,libtcod.Color(_y*6,_y*6,_y*6))
+			#libtcod.console_print(0, _i, _y, char)
+			libtcod.console_set_char(0, _i, _y, char)
+			_i+=1
 		_y+=1
 	libtcod.console_print(0,(var.window_size[0]/2)-(len(__version__)/2),
-		23,
+		28,
 		str(__version__))
 	_logofile.close()
 	libtcod.console_flush()
@@ -223,7 +229,7 @@ for line in _fdnames.readlines():
 _fdnames.close()
 
 #Generate level
-var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=6)
+var.world = world.World(size=(var.world_size[0],var.world_size[1]-6),depth=0)
 if '-load' in sys.argv:
 	var.world.load()
 else:
