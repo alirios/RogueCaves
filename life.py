@@ -352,6 +352,7 @@ class life:
 						(self.name,_i['name'],where))
 		
 					self.announce(what='bought item from where',item=item)
+					break
 		
 		return False
 	
@@ -522,11 +523,15 @@ class life:
 	def throw_item(self,item,at):
 		self.items.remove(item)
 		_str = 'throws the %s! ' % functions.get_item_name(item)
+		logging.debug('[ALife.%s] Threw %s at %s' %
+			(self.name,functions.get_item_name(item),at))
 		
 		for life in var.life:
 			if not life.z==self.z or life==self: continue
 			if tuple(item['pos']) == tuple(life.pos):
 				_str += 'It hits %s! The %s falls to the ground.' % (life.name,item['name'])
+				logging.debug('[ALife.%s] The %s hit %s' %
+					(self.name,functions.get_item_name(item),life.name))
 				self.announce(what='hit person with item',
 					person=life.id,
 					item=functions.get_item_name(item))
@@ -553,6 +558,8 @@ class life:
 				if not life.z==self.z or life==self: continue
 				if pos == tuple(life.pos):
 					_str += 'It hits %s! The %s falls to the ground.' % (life.name,item['name'])
+					logging.debug('[ALife.%s] The %s hit %s' %
+						(self.name,functions.get_item_name(item),life.name))
 					self.announce(what='hit person with item',
 						person=life.id,
 						item=functions.get_item_name(item))
@@ -561,6 +568,18 @@ class life:
 			
 			_last_pos = pos
 			_i+=1
+	
+	def push(self,who):
+		self.announce(what='pushed person',person=who.id)
+		_score = self.get_relationship_with(who)['score']
+		logging.debug('[ALife.%s] Pushed %s (%s) %s' % (self.name,who.name,_score,self.lowest['score']))
+		
+		_open = self.level.get_open_space_around(who.pos,dist=1)
+		if tuple(self.pos) in _open: _open.remove(tuple(self.pos))
+		if tuple(who.pos) in _open: _open.remove(tuple(who.pos))
+		
+		if _open:
+			who.pos = list(random.choice(_open))
 	
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
@@ -1105,9 +1124,11 @@ class life:
 						
 			
 			who.hp -= _dam
+			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,self.atk))
 			self.announce(what='attacked person',person=who.id,damage=_dam)
 		else:
 			who.hp -= self.atk
+			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,self.atk))
 			self.announce(what='attacked person',person=who.id,damage=self.atk)
 		
 		if who.hp<=0:
@@ -1272,9 +1293,11 @@ class life:
 					not tuple(room['owner'].pos) in room['walking_space']: continue
 				if tuple(self.pos) in room['walking_space']:
 					if not tuple(self.last_pos) in room['walking_space']:
+						if room['owner'].get_relationship_with(self)>room['owner'].dislike_at: return
 						room['owner'].say_phrase('enter_building',building=room,other=self)
 				elif tuple(self.last_pos) in room['walking_space']:
 					if not tuple(self.pos) in room['walking_space']:
+						if room['owner'].get_relationship_with(self)>room['owner'].dislike_at: return
 						room['owner'].say_phrase('leave_building',other=self)
 	
 	def fill_container(self,item,what):
@@ -1389,13 +1412,18 @@ class life:
 				seen['score'] = _score
 				
 				if _score < 0 and _score <= self.lowest['score']:
+					if seen['who'].hp<=0: continue
 					self.lowest['who'] = seen['who']
 					
 					if _score < self.lowest['score']:
 						self.on_enemy_spotted(self.lowest['who'])
 					
+					print self.name,'is scared of',self.lowest['who'].name,_score
 					self.lowest['score'] = _score
 					self.lowest['last_seen'] = seen['last_seen'][:]
+				elif self.lowest['who'] and self.lowest['who'] == seen['who']:
+					self.lowest['score'] = _score
+					print self.name,'SET NEW SCORE',_score
 				
 				if _score >= 0:
 					if _score >= self.highest['score']:
@@ -1423,9 +1451,15 @@ class life:
 				if self.add_event('flee',100,who=self.lowest['who']):
 					self.remove_event('attack')
 				self.task = 'flee'
+			
+			if self.get_relationship_with(self.lowest['who'])['score']>=0:
+				print self.name,'no longer scared of',self.lowest['who'].name
+				self.lowest['who'] = None
+				self.lowest['score'] = 0
 		else:
 			if self.task == 'attacking':
 				self.task = None
+				print 'SHOULD STOP ATTACKING NOW'
 		
 		_event = self.get_event()
 		
@@ -1482,11 +1516,11 @@ class life:
 				elif _pos:
 					self.go_to(_pos,z=1)
 		elif self.task['what'] == 'attack':
-			if self.task['who'].hp>0:
+			if self.task['who'].hp>0 and self.get_relationship_with(self.task['who'])['score']<0:
 				self.go_to(self.task['who'].pos,z=self.task['who'].z)
 				
 				if tuple(self.pos) == tuple(self.task['who'].pos):
-					self.attack(self.task['who'])
+					self.push(self.task['who'])
 			else:
 				if self.remove_event(self.task['what']):
 					self.task = None
@@ -1504,7 +1538,10 @@ class life:
 			if self.get_claimed('home'):
 				self.go_to(self.level.get_items_in_building(self.get_claimed('home'),type='bed')[0]['pos'])
 			else:
-				print 'NOWHERE TO RUN'
+				print self.name,'NOWHERE TO RUN'
+			
+			if self.get_relationship_with(self.task['who'])>0:
+				self.task['who'] = None
 		elif self.task['what'] == 'farm':
 			self.farm(self.task['where'])
 		elif self.task['what'] == 'cook':
@@ -1637,19 +1674,10 @@ class life:
 		for life in var.life:
 			if life == self or not self.z == life.z: continue
 			
-			if self.faction == life.faction:
-				if self.get_relationship_with(life)<0:
+			if life.pos == _pos:
+				if self.get_relationship_with(life) and self.get_relationship_with(life)['score']<=0:
 					self.attack(life)
 					_found = True
-					print 'WE COLLDIN BRO'
-				##TODO: Should I do this?
-				#if life.pos == _pos:
-				#	if self.player:
-				#		functions.log('%s is in the way.' % life.name)
-				#	_found = True
-			elif life.pos == _pos:
-				self.attack(life)
-				_found = True
 		
 		if not _found:
 			if not self.pos == _pos:
@@ -2421,6 +2449,12 @@ class human(life):
 				_score-=25
 				#print 'I hit someone', _score
 			
+			for match in self.get_past_event({'from':who.id,'person':self.id,'what':'pushed person'}):
+				_score+=5
+			
+			for match in self.get_past_event({'from':self.id,'person':who.id,'what':'pushed person'}):
+				_score+=5
+			
 			_events = self.get_past_event({'from':self.id,'person':who.id,'what':'attacked person'})
 			for match in _events:
 				_score+=(match['damage']*2)
@@ -2473,12 +2507,14 @@ class human(life):
 		if 'farm' in self.skills:
 			#_farm_score-=(len(self.get_all_items_of_type(['food','cooked_food']))*2)
 			
+			_stored = len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))
+			_has = len(self.get_items(type='seed'))
+			
 			##TODO: Calculate how much food this ALife needs
 			if self.can_farm() and not self.task['what']=='farm':
-				_farm_score+=\
-					len(self.level.get_all_items_in_building_of_type(self.get_claimed('home'),'seed'))*10
-				_farm_score+=len(self.get_items(type='seed'))*10
-			elif self.can_farm() and self.task['what']=='farm':
+				_farm_score+=(_stored*10)
+				_farm_score+=(_has*10)
+			elif self.can_farm() and self.task['what']=='farm' and (_stored or _has):
 				_farm_score = 75
 			
 			if self.get_all_grown_crops():
@@ -2549,7 +2585,6 @@ class human(life):
 				self.add_event('sell',50,items=_items,where=self.get_nearest_store(),delay=5)
 			else:
 				self.add_event('sell',0,items=_items,where=self.get_nearest_store(),delay=5)
-			
 		elif 'barkeep' in self.skills:
 			_barkeep_score = 25
 			
@@ -2608,7 +2643,7 @@ class human(life):
 	def kill(self):
 		life.kill(self)
 		
-		if not self.player and self.task.has_key('who') and self.task['who'].player:
+		if not self.player and self.task['who'] and self.task['who'].player:
 			self.task['who'].in_danger = False
 
 class crazy_miner(human):
@@ -2662,7 +2697,7 @@ class dog(life):
 			
 			_score-=(self.fatigue*2)
 			
-			if _score<0: _score = 0
+			if _score<0: _score = 1
 				
 		else:
 			if who.weapon: _score+=who.weapon['damage']*2
