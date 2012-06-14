@@ -1524,7 +1524,6 @@ class life:
 			else:
 				if self.remove_event(self.task['what']):
 					self.task = None
-					self.say('Got em.')
 					self.lowest = {'who':None,'score':0}
 		elif self.task['what'] == 'run_shop':
 			self.run_shop(self.task['where'])
@@ -1537,8 +1536,8 @@ class life:
 		elif self.task['what'] == 'flee':
 			if self.get_claimed('home'):
 				self.go_to(self.level.get_items_in_building(self.get_claimed('home'),type='bed')[0]['pos'])
-			else:
-				print self.name,'NOWHERE TO RUN'
+			#else:
+			#	print self.name,'NOWHERE TO RUN'
 			
 			if self.get_relationship_with(self.task['who'])>0:
 				self.task['who'] = None
@@ -2633,6 +2632,7 @@ class human(life):
 			_has_relationship = self.get_relationship_with(self.level.get_room(_bar)['owner'])
 			if not _has_relationship or _has_relationship['score']>self.dislike_at:
 				self.add_event('socialize',self.fatigue,delay=20)
+				#self.add_event('socialize',90,delay=20)
 			else:
 				#print 'Refusing to socialize'
 				#print _has_relationship
