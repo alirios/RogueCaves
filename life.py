@@ -997,6 +997,9 @@ class life:
 	def on_sleep(self):
 		logging.debug('[ALife.%s] Fell asleep' % self.name)
 	
+	def on_submission(self,who):
+		logging.debug('[ALife.%s] Submission, scared of %s' % (self.name,who.name))
+	
 	def claim_real_estate(self,pos,size,label):
 		"""Helper function. Registers land at 'pos' with 'size' as 'label'"""
 		self.owned_land.append({'where':pos,'size':size,'label':label})
@@ -1418,12 +1421,12 @@ class life:
 					if _score < self.lowest['score']:
 						self.on_enemy_spotted(self.lowest['who'])
 					
-					print self.name,'is scared of',self.lowest['who'].name,_score
+					#print self.name,'is scared of',self.lowest['who'].name,_score
 					self.lowest['score'] = _score
 					self.lowest['last_seen'] = seen['last_seen'][:]
 				elif self.lowest['who'] and self.lowest['who'] == seen['who']:
 					self.lowest['score'] = _score
-					print self.name,'SET NEW SCORE',_score
+					#print self.name,'SET NEW SCORE',_score
 				
 				if _score >= 0:
 					if _score >= self.highest['score']:
@@ -1443,19 +1446,20 @@ class life:
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			if self.judge(self)>=abs(self.judge(self.lowest['who'])):
-				if self.add_event('attack',100,who=self.lowest['who']):
-					if self.lowest['who'].player:
-						self.lowest['who'].is_in_danger(self)
-			else:
-				if self.add_event('flee',100,who=self.lowest['who']):
-					self.remove_event('attack')
-				self.task = 'flee'
+			#if self.judge(self)>=abs(self.judge(self.lowest['who'])):
+			if self.add_event('attack',100,who=self.lowest['who']):
+				if self.lowest['who'].player:
+					self.lowest['who'].is_in_danger(self)
+			#else:
+			#	if self.add_event('flee',100,who=self.lowest['who']):
+			#		self.remove_event('attack')
+			#	self.task = 'flee'
 			
 			if self.get_relationship_with(self.lowest['who'])['score']>=0:
-				print self.name,'no longer scared of',self.lowest['who'].name
+				#print self.name,'no longer scared of',self.lowest['who'].name
 				self.lowest['who'] = None
 				self.lowest['score'] = 0
+				self.remove_event('attack')
 		else:
 			if self.task == 'attacking':
 				self.task = None
@@ -1516,15 +1520,14 @@ class life:
 				elif _pos:
 					self.go_to(_pos,z=1)
 		elif self.task['what'] == 'attack':
-			if self.task['who'].hp>0 and self.get_relationship_with(self.task['who'])['score']<0:
+			if self.task['who'].hp>0:
 				self.go_to(self.task['who'].pos,z=self.task['who'].z)
 				
 				if tuple(self.pos) == tuple(self.task['who'].pos):
 					self.push(self.task['who'])
-			else:
-				if self.remove_event(self.task['what']):
-					self.task = None
-					self.lowest = {'who':None,'score':0}
+				
+				_score = self.lowest['who'].get_relationship_with(self)
+			
 		elif self.task['what'] == 'run_shop':
 			self.run_shop(self.task['where'])
 		elif self.task['what'] == 'run_forge':
@@ -2208,8 +2211,10 @@ class life:
 				self.drink(_has_drink[0])
 			else:
 				_building_owner = self.level.get_room(_building)['owner']
-				#_relationship = self.get_relationship_with(_building_owner)
-				self.buy_item_type_from_alife('drink',_building_owner)
+				if self.get_relationship_with(_building_owner)['score']>self.dislike_at:
+					self.buy_item_type_from_alife('drink',_building_owner)
+				else:
+					print 'NO DRINK'
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -2297,6 +2302,10 @@ class human(life):
 	def on_sleep(self):
 		life.on_sleep(self)
 		self.say('Zzz')
+	
+	def on_submission(self,who):
+		life.on_submission(self,who)
+		self.say('scampers off.',action=True)
 	
 	def is_in_danger(self,who):
 		self.in_danger = True
@@ -2424,50 +2433,69 @@ class human(life):
 			if 'skill' in self.attracted_to:
 				_score+=(len(who.skills))*2
 			
+			_neg = 0
 			for match in self.get_past_event({'from':self.id,'person':who.id,'what':'cursed'}):
-				_score-=10
+				_neg-=10
 			
 			for match in self.get_past_event({'from':who.id,'person':self.id,'what':'cursed'}):
-				_score-=10
+				_neg-=10
 			
 			_what = 'threw item at person'
 			for match in self.get_past_event({'from':who.id,'person':self.id,'what':_what}):
-				_score-=15
+				_neg-=10
+				#Threw item at me
 			
 			_what = 'threw item at person'
 			for match in self.get_past_event({'from':self.id,'person':who.id,'what':_what}):
-				_score-=10
+				_neg-=20
+				#I threw an item at them
 			
 			_what = 'hit person with item'
 			for match in self.get_past_event({'from':who.id,'person':self.id,'what':_what}):
-				_score-=30
-				#print 'I was hit by someone',_score
+				_neg-=20
+			#	#print 'I was hit by someone',_score
 			
-			_what = 'hit person with item'
-			for match in self.get_past_event({'from':self.id,'person':who.id,'what':_what}):
-				_score-=25
-				#print 'I hit someone', _score
+			#_what = 'hit person with item'
+			#for match in self.get_past_event({'from':self.id,'person':who.id,'what':_what}):
+			#	_score-=25
+			#	#print 'I hit someone', _score
 			
-			for match in self.get_past_event({'from':who.id,'person':self.id,'what':'pushed person'}):
-				_score+=5
+			#for match in self.get_past_event({'from':who.id,'person':self.id,'what':'pushed person'}):
+			#	_score+=5
 			
-			for match in self.get_past_event({'from':self.id,'person':who.id,'what':'pushed person'}):
-				_score+=5
+			#for match in self.get_past_event({'from':self.id,'person':who.id,'what':'pushed person'}):
+			#	_score+=5
 			
 			_events = self.get_past_event({'from':self.id,'person':who.id,'what':'attacked person'})
 			for match in _events:
-				_score+=(match['damage']*2)
+				if self.hp>=5:
+					_neg-=(match['damage']*2)
+					#print self.name,'Adding the damage in'
+				#else:
+				#	_neg+=(match['damage']*2)
+				#	print self.name,'Subtracting the damage in'
 				#print 'I punched this dude, now I feel better',_score
 			
 			_events = self.get_past_event({'from':who.id,'person':self.id,'what':'attacked person'})
 			for match in _events:
-				_score+=match['damage']
+				if self.hp>=5:
+					_neg-=match['damage']
+					#print self.name,'Adding the damage in'
+				#else:
+				#	_neg+=match['damage']
+				#	print self.name,'Subtracting the damage in'
 				#print 'This dude punched me, better look out',_score
 			
 			for match in self.get_past_event({'from':who.id,'what':'vomited'}):
 				if 'vomit' in self.dislikes: _score-=6
 				elif 'vomit' in self.likes: _score+=3
 				else: _score-=3
+				
+			#Submission
+			if self.hp>=5 and who.hp>=5:
+				_score+=_neg
+			else:
+				_score = 10
 			
 			#If the ALife is married to this person, give them a huge bonus
 			##TODO: Could marriage be a negative thing?

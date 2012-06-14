@@ -643,7 +643,7 @@ def get_input():
 				elif event.key == K_x:
 					var.max_fps = 60
 				elif event.key == K_c:
-					var.max_fps = 1
+					var.max_fps = 10
 				elif event.key == K_v:
 					for pos in var.player.level.real_estate:
 						var.view.setbrightness(0, region=(pos[0],pos[1],1,1))
@@ -715,6 +715,10 @@ def get_input():
 		
 		if key.c == ord('z'):
 			var.max_fps=20
+			libtcod.sys_set_fps(var.max_fps)
+		
+		if key.c == ord('c'):
+			var.max_fps=10
 			libtcod.sys_set_fps(var.max_fps)
 		
 		if key.vk in [libtcod.KEY_ESCAPE] or key.c == ord('q'):
