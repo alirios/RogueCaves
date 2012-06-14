@@ -46,6 +46,7 @@ class life:
 		self.task = {'what':None}
 		self.task_delay = 0
 		self.events = []
+		self.limbs = {}
 		
 		self.thirst = 0
 		self.thirst_timer_max = 100
@@ -141,6 +142,7 @@ class life:
 		_keys['skills'] = self.skills
 		_keys['likes'] = self.likes
 		_keys['dislikes'] = self.dislikes
+		_keys['limbs'] = self.limbs
 		
 		return _keys
 	
@@ -212,6 +214,7 @@ class life:
 		self.skills = keys['skills']
 		self.likes = keys['likes']
 		self.dislikes = keys['dislikes']
+		self.limbs = keys['limbs']
 	
 	def build_history(self):
 		logging.debug('[ALife.%s.HistoryGen] Starting...' % (self.name))
@@ -357,7 +360,10 @@ class life:
 		return False
 	
 	def buy_item_type_from_alife(self,type,who):
-		who.add_event('serve_item_to',75,who=self,items=type)
+		if self.get_relationship_with(who)<=self.dislike_at:
+			who.remove_event('serve_item_to')
+		else:
+			who.add_event('serve_item_to',75,who=self,items=type)
 	
 	def serve_item_to(self,type,who):
 		if type == 'drink' and 'barkeep' in self.skills:
@@ -1130,9 +1136,34 @@ class life:
 			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,self.atk))
 			self.announce(what='attacked person',person=who.id,damage=_dam)
 		else:
-			who.hp -= self.atk
-			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,self.atk))
-			self.announce(what='attacked person',person=who.id,damage=self.atk)
+			_dam = self.atk
+			
+			if who.race == 'human':
+				_hit_limb = random.choice(['left arm','right arm'])
+				
+				if who.limbs[_hit_limb]['skin']['bruised']<3:
+					who.limbs[_hit_limb]['skin']['bruised']+=1
+					#logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
+				elif who.limbs[_hit_limb]['skin']['bruised']==3:
+					who.limbs[_hit_limb]['skin']['bruised']+=1
+					_what = 'Hit %s in the %s, bruising the skin severely!' % (who.name,_hit_limb)
+					logging.debug('[ALife.%s] %s' % (self.name,_what))
+					_dam += 2
+				elif who.limbs[_hit_limb]['muscle']['bruised']<3:
+					print 'HEREERERE'
+					who.limbs[_hit_limb]['muscle']['bruised']+=1
+					#_what = 'Hit %s in the %s, bruising the muscle severely!' % (who.name,_hit_limb)
+					#logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
+					_dam += 2
+				elif who.limbs[_hit_limb]['muscle']['bruised']==3:
+					who.limbs[_hit_limb]['muscle']['bruised']+=1
+					_what = 'Hit %s in the %s, bruising the muscle severely!' % (who.name,_hit_limb)
+					logging.debug('[ALife.%s] %s' % (self.name,_what))
+					_dam += 4
+				
+			who.hp -= _dam
+			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,_dam))
+			self.announce(what='attacked person',person=who.id,damage=_dam)
 		
 		if who.hp<=0:
 			if who.race in ['zombie']:
@@ -2211,10 +2242,11 @@ class life:
 				self.drink(_has_drink[0])
 			else:
 				_building_owner = self.level.get_room(_building)['owner']
-				if self.get_relationship_with(_building_owner)['score']>self.dislike_at:
+				_relationship = self.get_relationship_with(_building_owner)
+				if _relationship and _relationship['score']>self.dislike_at:
 					self.buy_item_type_from_alife('drink',_building_owner)
-				else:
-					print 'NO DRINK'
+				elif _relationship and _relationship['score']<=self.dislike_at:
+					logging.debug('[ALife.%s] Refuses to drink' % (self.name))
 	
 	def enter(self):
 		if self.level.map[self.pos[0]][self.pos[1]] == 3:
@@ -2282,6 +2314,19 @@ class human(life):
 		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
+		
+		self.limbs = {'left arm':{'skin':{'cut':5,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'right arm':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}}}
 	
 	def save(self):
 		_keys = {}
