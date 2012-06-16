@@ -1,5 +1,6 @@
 import functions, life, draw, var
 import logging, copy, math, random, time
+import numpy
 
 class LevelGen:
 	def __init__(self,size=(50,50),rooms=25,room_size=(5,7),diagtunnels=True,overlaprooms=False,outside=False):
@@ -17,7 +18,7 @@ class LevelGen:
 		
 		#Lights and maps...
 		self.lights 		= []
-		self.fmap 			= [[0] * self.size[1] for i in range(self.size[0])]
+		self.fmap 			= [[0] * self.size[1] for i in xrange(self.size[0])]
 		self.real_estate	= []
 		self.lmap 			= []
 		self.tmap 			= []
@@ -25,13 +26,13 @@ class LevelGen:
 		self.items 			= []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
-		for x in range(self.size[0]):
+		for x in xrange(self.size[0]):
 			_y = []
 			_l = []
 			_i = []
 			_t = []
 			
-			for y in range(self.size[1]):
+			for y in xrange(self.size[1]):
 				_y.append(0)
 				_l.append({'source':False,'color':(0,0,0),'brightness':0})
 				_i.append([])
@@ -67,8 +68,8 @@ class LevelGen:
 		_keys['rooms'] = _rooms
 		
 		_items = copy.deepcopy(self.items)
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in _items[x][y]:
 					if item.has_key('planted_by'):
 						item['planted_by'] = item['planted_by'].id
@@ -112,8 +113,8 @@ class LevelGen:
 			if room.has_key('owner') and room['owner']:
 				room['owner'] = functions.get_alife_by_id(room['owner'])
 		
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					if item.has_key('planted_by'):
 						item['planted_by'] = functions.get_alife_by_id(item['planted_by'])
@@ -130,6 +131,27 @@ class LevelGen:
 								_item['from'] = functions.get_alife_by_id(_item['from'])
 					if item['type'] == 'stove' and item['cooking'] and item['cooking'].has_key('planted_by'):
 						item['cooking']['planted_by'] = functions.get_alife_by_id(item['cooking']['planted_by'])
+	
+	def build_color_map(self):
+		self.color_map = []
+		r = numpy.zeros((self.size[1],self.size[0]))
+		g = numpy.zeros((self.size[1],self.size[0]))
+		b = numpy.zeros((self.size[1],self.size[0]))
+		
+		for x in xrange(0,self.size[0]):	
+			for y in xrange(0,self.size[1]):
+				_fgcolor = var.color_codes[var.tile_map[str(self.map[x][y])]['color'][0]]
+				_bgcolor = var.color_codes[var.tile_map[str(self.map[x][y])]['color'][1]]
+				#r[x,y] = _fgcolor[0]
+				#g[x,y] = _fgcolor[1]
+				#b[x,y] = _fgcolor[2]
+				r[y,x] = _bgcolor[0]
+				g[y,x] = _bgcolor[1]
+				b[y,x] = _bgcolor[2]
+		
+		self.color_map.append(r)
+		self.color_map.append(g)
+		self.color_map.append(b)
 	
 	def add_light(self,pos,color,life,brightness):
 		self.lights.append(pos)
@@ -157,8 +179,8 @@ class LevelGen:
 	
 	def get_all_items_of_tile(self,tile):
 		_ret = []
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					if item['type'] == 'storage':
 						for _item in item['items']:
@@ -173,8 +195,8 @@ class LevelGen:
 	def get_items(self,**kargv):
 		_ret = []
 		
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					_match = kargv.keys()
 					for key in kargv:
@@ -190,8 +212,8 @@ class LevelGen:
 	def get_items_ext(self,**kargv):
 		_ret = []
 		
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					_match = kargv.keys()
 					for key in kargv:
@@ -265,8 +287,8 @@ class LevelGen:
 		else: _list = False
 		
 		_ret = []
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					if item['type'] == 'storage' and check_storage:
 						for _item in item['items']:
@@ -289,8 +311,8 @@ class LevelGen:
 		"""Returns items with flag 'tag'."""
 		_ret = []
 		
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					if item['type'] == 'storage' and not ignore_storage:
 						for _item in item['items']:
@@ -380,8 +402,8 @@ class LevelGen:
 	
 	def get_all_solid_items(self):
 		_ret = []
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
 					if item['solid']:
 						_ret.append(item)
@@ -423,13 +445,13 @@ class LevelGen:
 		return _ret
 	
 	def get_open_space_around(self,pos,dist=5):
-		"""Returns all open spaces around 'pos' in range 'dist'"""
+		"""Returns all open spaces around 'pos' in xrange 'dist'"""
 		_ret = []
 		
-		for x1 in range(-dist,dist+1):
+		for x1 in xrange(-dist,dist+1):
 			x = pos[0]+x1
 			if x<0 or x>=self.size[0]: continue
-			for y1 in range(-dist,dist+1):
+			for y1 in xrange(-dist,dist+1):
 				y = pos[1]+y1
 				if y<0 or y>=self.size[1]: continue
 				
@@ -440,16 +462,16 @@ class LevelGen:
 	
 	def get_real_estate(self,size):
 		_ret = []
-		for x1 in range(self.size[0]):
+		for x1 in xrange(self.size[0]):
 			if not x1: continue
 			#if x1==self.size[0]: continue
-			for y1 in range(self.size[1]):
+			for y1 in xrange(self.size[1]):
 				if not y1: continue
 				#if y1>=self.size[1]: continue
 				_break = False
-				for x2 in range(size[0]):
+				for x2 in xrange(size[0]):
 					if x1+x2>=self.size[0]: _break=True;break
-					for y2 in range(size[1]):
+					for y2 in xrange(size[1]):
 						if y1+y2>=self.size[1]-1: _break=True;break
 						if (x1+x2,y1+y2) in self.real_estate:
 							_break = True
@@ -463,8 +485,8 @@ class LevelGen:
 		return _ret
 	
 	def claim_real_estate(self,pos,size):
-		for x1 in range(size[0]):
-			for y1 in range(size[1]):
+		for x1 in xrange(size[0]):
+			for y1 in xrange(size[1]):
 				self.real_estate.append((pos[0]+x1,pos[1]+y1))
 	
 	def has_item_type_at(self,type,pos):
@@ -482,8 +504,8 @@ class LevelGen:
 		return False
 	
 	def remove_item_at(self,item,pos):
-		for y in range(self.size[1]):
-			for x in range(self.size[0]):
+		for y in xrange(self.size[1]):
+			for x in xrange(self.size[0]):
 				for _item in self.items[x][y]:
 					if _item['type'] == 'storage':
 						for __item in _item['items']:
@@ -534,7 +556,7 @@ class LevelGen:
 			oy+=y;
 		
 	def light(self,pos):
-		self.vmap = [[self.outside] * self.size[1] for i in range(self.size[0])]
+		self.vmap = [[self.outside] * self.size[1] for i in xrange(self.size[0])]
 		
 		if self.outside: return
 		
@@ -595,11 +617,11 @@ class LevelGen:
 						light['children'].append(_pos)
 	
 	def decompose(self,times,edgesonly=True,count=4,tile=-1,to=1,all=False):
-		for i in range(times):
+		for i in xrange(times):
 			_map = copy.deepcopy(self.map)
 			
-			for y in range(self.size[1]-1):
-				for x in range(self.size[0]-1):
+			for y in xrange(self.size[1]-1):
+				for x in xrange(self.size[0]-1):
 					if (x,y) in self.landmarks: continue
 					
 					if self.map[x][y] and edgesonly: continue
@@ -628,11 +650,11 @@ class LevelGen:
 			self.map = _map
 	
 	def decompose_ext(self,times,all=False,find=-1,to=-1,count=3):
-		for i in range(times):
+		for i in xrange(times):
 			_map = copy.deepcopy(self.map)
 			
-			for x in range(self.size[0]):
-				for y in range(self.size[1]):
+			for x in xrange(self.size[0]):
+				for y in xrange(self.size[1]):
 					if (x,y) in self.landmarks: continue
 					
 					if self.map[x][y]==find and not all: continue
@@ -662,17 +684,17 @@ class LevelGen:
 		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
 		_ret = []
 		
-		for i in range(walkers):
+		for i in xrange(walkers):
 			_pos = random.choice(where)
 			_tile = random.choice(types)
 			_walkers.append([_pos[0],_pos[1],_dirs[:],_tile])
 		
-		for i in range(random.randint(intensity[0],intensity[1])):
+		for i in xrange(random.randint(intensity[0],intensity[1])):
 			for walker in _walkers:
 				_pos=random.choice(walker[2])
 				walker[2].remove(_pos)
 				
-				for i2 in range(random.randint(3,4)):
+				for i2 in xrange(random.randint(3,4)):
 					
 					if not len(walker[2]):
 						walker[2] = _dirs[:]
@@ -728,7 +750,7 @@ class LevelGen:
 		_places.extend(exits)
 		for pos in _places:
 			#We'll make a 3x3 area around it
-			for x in range(-1,2):
+			for x in xrange(-1,2):
 				#One thing I suggest is making lines
 				#as compact as possible.
 				#For example, we'll be writing "entrance[0]+x"
@@ -745,7 +767,7 @@ class LevelGen:
 				#before the variables I plan to throw away...
 				_x = pos[0]+x
 				
-				for y in range(-1,2):
+				for y in xrange(-1,2):
 					#We need to check to see if we're drawing
 					#inside the map first...
 					#By the way, a '\' in Python
@@ -784,7 +806,7 @@ class LevelGen:
 			self.landmarks.append(pos)
 		
 		#We'll want to place our rooms next
-		for i in range(self.max_rooms):
+		for i in xrange(self.max_rooms):
 			#To prevent our rooms from being too far apart,
 			#we want to randomly select a position and compare
 			#it to our landmark list...
@@ -827,10 +849,10 @@ class LevelGen:
 				if _pos[1]-(_room_size[1]/2)<=0 or _pos[1]+(_room_size[1]/2)>=self.size[1]: _found=False;continue
 				
 				#Start checking to see if the room "fits"
-				for x in range(-_room_size[0]/2,_room_size[0]/2):					
+				for x in xrange(-_room_size[0]/2,_room_size[0]/2):					
 					_x = _pos[0]+x
 					
-					for y in range(-_room_size[1]/2,_room_size[1]/2):
+					for y in xrange(-_room_size[1]/2,_room_size[1]/2):
 						_y = _pos[1]+y
 						
 						#ALRIGHT, IS YOUR BODY READY?
@@ -1012,8 +1034,8 @@ class LevelGen:
 		self.exits = exits
 		self.entrances = [] #ALife needs this
 		
-		for x in range(self.size[0]):
-			for y in range(self.size[1]):
+		for x in xrange(self.size[0]):
+			for y in xrange(self.size[1]):
 				if not self.map[x][y]:
 					self.map[x][y] = random.choice(var.GRASS)
 				self.walking_space.append((x,y))
@@ -1036,9 +1058,9 @@ class LevelGen:
 			_zone = _town.get_random_zone()
 			_pos = (50+(_zone['pos'][0])*_room_size[0],50+(_zone['pos'][1])*_room_size[1])
 		
-			for x in range(0,_room_size[0]):
+			for x in xrange(0,_room_size[0]):
 				_x = _pos[0]+x
-				for y in range(0,_room_size[1]):
+				for y in xrange(0,_room_size[1]):
 					_y = _pos[1]+y
 					_room.append((_x,_y))
 			
@@ -1089,9 +1111,9 @@ class LevelGen:
 		
 		#for road in _town.get_all_zones_of_type('road'):
 		#	_pos = (1+(road['pos'][0])*_room_size[0],1+(road['pos'][1])*_room_size[1])
-		#	for x in range(0,_room_size[0]):
+		#	for x in xrange(0,_room_size[0]):
 		#		_x = _pos[0]+x
-		#		for y in range(0,_room_size[1]):
+		#		for y in xrange(0,_room_size[1]):
 		#			_y = _pos[1]+y
 		#			try:
 		#				#if road['orientation']=='hor':
@@ -1102,7 +1124,7 @@ class LevelGen:
 		#			except:
 		#				pass
 		
-		for t in range(40):
+		for t in xrange(40):
 			_tree = self.add_item(32,
 				(random.randint(10,self.size[0]-10),
 				random.randint(10,self.size[1]-10)))
@@ -1155,10 +1177,10 @@ class LevelGen:
 	
 	def generate_tree(self):
 		_limbs = []
-		for x in range(-6,7):
+		for x in xrange(-6,7):
 			_y = []
 			
-			for y in range(-6,7):
+			for y in xrange(-6,7):
 				_y.append(0)
 			
 			_limbs.append(_y)
@@ -1179,10 +1201,10 @@ class town:
 		#	(that is, every x,y coord in self.size),
 		#	we instead make "zones", which are simply
 		#	chunks out of the landscape of size zone_size^2.
-		for x in range(self.size[0]/self.zone_size):
+		for x in xrange(self.size[0]/self.zone_size):
 			_y = []
 			
-			for y in range(self.size[1]/self.zone_size):
+			for y in xrange(self.size[1]/self.zone_size):
 				_y.append({'pos':(x,y),'zone':None,'facing_road':None})
 			
 			self.zones.append(_y)
@@ -1212,10 +1234,10 @@ class town:
 		_chunk[0]=_chunk_size
 		_chunk[1]=_chunk_size
 		
-		for i in range(8):
-			for _x in range(_chunk[0]):
+		for i in xrange(8):
+			for _x in xrange(_chunk[0]):
 				x = _at_chunk[0]+_x
-				for _y in range(_chunk[1]):
+				for _y in xrange(_chunk[1]):
 					y = _at_chunk[1]+_y
 					
 					if _flags['orientation']=='ver':
@@ -1241,8 +1263,8 @@ class town:
 		
 		#Now connect the zones.
 		_zones = copy.deepcopy(self.zones)
-		for x in range(self.size[0]/self.zone_size):
-			for y in range(self.size[1]/self.zone_size):
+		for x in xrange(self.size[0]/self.zone_size):
+			for y in xrange(self.size[1]/self.zone_size):
 				if self.zones[x][y]['zone']=='road': continue
 				_count = 0
 				for __pos in [(-1,0),(1,0),(0,-1),(0,1)]:
@@ -1264,8 +1286,8 @@ class town:
 		self.zones = _zones
 	
 	def get_zone(self,remove=True):
-		for y in range(self.size[1]/self.zone_size):
-			for x in range(self.size[0]/self.zone_size):
+		for y in xrange(self.size[1]/self.zone_size):
+			for x in xrange(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']=='res':
 					if remove: self.zones[x][y]['zone'] = None
 					return {'pos':(x,y),'open':self.zones[x][y]['facing_road']}
@@ -1273,8 +1295,8 @@ class town:
 	def get_random_zone(self,remove=True):
 		_zones = []
 		
-		for y in range(self.size[1]/self.zone_size):
-			for x in range(self.size[0]/self.zone_size):
+		for y in xrange(self.size[1]/self.zone_size):
+			for x in xrange(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']=='res':
 					_zones.append({'pos':(x,y),'open':self.zones[x][y]['facing_road']})
 		
@@ -1285,16 +1307,16 @@ class town:
 	def get_all_zones_of_type(self,type):
 		_ret = []
 		
-		for y in range(self.size[1]/self.zone_size):
-			for x in range(self.size[0]/self.zone_size):
+		for y in xrange(self.size[1]/self.zone_size):
+			for x in xrange(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']==type:
 					_ret.append({'pos':(x,y),'orientation':self.zones[x][y]['orientation']})
 		
 		return _ret
 	
 	def out(self):
-		for y in range(self.size[1]/self.zone_size):
-			for x in range(self.size[0]/self.zone_size):
+		for y in xrange(self.size[1]/self.zone_size):
+			for x in xrange(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']: print self.zones[x][y]['zone'][1],
 				else: print '.',
 			print

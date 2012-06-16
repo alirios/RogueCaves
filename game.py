@@ -88,7 +88,7 @@ var.gametime = time.time()
 var.fpstime = time.time()
 var.dirty = []
 
-color_codes = {'black':(0,0,0),
+var.color_codes = {'black':(0,0,0),
 	'white':(255,255,255),
 	'gray':(128,128,128),
 	'red':(255,0,0),
@@ -111,10 +111,10 @@ color_codes = {'black':(0,0,0),
 
 if not var.server and var.output=='pygame':
 	#Colors...
-	for color in color_codes:
-		pygcurse.colornames[color] = pygame.Color(color_codes[color][0],
-			color_codes[color][1],
-			color_codes[color][2])
+	for color in var.color_codes:
+		pygcurse.colornames[color] = pygame.Color(var.color_codes[color][0],
+			var.color_codes[color][1],
+			var.color_codes[color][2])
 	
 	#Setup
 	var.clock = pygame.time.Clock()
@@ -260,6 +260,8 @@ else:
 	var.player.talents.append('Animal Husbandry')
 	
 	var.camera = [var.player.pos[0]-(var.window_size[0]/2),var.player.pos[1]-(var.window_size[1]/2)]
+	if var.camera[0]<0: var.camera[0]=0
+	if var.camera[1]<0: var.camera[1]=0
 
 	for i in range(9):
 		var.player.add_item_raw(21)
@@ -282,8 +284,8 @@ def draw_tile(tile,pos,color):
 		else: var.buffer[_x][_y] = tile['id']
 	elif tile.has_key('icon'):
 		if tile.has_key('limbs'):
-			for __x in range(-6,7):
-				for __y in range(-6,7):
+			for __x in xrange(-6,7):
+				for __y in xrange(-6,7):
 					if tile['limbs'][__x][__y]:
 						libtcod.console_set_char_background(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50), flag=libtcod.BKGND_SET)
 						libtcod.console_set_char_foreground(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50))
@@ -300,8 +302,8 @@ def draw_tile(tile,pos,color):
 	if var.output=='pygame':
 		var.view.putchar(tile['icon'],x=_x,y=_y,fgcolor=color[0],bgcolor=color[1])
 	else:
-		_color = (color_codes[color[0]],color_codes[color[1]])
-		libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
+		_color = (var.color_codes[color[0]],var.color_codes[color[1]])
+		#libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
 		libtcod.console_set_char_foreground(var.view, _x, _y, libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
 		libtcod.console_set_char(var.view, _x, _y, tile['icon'])
 
@@ -344,8 +346,8 @@ def draw_screen(refresh=False):
 		if _yrange[0]<0: _yrange[0]=0
 		if _yrange[1]>var.window_size[1]: _yrange[1]=var.window_size[1]
 	
-	for x in range(_xrange[0],_xrange[1]):
-		for y in range(_yrange[0],_yrange[1]):
+	for x in xrange(_xrange[0],_xrange[1]):
+		for y in xrange(_yrange[0],_yrange[1]):
 			_tile = None
 			
 			if var.player.level.items[x][y]:
@@ -482,9 +484,16 @@ def draw_screen(refresh=False):
 				var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	else:
 		libtcod.console_blit(var.log, 0, 0, var.window_size[0], 6, 0, 0, var.window_size[1]-6)
+		_map = var.player.level.color_map
+		libtcod.console_fill_background(var.view,
+			_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
+			_map[1][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
+			_map[2][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]])
 		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
 		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		#var.console_buffer.blit(var.view)
+		#print var.camera[0],var.camera[0]+var.window_size[0],
+		#print _map[1][var.camera[0]:var.camera[0]+var.window_size[0],var.camera[1]:var.camera[0]+var.window_size[0]]
 		libtcod.console_flush()
 	
 	if time.time()-var.fpstime>=1:

@@ -67,6 +67,8 @@ class World:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(exits=_exits)
 				level['level'].z = level['z']
+			
+			level['level'].build_color_map()
 			#logging.debug('\tTotal: %s' % (time.time()-_ltime))
 		
 		logging.debug('[LevelGen] Took: %s' % (time.time()-_stime))
