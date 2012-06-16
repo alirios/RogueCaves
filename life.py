@@ -1626,25 +1626,24 @@ class life:
 		if self.player:
 			if dir == 'up' and self.pos[1]-1>=0:
 				_pos[1]-=1
-				if _pos[1]-var.camera[1]<(var.window_size[1]/2)-var.scroll_speed:
-					#print 'YEAHHHHHHHHHHHHHH'
+				if _pos[1]-var.camera[1]<=(var.window_size[1]/2)-var.scroll_speed:
 					var.camera[1]-=var.scroll_speed
 					if var.camera[1]<0: var.camera[1]=0
 			elif dir == 'down' and self.pos[1]+1<var.world.size[1]:
 				_pos[1]+=1
-				if _pos[1]-var.camera[1]>(var.window_size[1]/2)+var.scroll_speed:
+				if _pos[1]-var.camera[1]>=(var.window_size[1]/2)+var.scroll_speed-2:
 					var.camera[1]+=var.scroll_speed
 				if var.camera[1]>=var.world_size[1]-1:
 					var.camera[1]=var.world_size[1]-1
 					print 'greater'
 			elif dir == 'left' and self.pos[0]-1>=0:
 				_pos[0]-=1
-				if _pos[0]-var.camera[0]<(var.window_size[0]/2)-var.scroll_speed:
+				if _pos[0]-var.camera[0]<=(var.window_size[0]/2)-var.scroll_speed:
 					var.camera[0]-=var.scroll_speed		
 				if var.camera[0]<0: var.camera[0]=0
 			elif dir == 'right' and self.pos[0]+1<var.world.size[0]:
 				_pos[0]+=1
-				if _pos[0]-var.camera[0]>(var.window_size[0]/2)+var.scroll_speed:
+				if _pos[0]-var.camera[0]>=(var.window_size[0]/2)+var.scroll_speed:
 					var.camera[0]+=var.scroll_speed
 		else:
 			_pos = self.think()

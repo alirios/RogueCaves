@@ -49,7 +49,8 @@ if var.server: logging.info('Rogue Caves Server - %s' % __version__)
 else: logging.info('Rogue Caves - %s' % __version__)
 
 #Setup stuff...
-var.window_size = (100,50)
+#var.window_size = (100,50)
+var.window_size = (70,40)
 var.world_size = (200,100)
 var.camera = [0,0]
 var.scroll_speed = 1
@@ -177,7 +178,10 @@ if not var.server and var.output=='pygame':
 elif not var.server and var.output=='libtcod':
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
 	#var.console_buffer = libtcod.ConsoleBuffer(var.window_size[0],var.window_size[1]-6)
-	libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+	if '-small' in sys.argv:
+		libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+	else:
+		libtcod.console_set_custom_font(os.path.join('data','terminal16x16_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
 	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
 	var.tree = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
@@ -484,13 +488,16 @@ def draw_screen(refresh=False):
 				var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	else:
 		libtcod.console_blit(var.log, 0, 0, var.window_size[0], 6, 0, 0, var.window_size[1]-6)
-		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
-		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		_map = var.player.level.color_map
 		libtcod.console_fill_background(var.view,
 			_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
 			_map[1][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
 			_map[2][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]])
+		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
+		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
+		#var.console_buffer.blit(var.view)
+		#print var.camera[0],var.camera[0]+var.window_size[0],
+		#print _map[1][var.camera[0]:var.camera[0]+var.window_size[0],var.camera[1]:var.camera[0]+var.window_size[0]]
 		libtcod.console_flush()
 	
 	if time.time()-var.fpstime>=1:

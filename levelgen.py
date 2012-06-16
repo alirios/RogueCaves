@@ -1125,10 +1125,11 @@ class LevelGen:
 		#				pass
 		
 		for t in xrange(40):
-			_tree = self.add_item(32,
-				(random.randint(10,self.size[0]-10),
-				random.randint(10,self.size[1]-10)))
-			_tree['limbs'] = self.generate_tree()
+			_pos = (random.randint(10,self.size[0]-10),
+				random.randint(10,self.size[1]-10))
+			if self.map[_pos[0]][_pos[1]] in var.GRASS:
+				_tree = self.add_item(32,_pos)
+				_tree['limbs'] = self.generate_tree()
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
@@ -1184,6 +1185,8 @@ class LevelGen:
 				_y.append(0)
 			
 			_limbs.append(_y)
+		
+		_limbs[0][0]=1
 		
 		for pos in draw.draw_circle((0,0),random.choice([5,7,9,11,13])):
 			_limbs[pos[0]][pos[1]]=1	
