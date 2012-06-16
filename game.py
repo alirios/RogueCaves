@@ -484,16 +484,13 @@ def draw_screen(refresh=False):
 				var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	else:
 		libtcod.console_blit(var.log, 0, 0, var.window_size[0], 6, 0, 0, var.window_size[1]-6)
+		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
+		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		_map = var.player.level.color_map
 		libtcod.console_fill_background(var.view,
 			_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
 			_map[1][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
 			_map[2][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]])
-		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
-		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
-		#var.console_buffer.blit(var.view)
-		#print var.camera[0],var.camera[0]+var.window_size[0],
-		#print _map[1][var.camera[0]:var.camera[0]+var.window_size[0],var.camera[1]:var.camera[0]+var.window_size[0]]
 		libtcod.console_flush()
 	
 	if time.time()-var.fpstime>=1:
