@@ -1034,7 +1034,7 @@ class LevelGen:
 			'store','store','bar','store','store','store','forge']:
 			_room = []
 			_zone = _town.get_random_zone()
-			_pos = (1+(_zone['pos'][0])*_room_size[0],1+(_zone['pos'][1])*_room_size[1])
+			_pos = (50+(_zone['pos'][0])*_room_size[0],50+(_zone['pos'][1])*_room_size[1])
 		
 			for x in range(0,_room_size[0]):
 				_x = _pos[0]+x
@@ -1102,6 +1102,12 @@ class LevelGen:
 		#			except:
 		#				pass
 		
+		for t in range(40):
+			_tree = self.add_item(32,
+				(random.randint(10,self.size[0]-10),
+				random.randint(10,self.size[1]-10)))
+			_tree['limbs'] = self.generate_tree()
+		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4
 			self.claim_real_estate(pos,(1,1))
@@ -1146,6 +1152,21 @@ class LevelGen:
 				
 				if need == 28:
 					_i['contains'] = 'ale'
+	
+	def generate_tree(self):
+		_limbs = []
+		for x in range(-6,7):
+			_y = []
+			
+			for y in range(-6,7):
+				_y.append(0)
+			
+			_limbs.append(_y)
+		
+		for pos in draw.draw_circle((0,0),random.choice([5,7,9,11,13])):
+			_limbs[pos[0]][pos[1]]=1	
+		
+		return _limbs
 
 class town:
 	def __init__(self,size=(78,36)):

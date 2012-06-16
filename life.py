@@ -1642,12 +1642,26 @@ class life:
 		if self.player:
 			if dir == 'up' and self.pos[1]-1>=0:
 				_pos[1]-=1
+				if _pos[1]-var.camera[1]<(var.window_size[1]/2)-var.scroll_speed:
+					#print 'YEAHHHHHHHHHHHHHH'
+					var.camera[1]-=var.scroll_speed
+					if var.camera[1]<0: var.camera[1]=0
 			elif dir == 'down' and self.pos[1]+1<var.world.size[1]:
 				_pos[1]+=1
+				if _pos[1]-var.camera[1]>(var.window_size[1]/2)+var.scroll_speed:
+					var.camera[1]+=var.scroll_speed
+				if var.camera[1]>=var.world_size[1]-1:
+					var.camera[1]=var.world_size[1]-1
+					print 'greater'
 			elif dir == 'left' and self.pos[0]-1>=0:
 				_pos[0]-=1
+				if _pos[0]-var.camera[0]<(var.window_size[0]/2)-var.scroll_speed:
+					var.camera[0]-=var.scroll_speed		
+				if var.camera[0]<0: var.camera[0]=0
 			elif dir == 'right' and self.pos[0]+1<var.world.size[0]:
 				_pos[0]+=1
+				if _pos[0]-var.camera[0]>(var.window_size[0]/2)+var.scroll_speed:
+					var.camera[0]+=var.scroll_speed
 		else:
 			_pos = self.think()
 			
@@ -1669,7 +1683,10 @@ class life:
 		if _items:
 			_i = 0
 			for _tile in _items:
-				if _tile['tile'] == 11:
+				if _tile['solid']:
+					self.pos = self.pos[:]
+					return
+				elif _tile['tile'] == 11:
 					if _tile['life']<=0:
 						_chance = random.randint(0,100)
 						if _chance <= 55:
@@ -1832,7 +1849,6 @@ class life:
 				pass
 			else:
 				self.claim_building(where,label)
-				functions.log('%s has claimed \'%s\'!' % (self.name,where))
 	
 	def go_to_building_and_buy(self,items,building):
 		"""Go to 'building' and buy 'item'"""

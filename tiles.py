@@ -23,7 +23,8 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 	'28':{'name':'barrel','solid':False,'type':'container','contains':None,'tile':28,'price':40},
 	'30':{'name':'forge','solid':False,'type':'forge','tile':30,'price':100,'forging':None,
 		'forge_time':0},
-	'31':{'name':'iron','solid':False,'type':'ore','tile':31,'price':16}}
+	'31':{'name':'iron','solid':False,'type':'ore','tile':31,'price':16},
+	'32':{'name':'tree','solid':True,'type':'tree','tile':32,'price':-1}}
 
 var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},
@@ -56,7 +57,8 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'28':{'icon':'8','color':['brown','darkbrown']},
 	'29':{'icon':'.','color':['sand','darkishbrown']},
 	'30':{'icon':'#','color':['white','black']},
-	'31':{'icon':'i','color':['gray','darkgray']}}
+	'31':{'icon':'i','color':['gray','darkgray']},
+	'32':{'icon':'#','color':['brown','darkbrown']}}
 
 var.solid = [0,11,15]
 var.blocking = [10]

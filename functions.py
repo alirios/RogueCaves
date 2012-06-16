@@ -228,7 +228,6 @@ def generate_human(job):
 	
 	_ret.attracted_to.extend(random.sample(_high_attractions,_high_attractions_score))
 	_ret.attracted_to.extend(random.sample(_mid_attractions,_mid_attractions_score))
-	#_ret.attracted_to.extend(random.sample(_low_attractions,_low_attractions_score))
 	_ret.attracted_to.extend(random.sample(_low_attractions,1))
 	
 	#Now pick some things this ALife likes
@@ -239,7 +238,6 @@ def generate_human(job):
 	
 	#and dislikes
 	_ret.dislikes = random.sample(_likes,random.randint(2,4))
-	_ret.dislikes.append('ale')
 	
 	if job=='trade':
 		if _male:
