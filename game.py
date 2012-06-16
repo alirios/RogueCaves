@@ -326,7 +326,7 @@ def draw_screen(refresh=False):
 	if not var.player.level.outside:
 		if var.output=='pygame': var.view.setbrightness(0, region=region)
 	
-	if not var.camera == var.camera_last:
+	if not var.camera == var.camera_last and var.output=='libtcod':
 		libtcod.console_clear(var.tree)
 	
 	var.player.level.light(var.player.pos)
@@ -715,7 +715,7 @@ def get_input():
 			elif event.type == MOUSEBUTTONDOWN:
 				for life in var.life:
 					if life.z == var.player.z:
-						if life.pos == list(var.mouse_pos):
+						if [life.pos[0]-var.camera[0],life.pos[1]-var.camera[1]] == list(var.mouse_pos):
 							print '='*8
 							print life.name
 							print 'Task: %s' % life.task

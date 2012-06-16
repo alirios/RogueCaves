@@ -171,8 +171,9 @@ class LevelGen:
 		
 		_item['pos'] = pos
 		
-		self.items_shortcut.append(_item)
-		if not no_place: self.items[pos[0]][pos[1]].append(_item)
+		if not no_place:
+			self.items[pos[0]][pos[1]].append(_item)
+			self.items_shortcut.append(_item)
 		return _item
 	
 	def place_item(self,pos,item):
@@ -504,24 +505,13 @@ class LevelGen:
 		return False
 	
 	def remove_item_at(self,item,pos):
-		
 		for _item in self.items_shortcut:
 			if _item['type'] == 'storage':
 				for __item in _item['items']:
 					if __item == item:
 						_item['items'].remove(__item)
 				if _item == item:
-					self.remove_item(pos,item)
-		
-		#for y in xrange(self.size[1]):
-		#	for x in xrange(self.size[0]):
-		#		for _item in self.items[x][y]:
-		#			if _item['type'] == 'storage':
-		#				for __item in _item['items']:
-		#					if __item == item:
-		#						_item['items'].remove(item)
-		#			if _item == item:
-		#				self.items[x][y].remove(item)						
+					self.remove_item(pos,item)					
 	
 	def get_room(self,name):
 		for room in self.rooms:
@@ -583,15 +573,18 @@ class LevelGen:
 		for item in self.get_all_items_of_type(['seed','stove','forge'],check_storage=False):
 			if item['type'] == 'seed':
 				if item.has_key('planted_by') and item['growth']==item['growth_max']:
-					self.items[item['pos'][0]][item['pos'][1]].remove(item)
+					self.remove_item(item['pos'],item)
 					_i = self.add_item(item['makes'],item['pos'])
 					_i['planted_by'] = item['planted_by']
 				
-				if item['growth_time']>=item['growth_time_max']:
-					item['growth']+=1
-					item['image_index']+=1
-					item['growth_time']=0
-				else: item['growth_time']+=1
+				if item['growth']<item['growth_max']:
+					if item['growth_time']>=item['growth_time_max']:
+						item['growth']+=1
+						item['image_index']+=1
+						item['growth_time']=0
+					else:
+						item['growth_time']+=1
+						#print 'ticking',item['growth_time'],item['image_index']
 			elif item['type'] == 'stove':
 				if item['cooking'] and item['cooking']['type']=='food':
 					if item['cooking']['type']=='food' and\
@@ -1133,7 +1126,7 @@ class LevelGen:
 		#			except:
 		#				pass
 		
-		for t in xrange(40):
+		for t in xrange(140):
 			_pos = (random.randint(10,self.size[0]-10),
 				random.randint(10,self.size[1]-10))
 			if self.map[_pos[0]][_pos[1]] in var.GRASS:

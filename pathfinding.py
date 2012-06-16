@@ -42,18 +42,27 @@ class astar:
 			self.tmap.append([0] * self.size[1])
 			
 		#Create our map
+		#for x in xrange(self.size[0]):
+		#	_ycol = []
+		#	for y in xrange(self.size[1]):
+		#		if self.omap[x][y] in self.blocking:
+		#			_ycol.append(0)
+		#		else:
+		#			_ycol.append(1)
+		#	
+		#	self.map.append(_ycol)
+		#
+		#for pos in blocking:
+		#	self.map[pos[0]][pos[1]] = 0
+		self.map = numpy.ones((self.size[1],self.size[0]))
+		
 		for x in xrange(self.size[0]):
-			_ycol = []
 			for y in xrange(self.size[1]):
 				if self.omap[x][y] in self.blocking:
-					_ycol.append(0)
-				else:
-					_ycol.append(1)
-			
-			self.map.append(_ycol)
+					self.map[y,x] = 0
 		
 		for pos in blocking:
-			self.map[pos[0]][pos[1]] = 0
+			self.map[pos[1],pos[0]] = 0
 		
 		#Calculate our starting node
 		if not self.dij:
@@ -188,7 +197,7 @@ class astar:
 			_x = pos[0]+r[0]
 			_y = pos[1]+r[1]
 			
-			if _x<0 or _x>=self.size[0] or _y<0 or _y>=self.size[1] or not self.map[_x][_y]: continue
+			if _x<0 or _x>=self.size[0] or _y<0 or _y>=self.size[1] or not self.map[_y,_x]: continue
 			
 			if (_x,_y) in self.clist and checkclist:
 				continue 

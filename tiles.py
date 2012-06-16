@@ -9,7 +9,7 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 		'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
 	'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
 	'21':{'name':'carrot (seed)','solid':False,'type':'seed','tile':21,'price':2,\
-		'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':30,'image_index':0,\
+		'growth':0,'growth_max':2,'growth_time':0,'growth_time_max':5,'image_index':0,\
 		'images':['i','I','Y'],'makes':22},
 	'22':{'name':'carrot','solid':False,'type':'food','tile':22,'price':4,'cook_time':10,\
 		'makes':25},

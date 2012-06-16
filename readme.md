@@ -38,6 +38,10 @@ Current Version: 06.16.2012A
 ----------------------------
 Changed
 -------
+* pathfinding.py is now using numpy
+* Fixed memory leak in pathfinding.py
+* Optimized most functions in levelgen.py
+* Fixed farming
 * Scrolling
 * -font flag
 * -small flag

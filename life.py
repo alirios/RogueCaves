@@ -633,7 +633,8 @@ class life:
 				return False
 			_item['planted_by'] = self
 			_item['pos'] = _pos
-			self.level.items[_pos[0]][_pos[1]].append(_item)
+			#self.level.items[_pos[0]][_pos[1]].append(_item)
+			self.level.place_item(_pos,_item)
 			self.items.remove(_item)
 		
 		return True
@@ -1696,12 +1697,14 @@ class life:
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 %s.' % _tile['name'])
-				elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
-					if _tile['planted_by'] == self:
-						_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
-						self.add_item(_item)
-						if self.player:
-							functions.log('You picked up some %s.' % _tile['name'])
+				#elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
+				#	if _tile['planted_by'] == self:
+				#		_item = self.level.items[_pos[0]][_pos[1]]
+				#		print _item
+				#		self.level.remove_item(_pos,_item)
+				#		self.add_item(_item)
+				#		if self.player:
+				#			functions.log('You picked up some %s.' % _tile['name'])
 				
 				_i+=1
 		
@@ -1769,7 +1772,7 @@ class life:
 				_blocking.remove(tuple(pos))
 			
 			try:
-				_a = time.time()
+				#_a = time.time()
 				self.path = pathfinding.astar(start=self.pos,end=pos,\
 					omap=self.level.map,size=self.level.size,blocking=_blocking).path
 				#print 'Pathing time',time.time()-_a
@@ -1877,8 +1880,6 @@ class life:
 			for i in range(count):
 				for item in self.level.items[pos[0]][pos[1]]:
 					if item[tag] == want:
-						#self.level.items[pos[0]][pos[1]].remove(item)
-						#self.level.items_shortcut.remove(_item)
 						self.level.remove_item(pos,item)
 						self.add_item(item)
 						break
