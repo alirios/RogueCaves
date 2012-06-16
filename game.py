@@ -180,6 +180,13 @@ elif not var.server and var.output=='libtcod':
 	
 	if '-small' in sys.argv:
 		libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+	elif '-font' in sys.argv:
+		try:
+			_font = sys.argv[sys.argv.index('-font')+1]
+			libtcod.console_set_custom_font(_font, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+		except:
+			logging.error('Failed to load font!')
+			sys.exit()
 	else:
 		libtcod.console_set_custom_font(os.path.join('data','terminal16x16_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)

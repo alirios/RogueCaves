@@ -7,7 +7,6 @@ Todo
 ----
 * React to things like vomit, etc
 * Tint ground where liquid is spilled
-* -font flag
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -40,6 +39,7 @@ Current Version: 06.16.2012A
 Changed
 -------
 * Scrolling
+* -font flag
 * -small flag
 * Sped up levelgen.get_real_estate()
 
