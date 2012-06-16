@@ -1772,7 +1772,7 @@ class life:
 				_a = time.time()
 				self.path = pathfinding.astar(start=self.pos,end=pos,\
 					omap=self.level.map,size=self.level.size,blocking=_blocking).path
-				print 'Pathing time',time.time()-_a
+				#print 'Pathing time',time.time()-_a
 			except KeyboardInterrupt:
 				logging.error('[ALife.%s.Pathing] Failed to travel from %s to %s' %
 					(self.name,self.pos,pos))
