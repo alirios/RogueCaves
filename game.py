@@ -130,7 +130,7 @@ if not var.server and var.output=='pygame':
 		font=_font,
 		caption='RogueCaves')
 	var.view = pygcurse.PygcurseSurface(var.window_size[0],
-		var.window_size[1]-6,
+		var.window_size[1],
 		font=_font,
 		windowsurface=var.window._windowsurface)
 	var.menu = pygcurse.PygcurseSurface(var.window_size[0],
@@ -177,7 +177,7 @@ if not var.server and var.output=='pygame':
 	var.view.update()
 elif not var.server and var.output=='libtcod':
 	var.buffer = [[0] * var.world_size[1] for i in range(var.world_size[0])]
-	#var.console_buffer = libtcod.ConsoleBuffer(var.window_size[0],var.window_size[1]-6)
+	
 	if '-small' in sys.argv:
 		libtcod.console_set_custom_font(os.path.join('data','terminal8x8_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	else:
@@ -258,8 +258,8 @@ else:
 	var.player.speed = 1
 	var.player.speed_max = 1
 	var.player.level = var.world.get_level(var.player.z)
-	#var.player.pos = list(var.player.level.get_open_buildings_of_type('bar')[0]['door'])
-	var.player.pos = [11,10]
+	var.player.pos = list(var.player.level.get_open_buildings_of_type('bar')[0]['door'])
+	#var.player.pos = [11,10]
 	var.player.god = var.ivan
 	var.player.talents.append('Animal Husbandry')
 	
@@ -287,7 +287,7 @@ def draw_tile(tile,pos,color):
 		if var.buffer[_x][_y] == tile['id'] and var.player.level.outside: return
 		else: var.buffer[_x][_y] = tile['id']
 	elif tile.has_key('icon'):
-		if tile.has_key('limbs'):
+		if tile.has_key('limbs') and var.output=='libtcod':
 			for __x in xrange(-6,7):
 				for __y in xrange(-6,7):
 					if tile['limbs'][__x][__y]:
@@ -298,7 +298,7 @@ def draw_tile(tile,pos,color):
 		if var.buffer[_x][_y] == tile['icon'] and var.player.level.outside: return
 		else: var.buffer[_x][_y] = tile['icon']
 	
-	var.dirty.append(pos)
+	var.dirty.append((_x,_y))
 	
 	if isinstance(tile['icon'],unicode):
 		tile['icon'] = str(tile['icon'])

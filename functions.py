@@ -262,7 +262,7 @@ def generate_human(job):
 			_ret.icon['color'][0] = 'purple'
 		for i in range(9):
 			_ret.add_item_raw(21)
-		#_ret.skills = ['farm']
+		_ret.skills = ['farm']
 		_ret.thirst = 10
 		_ret.pos = list(_ret.get_claimed('home',return_building=True)['door'])
 	elif job=='barkeep':

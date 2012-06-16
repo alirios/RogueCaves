@@ -460,27 +460,22 @@ class LevelGen:
 		
 		return _ret
 	
-	def get_real_estate(self,size):
+	def get_real_estate(self,pos,size):
 		_ret = []
-		for x1 in xrange(self.size[0]):
-			if not x1: continue
-			#if x1==self.size[0]: continue
-			for y1 in xrange(self.size[1]):
-				if not y1: continue
-				#if y1>=self.size[1]: continue
-				_break = False
-				for x2 in xrange(size[0]):
-					if x1+x2>=self.size[0]: _break=True;break
-					for y2 in xrange(size[1]):
-						if y1+y2>=self.size[1]-1: _break=True;break
-						if (x1+x2,y1+y2) in self.real_estate:
-							_break = True
-							break
-					
-					if _break: break
+		for (x1,y1) in self.get_open_space_around(pos,dist=30):
+			_break = False
+			for x2 in xrange(size[0]):
+				if x1+x2>=self.size[0]: _break=True;break
+				for y2 in xrange(size[1]):
+					if y1+y2>=self.size[1]-1: _break=True;break
+					if (x1+x2,y1+y2) in self.real_estate:
+						_break = True
+						break
 				
 				if _break: break
-				else: _ret.append((x1,y1))
+			
+			if _break: break
+			else: _ret.append((x1,y1))
 		
 		return _ret
 	

@@ -2027,7 +2027,7 @@ class life:
 		if _land:#self.task['where']:
 			where = (_land['where'][0],_land['where'][1],_land['size'][0],_land['size'][1])
 		else:
-			_res = self.level.get_real_estate((3,3))
+			_res = self.level.get_real_estate(self.pos,(3,3))
 			
 			_lowest = {'entry':None,'dist':100}
 			for entry in _res:

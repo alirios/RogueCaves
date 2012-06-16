@@ -34,7 +34,14 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.15.2012A
+Current Version: 06.16.2012A
+----------------------------
+Changed
+-------
+* -small flag
+* Sped up levelgen.get_real_estate()
+
+Previous Version: 06.15.2012A
 ----------------------------
 Changed
 -------
