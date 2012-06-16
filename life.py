@@ -541,7 +541,8 @@ class life:
 				self.announce(what='hit person with item',
 					person=life.id,
 					item=functions.get_item_name(item))
-				self.level.items[item['pos'][0]][item['pos'][1]].append(item)
+				#self.level.items[item['pos'][0]][item['pos'][1]].append(item)
+				self.level.place_item(tuple(item['pos']),item)
 				self.say(_str,action=True)
 				return		
 		
@@ -550,14 +551,14 @@ class life:
 		for pos in draw.draw_diag_line(self.pos,at):
 			print 'travel'
 			if self.level.map[pos[0]][pos[1]] in var.solid:
-				self.level.items[_last_pos[0]][_last_pos[1]].append(item)
+				#self.level.items[_last_pos[0]][_last_pos[1]].append(item)
+				self.level.place_item(_last_pos,item)
 				_str += 'It hits the wall and falls to the ground.'
 				break
 			
 			if _i>=6:
-				self.level.items[pos[0]][pos[1]].append(item)
 				_str += 'It falls to the ground'
-				self.level.items[pos[0]][pos[1]].append(item)
+				self.level.place_item(tuple(item['pos']),item)
 				break
 			
 			for life in var.life:
@@ -569,7 +570,8 @@ class life:
 					self.announce(what='hit person with item',
 						person=life.id,
 						item=functions.get_item_name(item))
-					self.level.items[pos[0]][pos[1]].append(item)
+					#self.level.items[pos[0]][pos[1]].append(item)
+					self.level.place_item(tuple(pos),item)
 					break
 			
 			_last_pos = pos
@@ -1873,7 +1875,9 @@ class life:
 			for i in range(count):
 				for item in self.level.items[pos[0]][pos[1]]:
 					if item[tag] == want:
-						self.level.items[pos[0]][pos[1]].remove(item)
+						#self.level.items[pos[0]][pos[1]].remove(item)
+						#self.level.items_shortcut.remove(_item)
+						self.level.remove_item(pos,item)
 						self.add_item(item)
 						break
 					elif item['type'] == 'storage':
@@ -1881,6 +1885,7 @@ class life:
 						for _item in item['items']:
 							if _item[tag] == want:
 								item['items'].remove(_item)
+								self.level.items_shortcut.remove(_item)
 								self.add_item(_item)
 								logging.debug('[ALife.%s] Removed %s from storage at %s' %
 									(self.name,_item['name'],pos))

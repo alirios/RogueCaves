@@ -24,6 +24,7 @@ class LevelGen:
 		self.tmap 			= []
 		self.fov 			= []
 		self.items 			= []
+		self.items_shortcut = []
 		
 		#Python has no concept of 2d arrays, so we "fake" it here.
 		for x in xrange(self.size[0]):
@@ -170,9 +171,17 @@ class LevelGen:
 		
 		_item['pos'] = pos
 		
+		self.items_shortcut.append(_item)
 		if not no_place: self.items[pos[0]][pos[1]].append(_item)
-		
 		return _item
+	
+	def place_item(self,pos,item):
+		self.items[pos[0]][pos[1]].append(item)
+		self.items_shortcut.append(item)
+	
+	def remove_item(self,pos,item):
+		self.items[pos[0]][pos[1]].remove(item)
+		self.items_shortcut.remove(item)
 	
 	def get_item(self,pos):
 		return self.items[pos[0]][pos[1]]
@@ -287,23 +296,21 @@ class LevelGen:
 		else: _list = False
 		
 		_ret = []
-		for y in xrange(self.size[1]):
-			for x in xrange(self.size[0]):
-				for item in self.items[x][y]:
-					if item['type'] == 'storage' and check_storage:
-						for _item in item['items']:
-							if _list:
-								if _item['type'] in type:
-									_ret.append(_item)
-							else:
-								if _item['type'] == type:
-									_ret.append(_item)
+		for item in self.items_shortcut:
+			if item['type'] == 'storage' and check_storage:
+				for _item in item['items']:
 					if _list:
-						if item['type'] in type:
-							_ret.append(item)
+						if _item['type'] in type:
+							_ret.append(_item)
 					else:
-						if item['type'] == type:
-							_ret.append(item)
+						if _item['type'] == type:
+							_ret.append(_item)
+			if _list:
+				if item['type'] in type:
+					_ret.append(item)
+			else:
+				if item['type'] == type:
+					_ret.append(item)
 		
 		return _ret
 	
@@ -311,16 +318,13 @@ class LevelGen:
 		"""Returns items with flag 'tag'."""
 		_ret = []
 		
-		for y in xrange(self.size[1]):
-			for x in xrange(self.size[0]):
-				for item in self.items[x][y]:
-					if item['type'] == 'storage' and not ignore_storage:
-						for _item in item['items']:
-							if _item.has_key(tag) and _item[tag]:
-								_ret.append(_item)
-					if item.has_key(tag) and item[tag]:
-						_ret.append(item)
-		
+		for item in self.items_shortcut:
+			if item['type'] == 'storage' and not ignore_storage:
+				for _item in item['items']:
+					if _item.has_key(tag) and _item[tag]:
+						_ret.append(_item)
+			if item.has_key(tag) and item[tag]:
+				_ret.append(item)
 		return _ret
 	
 	def get_all_items_in_building(self,building):
@@ -402,11 +406,11 @@ class LevelGen:
 	
 	def get_all_solid_items(self):
 		_ret = []
-		for y in xrange(self.size[1]):
-			for x in xrange(self.size[0]):
-				for item in self.items[x][y]:
-					if item['solid']:
-						_ret.append(item)
+		_a = time.time()
+		
+		for item in self.items_shortcut:
+			if item['solid']:
+				_ret.append(item)
 		
 		return _ret
 	
@@ -499,6 +503,15 @@ class LevelGen:
 		return False
 	
 	def remove_item_at(self,item,pos):
+		
+		for _item in self.items_shortcut:
+			if _item['type'] == 'storage':
+				for __item in _item['items']:
+					if __item == item:
+						_item['items'].remove(__item)
+				if _item == item:
+					self.remove_item(pos,item)
+		
 		for y in xrange(self.size[1]):
 			for x in xrange(self.size[0]):
 				for _item in self.items[x][y]:

@@ -51,7 +51,7 @@ else: logging.info('Rogue Caves - %s' % __version__)
 #Setup stuff...
 #var.window_size = (100,50)
 var.window_size = (70,40)
-var.world_size = (200,100)
+var.world_size = (300,300)
 var.camera = [0,0]
 var.scroll_speed = 1
 var.max_fps = 20
