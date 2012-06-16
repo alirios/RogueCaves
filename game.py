@@ -266,6 +266,7 @@ else:
 	var.camera = [var.player.pos[0]-(var.window_size[0]/2),var.player.pos[1]-(var.window_size[1]/2)]
 	if var.camera[0]<0: var.camera[0]=0
 	if var.camera[1]<0: var.camera[1]=0
+	var.camera_last = [-1,-1]
 
 	for i in range(9):
 		var.player.add_item_raw(21)
@@ -318,8 +319,7 @@ def draw_screen(refresh=False):
 	if not var.player.level.outside:
 		if var.output=='pygame': var.view.setbrightness(0, region=region)
 	
-	##TODO: ON SCROLL!!!
-	if var.output=='libtcod':
+	if not var.camera == var.camera_last:
 		libtcod.console_clear(var.tree)
 	
 	var.player.level.light(var.player.pos)
@@ -488,11 +488,11 @@ def draw_screen(refresh=False):
 				var.view.update(_xrange=tuple(_xrange),_yrange=tuple(_yrange))
 	else:
 		libtcod.console_blit(var.log, 0, 0, var.window_size[0], 6, 0, 0, var.window_size[1]-6)
-		_map = var.player.level.color_map
-		libtcod.console_fill_background(var.view,
-			_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
-			_map[1][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
-			_map[2][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]])
+		
+		if not var.camera == var.camera_last:
+			on_scroll()
+			var.camera_last = var.camera[:]
+		
 		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
 		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		#var.console_buffer.blit(var.view)
@@ -507,6 +507,13 @@ def draw_screen(refresh=False):
 		var.temp_fps = 0
 	else:
 		var.temp_fps += 1
+
+def on_scroll():
+	_map = var.player.level.color_map
+	libtcod.console_fill_background(var.view,
+		_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
+		_map[1][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
+		_map[2][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]])
 
 def tick():
 	_key = None
