@@ -1,5 +1,6 @@
 import var, time, sys
 from copy import deepcopy
+import numpy
 
 class astar:
 	def __init__(self,start=None,end=None,omap=None,size=None,goals=None,blocking=None,dij=False,inverted=False):
@@ -45,12 +46,22 @@ class astar:
 		for x in xrange(self.size[0]):
 			_ycol = []
 			for y in xrange(self.size[1]):
-				if self.omap[x][y] in self.blocking or (x,y) in blocking:
+				if self.omap[x][y] in self.blocking:
 					_ycol.append(0)
 				else:
 					_ycol.append(1)
 			
 			self.map.append(_ycol)
+		#self.map = numpy.zeros((self.size[1],self.size[0]))
+		#
+		#for x in xrange(self.size[0]):
+		#	for y in xrange(self.size[1]):
+		#		if self.omap[x][y] in self.blocking:
+		#			self.map[x,y] = 1
+		
+		for pos in blocking:
+			self.map[pos[0]][pos[1]] = 0
+		
 		print 'Map time',time.time()-_a
 		
 		#Calculate our starting node
