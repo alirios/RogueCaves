@@ -188,6 +188,7 @@ class LevelGen:
 	
 	def get_all_items_of_tile(self,tile):
 		_ret = []
+		
 		for y in xrange(self.size[1]):
 			for x in xrange(self.size[0]):
 				for item in self.items[x][y]:
@@ -512,15 +513,15 @@ class LevelGen:
 				if _item == item:
 					self.remove_item(pos,item)
 		
-		for y in xrange(self.size[1]):
-			for x in xrange(self.size[0]):
-				for _item in self.items[x][y]:
-					if _item['type'] == 'storage':
-						for __item in _item['items']:
-							if __item == item:
-								_item['items'].remove(item)
-					if _item == item:
-						self.items[x][y].remove(item)						
+		#for y in xrange(self.size[1]):
+		#	for x in xrange(self.size[0]):
+		#		for _item in self.items[x][y]:
+		#			if _item['type'] == 'storage':
+		#				for __item in _item['items']:
+		#					if __item == item:
+		#						_item['items'].remove(item)
+		#			if _item == item:
+		#				self.items[x][y].remove(item)						
 	
 	def get_room(self,name):
 		for room in self.rooms:

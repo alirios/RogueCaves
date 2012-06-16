@@ -41,15 +41,17 @@ class astar:
 			self.tmap.append([0] * self.size[1])
 			
 		#Create our map
-		for x in range(self.size[0]):
+		_a = time.time()
+		for x in xrange(self.size[0]):
 			_ycol = []
-			for y in range(self.size[1]):
+			for y in xrange(self.size[1]):
 				if self.omap[x][y] in self.blocking or (x,y) in blocking:
 					_ycol.append(0)
 				else:
 					_ycol.append(1)
 			
 			self.map.append(_ycol)
+		print 'Map time',time.time()-_a
 		
 		#Calculate our starting node
 		if not self.dij:
