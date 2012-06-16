@@ -47,6 +47,7 @@ Changed
 -------
 * Fixed logo
 * Combat overhauled
+* Added limbs
 
 Previous Version: 06.13.2012A
 ----------------------------

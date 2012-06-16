@@ -1,5 +1,5 @@
 import pathfinding, functions, draw, var
-import logging, random, copy, sys, re, os
+import logging, random, time, copy, sys, re, os
 
 class life:
 	def __init__(self,player=False):
@@ -714,22 +714,6 @@ class life:
 			_match = kargv.keys()
 			for key in kargv:
 				if item.has_key(key) and item[key] in kargv[key]:
-					_match.remove(key)
-					
-					if not _match:
-						_ret.append(item)
-						break
-		
-		return _ret
-	
-	def get_items_in_building(self,building,**kargv):
-		"""Returns items matching all values in kargv"""
-		_ret = []
-		
-		for item in self.items:
-			_match = kargv.keys()
-			for key in kargv:
-				if item.has_key(key) and item[key]==kargv[key]:
 					_match.remove(key)
 					
 					if not _match:
