@@ -1684,7 +1684,8 @@ class life:
 						else:
 							self.level.add_item(13,_pos)
 						
-						self.level.items[_pos[0]][_pos[1]].pop(_i)
+						_item = self.level.items[_pos[0]][_pos[1]][i]
+						self.level.remove_item(_pos,_item)
 					else:
 						if self.weapon:
 							_tile['life']-=self.weapon['damage']
@@ -1693,18 +1694,18 @@ class life:
 					self.pos = self.pos[:]
 					return
 				elif _tile['tile'] in [13,14,20]:
-					_item = self.level.items[_pos[0]][_pos[1]].pop(_i)
+					_item = self.level.items[_pos[0]][_pos[1]][i]
+					self.level.remove_item(_pos,_item)
 					self.add_item(_item)
 					if self.player:
 						functions.log('You picked up +1 %s.' % _tile['name'])
-				#elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
-				#	if _tile['planted_by'] == self:
-				#		_item = self.level.items[_pos[0]][_pos[1]]
-				#		print _item
-				#		self.level.remove_item(_pos,_item)
-				#		self.add_item(_item)
-				#		if self.player:
-				#			functions.log('You picked up some %s.' % _tile['name'])
+				elif _tile['type'] == 'food' and _tile.has_key('planted_by'):
+					if _tile['planted_by'] == self:
+						_item = self.level.items[_pos[0]][_pos[1]][_i]
+						self.level.remove_item(_pos,_item)
+						self.add_item(_item)
+						if self.player:
+							functions.log('You picked up some %s.' % _tile['name'])
 				
 				_i+=1
 		
@@ -1888,7 +1889,7 @@ class life:
 						for _item in item['items']:
 							if _item[tag] == want:
 								item['items'].remove(_item)
-								self.level.items_shortcut.remove(_item)
+								#self.level.items_shortcut.remove(_item)
 								self.add_item(_item)
 								logging.debug('[ALife.%s] Removed %s from storage at %s' %
 									(self.name,_item['name'],pos))
@@ -2197,18 +2198,21 @@ class life:
 		#Decide what to give this person
 		
 		_likes = self.get_relationship_with(who)['likes']
-		_in_storage = None
+		_in_storage = []
 		_has = None
 		
 		if _likes:
-			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_likes)
+			if self.get_claimed('home'):
+				_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_likes)
 			_has = self.get_items_ext(type=_likes)
 		elif not _in_storage and not _has:
 			_tlikes = ['food','cooked food']
-			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
+			if self.get_claimed('home'):
+				_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
 			_has = self.get_items_ext(type=['food','cooked food'])
 		else:
-			_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
+			if self.get_claimed('home'):
+				_in_storage = self.level.get_items_in_building_ext(self.get_claimed('home'),type=_tlikes)
 			_has = self.get_items_ext(type=['food','cooked food'])
 		
 		for item in _has:

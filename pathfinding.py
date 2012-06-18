@@ -42,18 +42,6 @@ class astar:
 			self.tmap.append([0] * self.size[1])
 			
 		#Create our map
-		#for x in xrange(self.size[0]):
-		#	_ycol = []
-		#	for y in xrange(self.size[1]):
-		#		if self.omap[x][y] in self.blocking:
-		#			_ycol.append(0)
-		#		else:
-		#			_ycol.append(1)
-		#	
-		#	self.map.append(_ycol)
-		#
-		#for pos in blocking:
-		#	self.map[pos[0]][pos[1]] = 0
 		self.map = numpy.ones((self.size[1],self.size[0]))
 		
 		for x in xrange(self.size[0]):

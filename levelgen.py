@@ -468,7 +468,7 @@ class LevelGen:
 	
 	def get_real_estate(self,pos,size):
 		_ret = []
-		for (x1,y1) in self.get_open_space_around(pos,dist=30):
+		for (x1,y1) in self.get_open_space_around(pos,dist=40):
 			_break = False
 			for x2 in xrange(size[0]):
 				if x1+x2>=self.size[0]: _break=True;break
@@ -1052,7 +1052,7 @@ class LevelGen:
 		
 		_town = town()
 		_town.generate()
-		_room_size = (6,6)
+		_room_size = (12,12)
 		
 		for _room_type in ['home','home','home','home','home','home','home','home','home',
 			'store','store','bar','store','store','store','forge']:
@@ -1060,29 +1060,24 @@ class LevelGen:
 			_zone = _town.get_random_zone()
 			_pos = (50+(_zone['pos'][0])*_room_size[0],50+(_zone['pos'][1])*_room_size[1])
 		
-			for x in xrange(0,_room_size[0]):
-				_x = _pos[0]+x
-				for y in xrange(0,_room_size[1]):
-					_y = _pos[1]+y
-					_room.append((_x,_y))
+			#for x in xrange(0,_room_size[0]):
+			#	_x = _pos[0]+x
+			#	for y in xrange(0,_room_size[1]):
+			#		_y = _pos[1]+y
+			#		_room.append((_x,_y))
 			
-			_room_walls = []
-			_room_floor = []
-			for pos in _room:
-				self.real_estate.append((pos[0],pos[1]))
-				if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
-					or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
-					self.map[pos[0]][pos[1]] = 15
-					_room_walls.append(pos)
-				else:
-					self.map[pos[0]][pos[1]] = 16
-					_room_floor.append(pos)
-				
-				if pos in self.walls:
-					self.walls.remove(pos)
+			#_room_walls = []
+			#_room_floor = []
+			#for pos in _room:
+			#	self.real_estate.append((pos[0],pos[1]))
+			#	if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
+			#		or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
+			#		self.map[pos[0]][pos[1]] = 15
+			#		_room_walls.append(pos)
+			#	else:
+			#		self.map[pos[0]][pos[1]] = 16
+			#		_room_floor.append(pos)
 			
-			__walls = _room_walls[:]
-			_doors = []
 			__pos = list(_pos)
 			if _zone['open'][0]==1:
 				__pos[0]+=((_zone['open'][0]*_room_size[0])-1)
@@ -1100,16 +1095,59 @@ class LevelGen:
 				if not ____pos in self.real_estate:
 					self.real_estate.append(____pos)
 			
-			_room_walls.remove(tuple(__pos))
+			_door = (__pos[0]-_pos[0],__pos[1]-_pos[1])
+			_building = self.generate_building(_door)
+			
+			_room_walls = []
+			_room_floor = []
+			for x in range(_building.size[0]):
+				for y in range(_building.size[1]):
+					_x = _pos[0]+y
+					_y = _pos[1]+x
+					if not _building.house[y,x]:
+						self.map[_x][_y] = 15
+						_room_walls.append((_x,_y))
+					else:
+						self.map[_x][_y] = 16
+						_room_floor.append((_x,_y))
+			
+			_walking = []
+			for entry in _building.walking_space:
+				_walking.append((_pos[0]+entry[0],_pos[1]+entry[1]))
+			
+			__room = {'name':_room_type,'walls':_room_walls,'walking_space':_walking,
+				'door':__pos,'type':_room_type,'owner':None}
+			
+			__room['name'] += str(functions.get_id())
+			
+			#_room_walls.remove(tuple(__pos))
+			if __room['type'] == 'home':
+				_needs = [26,24,18]
+			elif __room['type'] == 'store':
+				_needs = [18,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
+			elif __room['type'] == 'bar':
+				_needs = [28,18,27,27,27]
+			elif __room['type'] == 'forge':
+				_needs = [30,18,31]
+				__room['orders'] = ['23']
 			
 			self.map[__pos[0]][__pos[1]] = 16
-			__room = {'name':_room_type,'walls':_room_walls,'walking_space':_room_floor,\
-				'door':__pos[:],'type':_room_type,'owner':None}
-			
 			self.rooms.append(__room)
-			self.generate_building(__room)
+			#self.landmarks.append(random.choice(_room))
 			
-			self.landmarks.append(random.choice(_room))
+			for need in _needs:
+				_pos = random.choice(__room['walking_space'])
+				_stored = False
+				for _storage in self.get_all_items_in_building_of_type(__room['name'],'storage'):
+					_storage['items'].append(self.add_item(need,_pos,no_place=True))
+					_stored = True
+					break
+				
+				if not _stored:
+					_i = self.add_item(need,_pos)
+					
+					if need == 28:
+						_i['contains'] = 'ale'
 		
 		#for road in _town.get_all_zones_of_type('road'):
 		#	_pos = (1+(road['pos'][0])*_room_size[0],1+(road['pos'][1])*_room_size[1])
@@ -1137,46 +1175,8 @@ class LevelGen:
 			self.map[pos[0]][pos[1]] = 4
 			self.claim_real_estate(pos,(1,1))
 	
-	def generate_building(self,room):
-		if room['type'] == 'home':
-			_needs = [26,24,18]
-		elif room['type'] == 'store':
-			_needs = [18,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
-		elif room['type'] == 'bar':
-			_needs = [28,18,27,27,27]
-		elif room['type'] == 'forge':
-			_needs = [30,18,31]
-			room['orders'] = ['23']
-		
-		room['name'] += str(functions.get_id())
-		
-		#We like putting things in corners...
-		_possible = []
-		for pos in room['walking_space']:
-			_count = 0
-			for _pos in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,-1),(-1,1),(1,1)]:
-				x = pos[0]+_pos[0]
-				y = pos[1]+_pos[1]
-				
-				if self.map[x][y] in var.solid:
-					_count+=1
-
-			if _count==5:
-				_possible.append(pos)
-		
-		for need in _needs:
-			_stored = False
-			for _storage in self.get_all_items_in_building_of_type(room['name'],'storage'):
-				_storage['items'].append(self.add_item(need,_pos,no_place=True))
-				_stored = True
-				break
-			
-			if _possible and not _stored:
-				_pos = _possible.pop()
-				_i = self.add_item(need,_pos)
-				
-				if need == 28:
-					_i['contains'] = 'ale'
+	def generate_building(self,door):
+		return house(door)
 	
 	def generate_tree(self):
 		_limbs = []
@@ -1324,4 +1324,114 @@ class town:
 			for x in xrange(self.size[0]/self.zone_size):
 				if self.zones[x][y]['zone']: print self.zones[x][y]['zone'][1],
 				else: print '.',
+			print
+
+class house:
+	def __init__(self,open_side):
+		self.size = (12,12)
+		self.needs = ['bedroom','kitchen','bedroom']
+		self.rooms = [] #This will track the properties of each room
+		self.walking_space = []
+		
+		#What we're doing here is passing a blueprint along to levelgen,
+		#which will place all the tiles for us.
+		#We can do anything we want with the tiles, just as long as obey
+		#the guidelines put in place by 'open_side' and 'needs'
+
+		#Old housegen worked by collecting a list of needs for each
+		#house and placing the objects randomly inside.
+		#This works by tracking what kind of rooms each building needs.
+
+		#Creating a '2d' array in Python is pretty slow...
+		#This is a lot faster if we use Numpy
+		self.house = numpy.zeros(self.size,dtype=numpy.int16) #int16 because we don't need floats
+
+		#Just a reminder: Numpy arrays are [ROW,COLUMN]
+
+		#Start things off by looping through our needs
+		for need in self.needs:
+			if need=='bedroom':
+				_room_size = (5,5)
+			elif need=='kitchen':
+				_room_size = (5,5)
+			
+			#If this is the first room we place we should ensure it's near the "open"
+			#side of the building.
+			if not self.rooms:
+				_pos = self.find_open_near(_room_size,open_side)
+			else:
+				#_pos = random.choice(self.find_open(_room_size))
+				_pos = self.find_open_near(_room_size,random.choice(self.rooms)['pos'])
+			
+			_walking = []
+			for x in range(_room_size[0]):
+				if not x or x==_room_size[0]-1: continue
+				for y in range(_room_size[1]):
+					if not y or y==_room_size[1]-1: continue
+					self.house[_pos[0]+x,_pos[1]+y] = 1
+					_walking.append((_pos[0]+x,_pos[1]+y))
+					self.walking_space.append((_pos[0]+x,_pos[1]+y))
+			
+			if self.rooms:
+				_room = self.rooms[len(self.rooms)-1]
+				_from = random.choice(_walking)
+				_to = random.choice(_room['walking_space'])
+				
+				for pos in draw.draw_line(_from,_to):
+					self.house[pos[0],pos[1]]=1
+					_walking.append(pos)
+					self.walking_space.append(pos)
+			else:
+				#Connect the door to our first room
+				_to = random.choice(_walking)
+				for pos in draw.draw_line(open_side,_to):
+					self.house[pos[0],pos[1]]=1
+			
+			self.rooms.append({'pos':_pos,'walking_space':_walking,'type':need})
+
+	def find_open(self,size):
+		"""Finds us all open space inside of the array that fits 'size'"""
+		_ret = []
+		for x in range(self.size[0]):
+			for y in range(self.size[1]):
+				if not self.house[y,x]:
+					_break = False
+					for x1 in range(size[0]):	
+						for y1 in range(size[1]):
+							_pos = (x+x1,y+y1)
+							
+							#Make sure we do not touch the borders of the house
+							if _pos[0]>=self.size[0] or\
+								_pos[1]>=self.size[1] or\
+								self.house[_pos[0],_pos[1]]:
+								_break = True
+								break
+						
+						if _break:
+							break
+					
+					if not _break:
+						_ret.append((x,y))
+		
+		return _ret
+	
+	def find_open_near(self,size,pos):
+		"""Sorts data from find_open(size) to get the space closest to 'pos'"""
+		_open = self.find_open(size)
+		
+		_lowest = {'pos':None,'dist':9999}
+		for entry in _open:
+			_dist = abs(entry[0]-pos[0])+abs(entry[1]-pos[1])
+			
+			if _dist < _lowest['dist']:
+				_lowest['pos'] = entry
+				_lowest['dist'] = _dist
+		
+		return _lowest['pos']
+
+	def out(self):
+		for x in range(self.size[0]):
+			for y in range(self.size[1]):
+				if self.house[y,x]==1: print '.',
+				else: print '#',
 			print

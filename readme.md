@@ -7,6 +7,7 @@ Todo
 ----
 * React to things like vomit, etc
 * Tint ground where liquid is spilled
+* Draw item backgrounds
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -34,7 +35,15 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.16.2012A
+Current Version: 06.18.2012A
+----------------------------
+Changed
+-------
+* levelgen.house - House generation
+* chests no longer solid
+* Fixed iteration over non-sequence bug in life.build_relationship_with()
+
+Previous Version: 06.16.2012A
 ----------------------------
 Changed
 -------

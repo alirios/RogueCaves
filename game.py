@@ -50,7 +50,7 @@ else: logging.info('Rogue Caves - %s' % __version__)
 
 #Setup stuff...
 #var.window_size = (100,50)
-var.window_size = (70,40)
+var.window_size = (100,80)
 var.world_size = (300,300)
 var.camera = [0,0]
 var.scroll_speed = 1
@@ -736,8 +736,8 @@ def get_input():
 							#for item in life.items:
 							#	print item
 				
-				for item in var.player.level.items[var.mouse_pos[0]][var.mouse_pos[1]]:
-					if item['pos'] == var.mouse_pos:
+				for item in var.player.level.items[var.mouse_pos[0]+var.camera[0]][var.mouse_pos[1]+var.camera[1]]:
+					if [item['pos'][0]-var.camera[0],item['pos'][1]-var.camera[1]] == list(var.mouse_pos):
 						print item
 	else:
 		key = libtcod.console_check_for_keypress(flags=libtcod.KEY_PRESSED) 

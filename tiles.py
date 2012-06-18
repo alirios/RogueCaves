@@ -4,7 +4,7 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 	'13':{'name':'gold','solid':False,'type':'ore','tile':13,'price':15},
 	'14':{'name':'coal','solid':False,'type':'ore','tile':14,'price':2},
 	'17':{'name':'meat','solid':False,'type':'food','tile':17,'price':8},
-	'18':{'name':'chest','solid':True,'type':'storage','items':[],'tile':18,'price':25},
+	'18':{'name':'chest','solid':False,'type':'storage','items':[],'tile':18,'price':25},
 	'19':{'name':'pickaxe','solid':False,'type':'weapon','damage':3,\
 		'status':None,'rank':1,'sharp':True,'tile':19,'price':15},
 	'20':{'name':'bronze','solid':False,'type':'ore','tile':20,'price':1},
