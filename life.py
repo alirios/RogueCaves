@@ -1,5 +1,16 @@
-import pathfinding, functions, draw, var
-import logging, random, time, copy, sys, re, os
+import pathfinding
+import functions
+import draw
+import var
+import logging
+import random
+import time
+import copy
+import sys
+import re
+import os
+
+import libtcodpy as libtcod
 
 class life:
 	def __init__(self,player=False):
@@ -1084,15 +1095,24 @@ class life:
 	def attack(self,who):
 		"""Performs attack on object 'who'"""
 		if who.race in ['zombie']:
-			if self.player: functions.log('You swing at the %s!' % (who.race))
-			elif who.player: functions.log('The %s swings at you!' % (who.race))
+			if self.player: _atk_msg = 'You swing at the %s.' % (who.race)
+			elif who.player: _atk_msg = 'The %s swings at you.' % (who.race)
 		elif who.race in ['human']:
-			if self.player: functions.log('You swing at %s!' % (who.name))
-			elif who.player: functions.log('%s swings at you!' % (self.name))
-			#else: functions.log('%s swings at %s!' % (self.name,who.name))
+			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
+			elif who.player: _atk_msg = '%s swings at you.' % (self.name)
+			else:
+				if self.race=='human': functions.log('%s swings at %s' % (self.name,who.name))
+				elif self.race=='dog': functions.log('%s bites %s' % (self.name,who.name))
+		elif who.race in ['dog']:
+			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
+			elif who.player: _atk_msg = '%s lunges at you.' % (self.name)
+			else:
+				if self.race=='human': functions.log('%s swings at %s' % (self.name,who.name))
+				elif self.race=='dog': functions.log('%s bites %s' % (self.name,who.name))
 		else:
-			if self.player: functions.log('You swing at %s!' % (who.name))
-			elif who.player: functions.log('The %s swings at you!' % (self.race))
+			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
+			elif who.player: _atk_msg = 'The %s swings at you.' % (self.race)
+		
 		
 		self.hunger_timer -= 5
 		self.xp += 1
@@ -1130,17 +1150,34 @@ class life:
 				
 				if who.limbs[_hit_limb]['skin']['bruised']<3:
 					who.limbs[_hit_limb]['skin']['bruised']+=1
-					#logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
+					if self.player:
+						functions.log('You hit %s in the %s!' % (who.name,_hit_limb))
+					elif who.player:
+						functions.log('%s hits you in the %s!' % (self.name,_hit_limb))
+					logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
 				elif who.limbs[_hit_limb]['skin']['bruised']==3:
 					who.limbs[_hit_limb]['skin']['bruised']+=1
+					
+					if self.player:
+						functions.log('You hit %s in the %s, bruising the skin!' % (who.name,_hit_limb))
+					elif who.player:
+						functions.log('%s hit you in the %s, bruising the skin!' % (self.name,_hit_limb))
+					
 					_what = 'Hit %s in the %s, bruising the skin severely!' % (who.name,_hit_limb)
 					logging.debug('[ALife.%s] %s' % (self.name,_what))
 					_dam += 2
 				elif who.limbs[_hit_limb]['muscle']['bruised']<3:
-					print 'HEREERERE'
 					who.limbs[_hit_limb]['muscle']['bruised']+=1
-					#_what = 'Hit %s in the %s, bruising the muscle severely!' % (who.name,_hit_limb)
-					#logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
+					
+					if self.player:
+						functions.log('You hit %s in the %s!' % (who.name,_hit_limb))
+						if random.randint(0,1):
+							who.say('winces in pain.',action=True)
+						elif random.randint(0,1):
+							who.say('grasps their %s.' % _hit_limb,action=True)
+					elif who.player:
+						functions.log('%s hit you in the %s!' % (self.name,_hit_limb))
+					
 					_dam += 2
 				elif who.limbs[_hit_limb]['muscle']['bruised']==3:
 					who.limbs[_hit_limb]['muscle']['bruised']+=1
@@ -1151,6 +1188,9 @@ class life:
 			who.hp -= _dam
 			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,_dam))
 			self.announce(what='attacked person',person=who.id,damage=_dam)
+			
+			##TODO: Missing
+			#functions.log(_atk_msg)
 		
 		if who.hp<=0:
 			if who.race in ['zombie']:
@@ -1217,7 +1257,9 @@ class life:
 		
 		if tuple(pos) in _blocking:
 			_blocking.remove(tuple(pos))
-
+		
+		if len(_l)>=50: return False
+		
 		for _pos in _l:
 			if self.level.map[_pos[0]][_pos[1]] in var.solid:
 				_seen = False
@@ -1464,17 +1506,16 @@ class life:
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			#if self.judge(self)>=abs(self.judge(self.lowest['who'])):
 			if self.add_event('attack',100,who=self.lowest['who']):
 				if self.lowest['who'].player:
 					self.lowest['who'].is_in_danger(self)
-			#else:
-			#	if self.add_event('flee',100,who=self.lowest['who']):
-			#		self.remove_event('attack')
-			#	self.task = 'flee'
 			
-			if self.get_relationship_with(self.lowest['who'])['score']>=0:
-				#print self.name,'no longer scared of',self.lowest['who'].name
+			_relationship = self.get_relationship_with(self.lowest['who'])
+			if _relationship and _relationship['score']>=0:
+				self.lowest['who'] = None
+				self.lowest['score'] = 0
+				self.remove_event('attack')
+			elif not _relationship and self.lowest['who'].hp<=0:
 				self.lowest['who'] = None
 				self.lowest['score'] = 0
 				self.remove_event('attack')
@@ -1557,8 +1598,8 @@ class life:
 		elif self.task['what'] == 'flee':
 			if self.get_claimed('home'):
 				self.go_to(self.level.get_items_in_building(self.get_claimed('home'),type='bed')[0]['pos'])
-			#else:
-			#	print self.name,'NOWHERE TO RUN'
+			else:
+				self.go_to((5,5))
 			
 			if self.get_relationship_with(self.task['who'])>0:
 				self.task['who'] = None
@@ -1715,6 +1756,9 @@ class life:
 			
 			if life.pos == _pos:
 				if self.get_relationship_with(life) and self.get_relationship_with(life)['score']<=0:
+					self.attack(life)
+					_found = True
+				elif not life.faction == self.faction:
 					self.attack(life)
 					_found = True
 		
@@ -2372,6 +2416,8 @@ class human(life):
 			else:
 				functions.log('%s the %s runs towards you!' % \
 					(who.name,who.race))
+			
+			libtcod.console_set_keyboard_repeat(400,200)
 	
 	def get_weapon_name(self):
 		_name = ''
@@ -2566,6 +2612,12 @@ class human(life):
 		else:
 			_score += who.hp+who.atk+who.defe
 			if who.weapon: _score+=who.weapon['damage']*2
+			
+			#Distance penalty
+			_score -= functions.distance(self.pos,who.pos)
+			
+			if _score<=0: _score=1
+			
 			_score *= -1
 		
 		return _score
@@ -2674,7 +2726,7 @@ class human(life):
 			if self.get_claimed('work'):
 				self.add_event('run_bar',_barkeep_score,where=self.get_claimed('work'),delay=20)
 			else:
-				if self.task.has_key('where'):
+				if self.task.has_key('where') and self.task['where']:
 					_owner = self.level.get_room(self.task['where'])['owner']
 					if _owner and not _owner == self:
 						self.remove_event('run_bar')
@@ -2729,6 +2781,7 @@ class human(life):
 		
 		if not self.player and self.task['who'] and self.task['who'].player:
 			self.task['who'].in_danger = False
+			libtcod.console_set_keyboard_repeat(100,1)
 
 class crazy_miner(human):
 	def __init__(self):
@@ -2759,6 +2812,19 @@ class dog(life):
 		
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
+		
+		self.limbs = {'front left leg':{'skin':{'cut':5,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'front right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'back left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}},
+			'back right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0},
+				'bone':{'chipped':0}}}
 	
 	def on_enemy_spotted(self,who):
 		life.on_enemy_spotted(self,who)
@@ -2784,7 +2850,11 @@ class dog(life):
 			if _score<0: _score = 1
 				
 		else:
-			if who.weapon: _score+=who.weapon['damage']*2
+			if who.weapon:
+				_score+=who.weapon['damage']*2
+			else:
+				_score += who.atk
+			
 			_score *= -1
 		
 		return _score

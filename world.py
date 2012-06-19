@@ -78,6 +78,7 @@ class World:
 		for r in range(0): functions.generate_human('farmer')
 		for r in range(0): functions.generate_human('blacksmith')
 		for r in range(1): functions.generate_human('barkeep')
+		for r in range(1): functions.generate_human('bandit')
 	
 	def save(self):
 		logging.debug('[World.save] Gathering ALife strings...')
@@ -93,10 +94,15 @@ class World:
 		logging.debug('[World.save] Offloading strings to disk...')
 		
 		_save_file = open(os.path.join('data','test01.sav'),'w')
-		#_save_file.write(str(_alife))
-		_save_file.write(json.dumps({'alife':_alife})+'\n')
-		#_save_file.write(str(_levels))
-		_save_file.write(json.dumps({'levels':_levels})+'\n')
+		
+		try:
+			_save_file.write(json.dumps({'alife':_alife})+'\n')
+			_save_file.write(json.dumps({'levels':_levels})+'\n')
+		except:
+			logging.error('[World.Save.Error] Could not save world. Saving raw strings...')
+			_save_file.write(str(_alife))
+			_save_file.write(str(_levels))
+		
 		_save_file.close()
 		
 		logging.debug('[World.save] Done!')

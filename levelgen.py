@@ -1327,8 +1327,8 @@ class town:
 			print
 
 class house:
-	def __init__(self,open_side):
-		self.size = (12,12)
+	def __init__(self,open_side,size=(12,12)):
+		self.size = size
 		self.needs = ['bedroom','kitchen','bedroom']
 		self.rooms = [] #This will track the properties of each room
 		self.walking_space = []
@@ -1353,7 +1353,7 @@ class house:
 			if need=='bedroom':
 				_room_size = (5,5)
 			elif need=='kitchen':
-				_room_size = (5,5)
+				_room_size = (5,6)
 			
 			#If this is the first room we place we should ensure it's near the "open"
 			#side of the building.
@@ -1365,9 +1365,9 @@ class house:
 			
 			_walking = []
 			for x in range(_room_size[0]):
-				if not x or x==_room_size[0]-1: continue
+				if not x or x>=_room_size[0]-1: continue
 				for y in range(_room_size[1]):
-					if not y or y==_room_size[1]-1: continue
+					if not y or y>=_room_size[1]-1: continue
 					self.house[_pos[0]+x,_pos[1]+y] = 1
 					_walking.append((_pos[0]+x,_pos[1]+y))
 					self.walking_space.append((_pos[0]+x,_pos[1]+y))

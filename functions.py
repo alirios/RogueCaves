@@ -272,6 +272,13 @@ def generate_human(job):
 			_ret.icon['color'][0] = 'purple'
 		_ret.skills = ['barkeep']
 		_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
+	elif job=='bandit':
+		if _male:
+			_ret.icon['color'][0] = 'blue'
+		else:
+			_ret.icon['color'][0] = 'purple'
+		_ret.faction = 'bad'
+		#_ret.pos = list(_ret.level.get_open_buildings_of_type('store')[0]['door'])
 	
 	return _ret
 

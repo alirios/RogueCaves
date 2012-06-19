@@ -41,7 +41,7 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'12':{'icon':'#','color':['sand','brown']},
 	'13':{'icon':'1','color':['sand','gold']},
 	'14':{'icon':'c','color':['darkgray','darkergray']},
-	'15':{'icon':'#','color':['white','brown']},
+	'15':{'icon':'#','color':['palebrown','brown']},
 	'16':{'icon':'.','color':['brown','sand']},
 	'17':{'icon':'F','color':['red','lightsand']},
 	'18':{'icon':'#','color':['brown','lightsand']},
@@ -58,9 +58,10 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'29':{'icon':'.','color':['sand','darkishbrown']},
 	'30':{'icon':'#','color':['white','black']},
 	'31':{'icon':'i','color':['gray','darkgray']},
-	'32':{'icon':'#','color':['brown','darkbrown']}}
+	'32':{'icon':'#','color':['brown','darkbrown']},
+	'33':{'icon':'#','color':['darkishbrown','darkbrown']}}
 
-var.solid = [0,11,15]
+var.solid = [0,11,15,33]
 var.blocking = [10]
 
 var.DIRT = [28,29]

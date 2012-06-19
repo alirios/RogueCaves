@@ -188,6 +188,7 @@ elif not var.server and var.output=='libtcod':
 			logging.error('Failed to load font!')
 			sys.exit()
 	else:
+		var.window_size = (80,50)
 		libtcod.console_set_custom_font(os.path.join('data','terminal16x16_aa_tc.png'), libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
 	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)

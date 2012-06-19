@@ -39,6 +39,9 @@ Current Version: 06.18.2012A
 ----------------------------
 Changed
 -------
+* Working on combat
+* Less messages during combat
+* Dogs now attack
 * levelgen.house - House generation
 * chests no longer solid
 * Fixed iteration over non-sequence bug in life.build_relationship_with()
