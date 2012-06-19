@@ -889,6 +889,21 @@ class life:
 		if not _lowest['name']: return False
 		return _lowest['name']
 	
+	def get_max_speed(self):
+		_ret = self.speed_max
+		
+		for limb in ['left leg','right leg']:
+			if self.limbs.has_key(limb):
+				for key in self.limbs[limb]:
+					for part in self.limbs[limb][key]:
+						if self.limbs[limb][key][part]>0:
+							_ret+=1
+			else:
+				_ret+=3
+		
+		print self.name,_ret
+		return _ret
+	
 	def get_base_damage(self):
 		"""Calculates damage with mods added in."""
 		_ret = 0
@@ -1114,7 +1129,10 @@ class life:
 		"""Let the combat function do the work for us."""
 		if self.player:
 			print 'You attack!'
-		combat.attack(self,who)
+		
+		#Can this person even attack?
+		if self.limbs.has_key('left arm') or self.limbs.has_key('right arm'):
+			combat.attack(self,who)
 	
 	def has_seen(self,who):
 		"""Helper function. Searches 'seen' for object 'who'"""
@@ -1566,7 +1584,7 @@ class life:
 			self.speed -= 1
 			return
 		else:
-			self.speed = self.speed_max
+			self.speed = self.get_max_speed()
 		
 		if self.player:
 			if dir == 'up' and self.pos[1]-1>=0:
@@ -2710,6 +2728,9 @@ class dog(life):
 			self.gender = 'female'
 			self.name = functions.get_dog_name_by_gender('female')
 		
+		self.weapon = {'name':'teeth','solid':False,'type':'weapon','damage':3,\
+			'status':None,'sharp':True,'tile':19,'price':0}
+		
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
 		
@@ -2735,6 +2756,23 @@ class dog(life):
 		
 		if self.owner == who:
 			self.say_phrase('dog_happy_owner',other=who,action=True)
+	
+	def attack(self,who):
+		combat.attack(self,who)
+	
+	def get_max_speed(self):
+		_ret = self.speed_max
+		
+		for limb in ['front left leg','front right leg','back left leg','back right leg']:
+			if self.limbs.has_key(limb):
+				for key in self.limbs[limb]:
+					for part in self.limbs[limb][key]:
+						if self.limbs[limb][key][part]>0:
+							_ret+=1
+			else:
+				_ret+=3
+		
+		return _ret
 	
 	def judge(self,who):
 		_score = 0

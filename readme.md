@@ -9,6 +9,7 @@ Todo
 * Tint ground where liquid is spilled
 * Draw item backgrounds
 * If no line of sight, can the player hear an action?
+* Multiple ways for dogs to attack
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -40,6 +41,8 @@ Current Version: 06.19.2012A
 ----------------------------
 Changed
 -------
+* Severed limbs, movement penalties
+* life.get_max_speed()
 * Removing combat from life.py and placing it in combat.py
 
 Previous Version: 06.18.2012A
