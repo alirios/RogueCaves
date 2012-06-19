@@ -8,6 +8,7 @@ Todo
 * React to things like vomit, etc
 * Tint ground where liquid is spilled
 * Draw item backgrounds
+* If no line of sight, can the player hear an action?
 
 Future Milestone: Boring Badger
 -------------------------------
@@ -35,7 +36,13 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.18.2012A
+Current Version: 06.19.2012A
+----------------------------
+Changed
+-------
+* Removing combat from life.py and placing it in combat.py
+
+Previous Version: 06.18.2012A
 ----------------------------
 Changed
 -------

@@ -481,7 +481,8 @@ def draw_screen(refresh=False):
 				fgcolor=_fgcolor,
 				bgcolor='black')
 		else:
-			libtcod.console_set_default_foreground(var.log, libtcod.white)
+			_color = 50+(_i*50)
+			libtcod.console_set_default_foreground(var.log, libtcod.Color(_color,_color,_color))
 			libtcod.console_print(var.log,0,1+_i,entry)
 		_i+=1
 	

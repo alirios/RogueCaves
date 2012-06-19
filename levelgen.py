@@ -1059,36 +1059,18 @@ class LevelGen:
 			_room = []
 			_zone = _town.get_random_zone()
 			_pos = (50+(_zone['pos'][0])*_room_size[0],50+(_zone['pos'][1])*_room_size[1])
-		
-			#for x in xrange(0,_room_size[0]):
-			#	_x = _pos[0]+x
-			#	for y in xrange(0,_room_size[1]):
-			#		_y = _pos[1]+y
-			#		_room.append((_x,_y))
-			
-			#_room_walls = []
-			#_room_floor = []
-			#for pos in _room:
-			#	self.real_estate.append((pos[0],pos[1]))
-			#	if _pos[0]-pos[0]==0 or pos[0]==_pos[0]+_room_size[0]-1\
-			#		or _pos[1]-pos[1]==0 or pos[1]==_pos[1]+_room_size[1]-1:
-			#		self.map[pos[0]][pos[1]] = 15
-			#		_room_walls.append(pos)
-			#	else:
-			#		self.map[pos[0]][pos[1]] = 16
-			#		_room_floor.append(pos)
 			
 			__pos = list(_pos)
 			if _zone['open'][0]==1:
 				__pos[0]+=((_zone['open'][0]*_room_size[0])-1)
-				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,3))
+				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,_room_size[1]-1))
 			elif _zone['open'][0]==-1:
-				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,3))
+				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,_room_size[1]-1))
 			if _zone['open'][1]==1:
 				__pos[1]+=((_zone['open'][1]*_room_size[1])-1)
-				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,3))
+				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
 			elif _zone['open'][1]==-1:
-				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,3))
+				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
 			
 			for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 				____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])

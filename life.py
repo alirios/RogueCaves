@@ -1,5 +1,6 @@
 import pathfinding
 import functions
+import combat
 import draw
 import var
 import logging
@@ -51,6 +52,7 @@ class life:
 		self.likes = []
 		self.dislikes = []
 		self.history = []
+		self.in_danger = False
 		
 		self.lowest = {'who':None,'score':0}
 		self.highest = {'who':None,'score':0}
@@ -887,6 +889,22 @@ class life:
 		if not _lowest['name']: return False
 		return _lowest['name']
 	
+	def get_base_damage(self):
+		"""Calculates damage with mods added in."""
+		_ret = 0
+		
+		_ret += self.atk
+		
+		return _ret
+	
+	def get_max_damage(self):
+		"""Calculates damage output with weapon"""
+		_ret = self.get_base_damage()
+		
+		if self.weapon: _ret+=self.weapon['damage']
+		
+		return _ret
+	
 	def get_money(self):
 		"""Returns amount of money the ALife has."""
 		_ret = 0
@@ -1091,133 +1109,12 @@ class life:
 		
 		_phrase = _phrase.replace('<','').replace('>','')
 		self.say(_phrase,action=action)
-	
+
 	def attack(self,who):
-		"""Performs attack on object 'who'"""
-		if who.race in ['zombie']:
-			if self.player: _atk_msg = 'You swing at the %s.' % (who.race)
-			elif who.player: _atk_msg = 'The %s swings at you.' % (who.race)
-		elif who.race in ['human']:
-			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
-			elif who.player: _atk_msg = '%s swings at you.' % (self.name)
-			else:
-				if self.race=='human': functions.log('%s swings at %s' % (self.name,who.name))
-				elif self.race=='dog': functions.log('%s bites %s' % (self.name,who.name))
-		elif who.race in ['dog']:
-			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
-			elif who.player: _atk_msg = '%s lunges at you.' % (self.name)
-			else:
-				if self.race=='human': functions.log('%s swings at %s' % (self.name,who.name))
-				elif self.race=='dog': functions.log('%s bites %s' % (self.name,who.name))
-		else:
-			if self.player: _atk_msg = 'You swing at %s.' % (who.name)
-			elif who.player: _atk_msg = 'The %s swings at you.' % (self.race)
-		
-		
-		self.hunger_timer -= 5
-		self.xp += 1
-		
-		if self.weapon:
-			_dam = random.randint(self.atk,self.weapon['damage']+self.atk)
-			if _dam >= self.weapon['damage']:
-				if self.player:
-					functions.log('Your %s hits for maximum damage!' % self.weapon['name'])
-				elif who.player:
-					functions.log('%s hits you with a %s for maximum damage!' % 
-						(self.name,self.get_weapon_name()))
-				
-				if self.weapon['sharp']:
-					self.weapon['status'] = 'the blood of %s the %s' % (who.name,who.race)
-					
-					_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
-						(-1,1),(0,1),(1,1)])
-					_x = who.pos[0]+_pos[0]
-					_y = who.pos[1]+_pos[1]
-					
-					if not 0>_x and not _x>=self.level.size[0] and\
-						not 0>_y and not _y>=self.level.size[1]:
-						self.level.tmap[_x][_y] = random.randint(150,255)
-						
-			
-			who.hp -= _dam
-			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,self.atk))
-			self.announce(what='attacked person',person=who.id,damage=_dam)
-		else:
-			_dam = self.atk
-			
-			if who.race == 'human':
-				_hit_limb = random.choice(['left arm','right arm'])
-				
-				if who.limbs[_hit_limb]['skin']['bruised']<3:
-					who.limbs[_hit_limb]['skin']['bruised']+=1
-					if self.player:
-						functions.log('You hit %s in the %s!' % (who.name,_hit_limb))
-					elif who.player:
-						functions.log('%s hits you in the %s!' % (self.name,_hit_limb))
-					logging.debug('[ALife.%s] Hit %s in the %s' % (self.name,who.name,_hit_limb))
-				elif who.limbs[_hit_limb]['skin']['bruised']==3:
-					who.limbs[_hit_limb]['skin']['bruised']+=1
-					
-					if self.player:
-						functions.log('You hit %s in the %s, bruising the skin!' % (who.name,_hit_limb))
-					elif who.player:
-						functions.log('%s hit you in the %s, bruising the skin!' % (self.name,_hit_limb))
-					
-					_what = 'Hit %s in the %s, bruising the skin severely!' % (who.name,_hit_limb)
-					logging.debug('[ALife.%s] %s' % (self.name,_what))
-					_dam += 2
-				elif who.limbs[_hit_limb]['muscle']['bruised']<3:
-					who.limbs[_hit_limb]['muscle']['bruised']+=1
-					
-					if self.player:
-						functions.log('You hit %s in the %s!' % (who.name,_hit_limb))
-						if random.randint(0,1):
-							who.say('winces in pain.',action=True)
-						elif random.randint(0,1):
-							who.say('grasps their %s.' % _hit_limb,action=True)
-					elif who.player:
-						functions.log('%s hit you in the %s!' % (self.name,_hit_limb))
-					
-					_dam += 2
-				elif who.limbs[_hit_limb]['muscle']['bruised']==3:
-					who.limbs[_hit_limb]['muscle']['bruised']+=1
-					_what = 'Hit %s in the %s, bruising the muscle severely!' % (who.name,_hit_limb)
-					logging.debug('[ALife.%s] %s' % (self.name,_what))
-					_dam += 4
-				
-			who.hp -= _dam
-			logging.debug('[ALife.%s] Attacked %s for %s damage' % (self.name,who.name,_dam))
-			self.announce(what='attacked person',person=who.id,damage=_dam)
-			
-			##TODO: Missing
-			#functions.log(_atk_msg)
-		
-		if who.hp<=0:
-			if who.race in ['zombie']:
-				if self.player: functions.log('You slay the %s!' % (who.race))
-				elif who.player: functions.log('The %s slays you!' % (who.race))
-			else:
-				if self.player: functions.log('You slay %s the %s!' % (who.name,who.race))
-				elif who.player: functions.log('The %s slays you!' % (self.race))
-			
-			self.xp += who.xp
-			
-			for item in who.items:
-				if self.player: functions.log('Found %s!' % item['name'])
-				self.add_item(item)
-				
-				if not self.weapon and item['type']=='weapon':
-					self.equip_item(item)
-			
-			if self.god:
-				self.god.on_kill(self,who)
-			
-			who.kill()
-		
-		if self.xp>=self.skill_level*var.skill_mod:
-			self.xp-=self.skill_level*var.skill_mod
-			self.skill_level+=1
-			self.hp = self.hp_max
+		"""Let the combat function do the work for us."""
+		if self.player:
+			print 'You attack!'
+		combat.attack(self,who)
 	
 	def has_seen(self,who):
 		"""Helper function. Searches 'seen' for object 'who'"""
@@ -1346,6 +1243,10 @@ class life:
 				self.fatigue-=1
 			else:
 				self.fatigue+=1
+		
+		if self.in_danger and self.in_danger.hp<=0:
+			self.in_danger = False
+			libtcod.console_set_keyboard_repeat(100,1)
 		
 		if self.pos == self.last_pos or self.z<1: return
 		
@@ -2366,7 +2267,6 @@ class human(life):
 		
 		#self.thirsty_at = -1
 		self.married = None
-		self.in_danger = False
 		self.faction = 'good'
 		self.trading = False
 		
@@ -2408,7 +2308,7 @@ class human(life):
 		self.say('scampers off.',action=True)
 	
 	def is_in_danger(self,who):
-		self.in_danger = True
+		self.in_danger = who
 		if self.player:
 			if who.weapon:
 				functions.log('%s the %s charges towards you with a %s!' % \
