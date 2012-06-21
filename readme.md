@@ -37,7 +37,16 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.19.2012A
+Current Version: 06.20.2012A
+----------------------------
+Changed
+-------
+* Limbs track who damaged them last
+* More combat changes
+* Bleeding out
+* Blood splatter
+
+Previous Version: 06.19.2012A
 ----------------------------
 Changed
 -------

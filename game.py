@@ -193,6 +193,8 @@ elif not var.server and var.output=='libtcod':
 	libtcod.console_init_root(var.window_size[0], var.window_size[1], 'Rogue Caves - %s' % __version__, False)
 	var.view = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
 	var.tree = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
+	var.splatter = libtcod.console_new(var.window_size[0], var.window_size[1]-6)
+	libtcod.console_set_key_color(var.splatter,libtcod.Color(0,0,0))
 	libtcod.console_set_key_color(var.tree,libtcod.Color(0,0,0))
 	var.log = libtcod.console_new(var.window_size[0], 6)
 	libtcod.console_set_keyboard_repeat(100,1)
@@ -292,6 +294,9 @@ def draw_tile(tile,pos,color):
 	_x = pos[0]-var.camera[0]
 	_y = pos[1]-var.camera[1]
 	
+	if var.player.level.tmap[pos[0]][pos[1]]:
+		libtcod.console_set_char_background(var.tree,_x,_y,libtcod.Color(var.player.level.tmap[pos[0]][pos[1]],0,0), flag=libtcod.BKGND_SET)
+	
 	if tile.has_key('id'):
 		if var.buffer[_x][_y] == tile['id'] and var.player.level.outside: return
 		else: var.buffer[_x][_y] = tile['id']
@@ -376,8 +381,8 @@ def draw_screen(refresh=False):
 					_tile = life.icon
 					_tile['id'] = life.id
 			
-			if var.player.level.tmap[x][y]:
-				var.player.level.tmap[x][y]-=1
+			#if var.player.level.tmap[x][y]:
+			#	var.player.level.tmap[x][y]-=1
 			
 			if var.player.level.vmap[x][y]:
 				if not _tile:
@@ -448,6 +453,14 @@ def draw_screen(refresh=False):
 		libtcod.console_print(var.log,len(_char)+len(_health)+len(_depth)+len(_skill)+len(_thirst)+5,0,_hunger)
 		libtcod.console_set_default_foreground(var.log, libtcod.white)
 		libtcod.console_print(var.log,var.window_size[0]-7,0,'FPS: %s' % str(var.fps))
+		
+		#Draw health of person attacking
+		if var.player.in_danger:
+			_in_danger = '%s: %s\\%s' % (var.player.in_danger.name,
+				var.player.in_danger.hp,
+				var.player.in_danger.hp_max)
+			libtcod.console_set_default_foreground(var.log, libtcod.red)
+			libtcod.console_print(var.log,var.window_size[0]-len(_in_danger),1,_in_danger)
 	
 	#TODO: Resetting colors here might help.
 	if var.in_menu:
@@ -481,8 +494,18 @@ def draw_screen(refresh=False):
 				fgcolor=_fgcolor,
 				bgcolor='black')
 		else:
-			_color = 50+(_i*50)
-			libtcod.console_set_default_foreground(var.log, libtcod.Color(_color,_color,_color))
+			if entry.startswith('You hit'):
+				_r = 0
+				_g = 250
+				_b = 0
+			elif entry.count(' you '):
+				_r,_g,_b = (250,0,0)
+			else:
+				_r = 50+(_i*50)
+				_g = 50+(_i*50)
+				_b = 50+(_i*50)
+			
+			libtcod.console_set_default_foreground(var.log, libtcod.Color(_r,_g,_b))
 			libtcod.console_print(var.log,0,1+_i,entry)
 		_i+=1
 	
@@ -502,6 +525,7 @@ def draw_screen(refresh=False):
 			on_scroll()
 			var.camera_last = var.camera[:]
 		
+		libtcod.console_blit(var.splatter, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		libtcod.console_blit(var.view, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0)
 		libtcod.console_blit(var.tree, 0, 0, var.window_size[0], var.window_size[1]-6, 0, 0, 0,0.4,0.7)
 		#var.console_buffer.blit(var.view)

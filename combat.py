@@ -24,6 +24,8 @@ def damage_limb(attacker,defender,limb):
 		if limb.count('arm') or limb.count('leg'):
 			if defender.limbs[limb]['skin']['cut']<=3:
 				defender.limbs[limb]['skin']['cut']+=_limb_damage
+				defender.limbs[limb]['skin']['bleeding']+=_limb_damage
+				defender.limbs[limb]['skin']['last_hit']=attacker.id
 				
 				_messages = [', slicing it open!',
 					', piercing it.',
@@ -37,6 +39,8 @@ def damage_limb(attacker,defender,limb):
 					(attacker.name,defender.name,limb,_limb_damage))
 			elif defender.limbs[limb]['muscle']['cut']<3:
 				defender.limbs[limb]['muscle']['cut']+=_limb_damage
+				defender.limbs[limb]['muscle']['bleeding']+=_limb_damage
+				defender.limbs[limb]['muscle']['last_hit']=attacker.id
 				
 				_messages = [', tearing the muscle.',
 					', shredding the muscle.',
@@ -47,6 +51,8 @@ def damage_limb(attacker,defender,limb):
 				defender.hp -= _dam
 			elif defender.limbs[limb]['muscle']['cut']>=3:
 				defender.limbs[limb]['muscle']['cut']+=_limb_damage
+				defender.limbs[limb]['muscle']['bleeding']+=_limb_damage
+				defender.limbs[limb]['muscle']['last_hit']=attacker.id
 				
 				_messages = [', cutting it off!',
 					', severing it entirely!',
@@ -182,7 +188,15 @@ def attack(attacker,defender):
 	attacker.hunger_timer -= 5
 	attacker.xp += 1
 	
-	#if attacker.weapon:
+	if attacker.weapon:
+		_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
+			(-1,1),(0,1),(1,1)])
+		_x = defender.pos[0]+_pos[0]
+		_y = defender.pos[1]+_pos[1]
+		
+		if not 0>_x and not _x>=attacker.level.size[0] and\
+			not 0>_y and not _y>=attacker.level.size[1]:
+			attacker.level.tmap[_x][_y] = random.randint(150,255)
 	#	_dam = random.randint(attacker.get_base_damage(),attacker.get_max_damage())
 	#	if _dam >= attacker.weapon['damage']:
 	#		if attacker.player:
@@ -237,8 +251,6 @@ def attack(attacker,defender):
 			if attacker.player: functions.log('You slay %s the %s!' % (defender.name,defender.race))
 			elif defender.player: functions.log('The %s slays you!' % (attacker.race))
 		
-		attacker.xp += defender.xp
-		
 		for item in defender.items:
 			if attacker.player: functions.log('Found %s!' % item['name'])
 			attacker.add_item(item)
@@ -249,7 +261,7 @@ def attack(attacker,defender):
 		if attacker.god:
 			attacker.god.on_kill(attacker,defender)
 		
-		defender.kill()
+		defender.kill(attacker)
 	
 	if attacker.xp>=attacker.skill_level:
 		attacker.xp-=attacker.skill_level

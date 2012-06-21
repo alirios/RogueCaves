@@ -901,7 +901,6 @@ class life:
 			else:
 				_ret+=3
 		
-		print self.name,_ret
 		return _ret
 	
 	def get_base_damage(self):
@@ -1125,14 +1124,25 @@ class life:
 		_phrase = _phrase.replace('<','').replace('>','')
 		self.say(_phrase,action=action)
 
+	def can_attack(self):
+		if self.limbs.has_key('left arm') and self.limbs['left arm']['muscle']['bruised']<3:
+			return True
+		
+		if self.limbs.has_key('right arm') and self.limbs['right arm']['muscle']['bruised']<3:
+			return True
+		
+		return False
+	
 	def attack(self,who):
 		"""Let the combat function do the work for us."""
 		if self.player:
 			print 'You attack!'
 		
 		#Can this person even attack?
-		if self.limbs.has_key('left arm') or self.limbs.has_key('right arm'):
+		if self.can_attack():
 			combat.attack(self,who)
+		else:
+			print self.name,'has no arms to attack with!'
 	
 	def has_seen(self,who):
 		"""Helper function. Searches 'seen' for object 'who'"""
@@ -1261,6 +1271,32 @@ class life:
 				self.fatigue-=1
 			else:
 				self.fatigue+=1
+		
+		#Bleed
+		_bleed = 0
+		_hit_by = None
+		for limb in self.limbs.keys():
+			for key in self.limbs[limb]:
+				if not self.limbs[limb][key].has_key('bleeding'): continue
+				if not self.limbs[limb][key]['bleeding']: continue
+				
+				_bleed += self.limbs[limb][key]['bleeding']
+				
+				if self.limbs[limb][key].has_key('last_hit'):
+					_hit_by = self.limbs[limb][key]['last_hit']
+				
+				self.limbs[limb][key]['bleeding']-=1
+		
+		self.hp-=_bleed
+		
+		if self.hp<=0:
+			if _hit_by:
+				_who = functions.get_alife_by_id(_hit_by)
+				functions.log('%s causes %s to bleed out!' % (_who.name,self.name))
+				self.kill(_who)
+			else:
+				self.say('bleeds out.',action=True)
+				self.kill()
 		
 		if self.in_danger and self.in_danger.hp<=0:
 			self.in_danger = False
@@ -1438,6 +1474,13 @@ class life:
 				self.lowest['who'] = None
 				self.lowest['score'] = 0
 				self.remove_event('attack')
+			
+			if not self.can_attack():
+				self.on_submission(self.lowest['who'])
+				self.lowest['who'] = None
+				self.lowest['score'] = 0
+				self.remove_event('attack')
+				
 		else:
 			if self.task == 'attacking':
 				self.task = None
@@ -2236,7 +2279,7 @@ class life:
 		self.level = var.world.get_level(self.z)
 		self.pos = list(self.level.walking_space[0])
 	
-	def kill(self):
+	def kill(self,who):
 		for life in var.life:
 			_temp = life.has_seen(self)
 			
@@ -2251,6 +2294,8 @@ class life:
 					if life.highest['who'] == self:
 						life.highest['who'] = None
 						life.highest['score'] = 0
+		
+		who.xp += self.xp
 		
 		for r in range(10+random.randint(0,3)):
 			_x = self.pos[0]+random.randint(-2,2)#+pos[0]
@@ -2335,7 +2380,7 @@ class human(life):
 				functions.log('%s the %s runs towards you!' % \
 					(who.name,who.race))
 			
-			libtcod.console_set_keyboard_repeat(400,200)
+			libtcod.console_set_keyboard_repeat(400,100)
 	
 	def get_weapon_name(self):
 		_name = ''
@@ -2694,8 +2739,8 @@ class human(life):
 		
 		return life.think_finalize(self)
 	
-	def kill(self):
-		life.kill(self)
+	def kill(self,who):
+		life.kill(self,who)
 		
 		if not self.player and self.task['who'] and self.task['who'].player:
 			self.task['who'].in_danger = False
@@ -2756,6 +2801,9 @@ class dog(life):
 		
 		if self.owner == who:
 			self.say_phrase('dog_happy_owner',other=who,action=True)
+	
+	def can_attack(self):
+		return True
 	
 	def attack(self,who):
 		combat.attack(self,who)
