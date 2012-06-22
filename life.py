@@ -25,7 +25,7 @@ class life:
 		self.hp = 10
 		self.hp_max = 10
 		self.submit_at = 10
-		self.pain_tolerance = 10
+		self.pain_tolerance = 8
 		self.speed = 0
 		self.speed_max = 0
 		self.pos = [0,0]
@@ -1121,6 +1121,7 @@ class life:
 	
 	def say(self,what,action=False):
 		if not what: return False
+		if self.has_event('passed_out'): return False
 		logging.debug('[ALife.%s.say] %s' %(self.name,what))
 		
 		"""Sends a string prefixed with the ALife's name to the log."""
@@ -1133,6 +1134,7 @@ class life:
 	
 	def say_phrase(self,type,action=False,**kargv):
 		"""Retrieves a phrase and formats it accordingly"""
+		if self.has_event('passed_out'): return False
 		_phrase = functions.get_phrase(type)
 		_tags = [tag.strip('<>') for tag in re.findall('<[\d\w\s.]*>',_phrase)]
 		for tag in _tags:
@@ -1166,9 +1168,6 @@ class life:
 	
 	def attack(self,who):
 		"""Let the combat function do the work for us."""
-		if self.player:
-			print 'You attack!'
-		
 		#Can this person even attack?
 		if self.can_attack():
 			combat.attack(self,who)
@@ -1322,13 +1321,14 @@ class life:
 		
 		#Pain
 		if self.get_pain()>=self.pain_tolerance and not self.has_event('passed_out'):
-			self.add_event('passed_out',self.get_pain()*12)
 			self.say('collapses.',action=True)
+			self.add_event('passed_out',self.get_pain()*12)
 			#print 'pass out',self.get_pain(),self.pain_tolerance/2
 			logging.debug('[ALife.%s] Passed out' % self.name)
 		elif self.has_event('passed_out') and self.get_pain()<=self.pain_tolerance/2:
 			print self.name,'I WOKE UP',self.get_pain(),self.pain_tolerance/2
 			self.remove_event('passed_out')
+			self.say('wakes up.',action=True)
 		elif self.has_event('passed_out'):
 			#self.pain_tolerance+=1
 			#print self.name,self.get_pain(),self.pain_tolerance
@@ -1481,12 +1481,10 @@ class life:
 					if _score < self.lowest['score'] and not self.task['what'] in ['attack','flee']:
 						self.on_enemy_spotted(self.lowest['who'])
 					
-					#print self.name,'is scared of',self.lowest['who'].name,_score
 					self.lowest['score'] = _score
 					self.lowest['last_seen'] = seen['last_seen'][:]
 				elif self.lowest['who'] and self.lowest['who'] == seen['who']:
 					self.lowest['score'] = _score
-					#print self.name,'SET NEW SCORE',_score
 				
 				if _score >= 0:
 					if _score >= self.highest['score']:
@@ -1595,7 +1593,6 @@ class life:
 				if tuple(self.pos) == tuple(self.task['who'].pos):
 					self.push(self.task['who'])
 				
-				print self.task['who']
 				_score = self.lowest['who'].get_relationship_with(self)
 			
 		elif self.task['what'] == 'run_shop':
@@ -2347,14 +2344,6 @@ class life:
 		
 		who.xp += self.xp
 		
-		#for r in range(10+random.randint(0,3)):
-		#	_x = self.pos[0]+random.randint(-2,2)#+pos[0]
-		#	_y = self.pos[1]+random.randint(-2,2)#+pos[1]
-		#	
-		#	if 0>_x or _x>=self.level.size[0]: continue
-		#	if 0>_y or _y>=self.level.size[1]: continue
-		#		self.level.tmap[_x][_y] = 255
-		
 		self.level.tmap[self.pos[0]][self.pos[1]] = 255
 		
 		logging.debug('%s died!' % self.name)
@@ -2374,8 +2363,8 @@ class human(life):
 			self.gender = 'female'
 			self.name = functions.get_name_by_gender('female')
 		
-		self.hp = 20
-		self.hp_max = 20
+		self.hp = 50
+		self.hp_max = 50
 		
 		#self.thirsty_at = -1
 		self.married = None
@@ -2383,17 +2372,15 @@ class human(life):
 		self.trading = False
 		
 		self.limbs = {'left arm':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'right arm':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}}}
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
+			'chest':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}}}
 	
 	def save(self):
 		_keys = {}
@@ -2420,8 +2407,7 @@ class human(life):
 		self.say('scampers off.',action=True)
 	
 	def is_in_danger(self,who):
-		self.in_danger = who
-		if self.player:
+		if self.player and not self.in_danger:
 			if who.weapon:
 				functions.log('%s the %s charges towards you with a %s!' % \
 					(who.name,who.race,who.get_weapon_name()))
@@ -2430,6 +2416,8 @@ class human(life):
 					(who.name,who.race))
 			
 			libtcod.console_set_keyboard_repeat(400,100)
+		
+		self.in_danger = who
 	
 	def get_weapon_name(self):
 		_name = ''

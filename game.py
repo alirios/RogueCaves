@@ -281,7 +281,7 @@ else:
 	for i in range(9):
 		var.player.add_item_raw(21)
 	
-	for i in range(0):
+	for i in range(1):
 		test = life.dog(male=random.randint(0,1))
 		test.z = 1
 		test.speed = 1

@@ -68,7 +68,51 @@ def damage_limb(attacker,defender,limb):
 				_what = 'Hit %s in the %s and severed the muscle.' % (defender.name,limb)
 				logging.debug('[ALife.%s] %s' % (attacker.name,_what))
 		elif limb.count('chest'):
-			pass
+			if defender.limbs[limb]['skin']['cut']<=3:
+				defender.limbs[limb]['skin']['cut']+=_limb_damage
+				defender.limbs[limb]['skin']['bleeding']+=_limb_damage
+				defender.limbs[limb]['skin']['last_hit']=attacker.id
+				
+				_messages = [', slicing it open!',
+					', piercing it.',
+					', cutting it open.',
+					', ripping it open!']
+				_msg += random.choice(_messages)
+				
+				attacker.weapon['status'] = 'the blood of %s the %s' % (defender.name,defender.race)
+				
+				logging.debug('[ALife.%s] Hit %s in the %s (%s), cutting it.' %
+					(attacker.name,defender.name,limb,_limb_damage))
+			elif defender.limbs[limb]['muscle']['cut']<3:
+				defender.limbs[limb]['muscle']['cut']+=_limb_damage
+				defender.limbs[limb]['muscle']['bleeding']+=_limb_damage
+				defender.limbs[limb]['muscle']['last_hit']=attacker.id
+				
+				_messages = [', tearing the muscle.',
+					', shredding the muscle.',
+					', ripping the muscle.']
+				_msg += random.choice(_messages)
+				
+				_dam += 2
+				defender.hp -= _dam
+			elif defender.limbs[limb]['muscle']['cut']>=3:
+				defender.limbs[limb]['muscle']['cut']+=_limb_damage
+				defender.limbs[limb]['muscle']['bleeding']+=_limb_damage
+				defender.limbs[limb]['muscle']['last_hit']=attacker.id
+				
+				_messages = [', causing massive bloodloss!',
+					', disabling %s entirely!' % defender.name,
+					', causing %s to collapse.' % defender.name]
+				_msg += random.choice(_messages)
+				
+				del defender.limbs[limb]
+				
+				_dam += 400
+				_in_pain = 2
+				defender.hp -= _dam
+				
+				_what = 'Hit %s in the %s and severed the muscle.' % (defender.name,limb)
+				logging.debug('[ALife.%s] %s' % (attacker.name,_what))
 	else:
 		_limb_damage = 1+(attacker.atk/5)
 		
@@ -80,7 +124,7 @@ def damage_limb(attacker,defender,limb):
 			if attacker.race=='human':
 				_msg += '%s hits %s in the %s' % (attacker.name,defender.name,limb)
 		
-		if limb.count('arm') or limb.count('leg'):
+		if limb.count('arm') or limb.count('leg') or limb.count('chest'):
 			if defender.limbs[limb]['skin']['bruised']<3:
 				defender.limbs[limb]['skin']['bruised']+=_limb_damage
 				
@@ -102,7 +146,7 @@ def damage_limb(attacker,defender,limb):
 				_msg += random.choice(_messages)
 				
 				_in_pain = 1
-				_dam += 2
+				#_dam += 2
 				
 				_what = 'Hit %s in the %s, bruising the skin severely!' % (defender.name,limb)
 				logging.debug('[ALife.%s] %s' % (attacker.name,_what))
@@ -128,8 +172,6 @@ def damage_limb(attacker,defender,limb):
 				
 				_what = 'Hit %s in the %s, bruising the muscle severely!' % (defender.name,limb)
 				logging.debug('[ALife.%s] %s' % (attacker.name,_what))
-		elif limb.count('chest'):
-			pass
 	
 	functions.log(_msg)
 	
@@ -185,54 +227,18 @@ def attack(attacker,defender):
 		elif defender.player:
 			_atk_msg = 'The %s swings at you.' % (attacker.race)
 	
-	attacker.hunger_timer -= 5
-	attacker.xp += 1
-	
-	if attacker.weapon:
-		#_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
-		#	(-1,1),(0,1),(1,1)])
+	if attacker.weapon and attacker.weapon['sharp']:
 		_pos = random.choice(defender.level.get_open_space_around(defender.pos,dist=2))
-		#_x = defender.pos[0]+_pos[0]
-		#_y = defender.pos[1]+_pos[1]
-		
-		if not 0>_pos[0] and not _pos[0]>=attacker.level.size[0] and\
-			not 0>_pos[1] and not _pos[1]>=attacker.level.size[1]:
-			attacker.level.tmap[_pos[0]][_pos[1]] = random.randint(150,255)
-	#	_dam = random.randint(attacker.get_base_damage(),attacker.get_max_damage())
-	#	if _dam >= attacker.weapon['damage']:
-	#		if attacker.player:
-	#			functions.log('Your %s hits for maximum damage!' % attacker.weapon['name'])
-	#		elif defender.player:
-	#			functions.log('%s hits you with a %s for maximum damage!' % 
-	#				(attacker.name,attacker.weapon['name']))
-	#		
-	#		if attacker.weapon['sharp']:
-	#			attacker.weapon['status'] = 'the blood of %s the %s' % (defender.name,defender.race)
-	#			
-	#			_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
-	#				(-1,1),(0,1),(1,1)])
-	#			_x = defender.pos[0]+_pos[0]
-	#			_y = defender.pos[1]+_pos[1]
-	#			
-	#			if not 0>_x and not _x>=attacker.level.size[0] and\
-	#				not 0>_y and not _y>=attacker.level.size[1]:
-	#				attacker.level.tmap[_x][_y] = random.randint(150,255)
-	#	
-	#	defender.hp -= _dam
-	#	logging.debug('[ALife.%s] Attacked %s for %s damage' % (attacker.name,defender.name,attacker.atk))
-	#	attacker.announce(what='attacked person',person=defender.id,damage=_dam)
-	#else:
-	_dam = attacker.get_base_damage()
+		attacker.level.tmap[_pos[0]][_pos[1]] = random.randint(150,255)
 	
-	#if defender.race in ['human','zombie']:
-	#_hit_limb = random.choice(['left arm','right arm'])
-	#else:
 	if not defender.limbs:
 		functions.log('%s has no limbs to attack!' % defender.name)
 		return
-	
-	_hit_limb = random.choice(defender.limbs.keys())
 
+	attacker.hunger_timer -= 5
+	#attacker.xp += 1
+	_hit_limb = random.choice(defender.limbs.keys())
+	_dam = attacker.get_base_damage()
 	_dam += damage_limb(attacker,defender,_hit_limb)
 	
 	if _hit_limb in ['chest','head','torso']:

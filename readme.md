@@ -10,6 +10,7 @@ Todo
 * Draw item backgrounds
 * If no line of sight, can the player hear an action?
 * Multiple ways for dogs to attack
+* ALife should figure out when they can't outrun someone
 
 Future Milestone: Boring Badger
 -------------------------------
