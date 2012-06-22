@@ -281,7 +281,7 @@ else:
 	for i in range(9):
 		var.player.add_item_raw(21)
 	
-	for i in range(1):
+	for i in range(0):
 		test = life.dog(male=random.randint(0,1))
 		test.z = 1
 		test.speed = 1
@@ -298,9 +298,11 @@ def draw_tile(tile,pos,color):
 		libtcod.console_set_char_background(var.tree,_x,_y,libtcod.Color(var.player.level.tmap[pos[0]][pos[1]],0,0), flag=libtcod.BKGND_SET)
 	
 	if tile.has_key('id'):
+		_icon = False
 		if var.buffer[_x][_y] == tile['id'] and var.player.level.outside: return
 		else: var.buffer[_x][_y] = tile['id']
 	elif tile.has_key('icon'):
+		_icon = True
 		if tile.has_key('limbs') and var.output=='libtcod':
 			for __x in xrange(-6,7):
 				for __y in xrange(-6,7):
@@ -321,7 +323,8 @@ def draw_tile(tile,pos,color):
 		var.view.putchar(tile['icon'],x=_x,y=_y,fgcolor=color[0],bgcolor=color[1])
 	else:
 		_color = (var.color_codes[color[0]],var.color_codes[color[1]])
-		#libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
+		#if _icon:
+		#	libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
 		libtcod.console_set_char_foreground(var.view, _x, _y, libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
 		libtcod.console_set_char(var.view, _x, _y, tile['icon'])
 
@@ -588,6 +591,7 @@ def tick():
 					
 			for life in var.life:
 				life.tick()
+				if life.has_event('passed_out'): continue				
 				if life.player: continue
 				life.walk(None)
 				
@@ -596,6 +600,7 @@ def tick():
 			
 			for life in var.life:
 				life.tick()
+				if life.has_event('passed_out'): continue
 				if life.player: continue
 				life.walk(None)
 		elif var.player.in_danger:
@@ -604,6 +609,7 @@ def tick():
 				
 				for life in var.life:
 					life.tick()
+					if life.has_event('passed_out'): continue
 					if life.player: continue
 					life.walk(None)
 	

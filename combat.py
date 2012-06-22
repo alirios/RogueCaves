@@ -189,14 +189,15 @@ def attack(attacker,defender):
 	attacker.xp += 1
 	
 	if attacker.weapon:
-		_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
-			(-1,1),(0,1),(1,1)])
-		_x = defender.pos[0]+_pos[0]
-		_y = defender.pos[1]+_pos[1]
+		#_pos = random.choice([(-1,-1),(0,-1),(1,-1),(-1,0),(0,0),(1,0),\
+		#	(-1,1),(0,1),(1,1)])
+		_pos = random.choice(defender.level.get_open_space_around(defender.pos,dist=2))
+		#_x = defender.pos[0]+_pos[0]
+		#_y = defender.pos[1]+_pos[1]
 		
-		if not 0>_x and not _x>=attacker.level.size[0] and\
-			not 0>_y and not _y>=attacker.level.size[1]:
-			attacker.level.tmap[_x][_y] = random.randint(150,255)
+		if not 0>_pos[0] and not _pos[0]>=attacker.level.size[0] and\
+			not 0>_pos[1] and not _pos[1]>=attacker.level.size[1]:
+			attacker.level.tmap[_pos[0]][_pos[1]] = random.randint(150,255)
 	#	_dam = random.randint(attacker.get_base_damage(),attacker.get_max_damage())
 	#	if _dam >= attacker.weapon['damage']:
 	#		if attacker.player:

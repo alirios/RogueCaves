@@ -24,6 +24,8 @@ class life:
 		self.name = 'Default'
 		self.hp = 10
 		self.hp_max = 10
+		self.submit_at = 10
+		self.pain_tolerance = 10
 		self.speed = 0
 		self.speed_max = 0
 		self.pos = [0,0]
@@ -87,6 +89,8 @@ class life:
 		_keys['icon'] = self.icon
 		_keys['hp'] = self.hp
 		_keys['hp_max'] = self.hp_max
+		_keys['pain_tolerance'] = self.pain_tolerance
+		_keys['submit_at'] = self.submit_at
 		_keys['speed'] = self.speed
 		_keys['speed_max'] = self.speed_max
 		_keys['pos'] = self.pos
@@ -171,6 +175,8 @@ class life:
 		self.icon['icon'] = str(self.icon['icon'])
 		self.hp = keys['hp']
 		self.hp_max = keys['hp_max']
+		self.submit_at = keys['submit_at']
+		self.pain_tolerance = keys['pain_tolerance']
 		self.speed = keys['speed']
 		self.speed_max = keys['speed_max']
 		self.pos = keys['pos']
@@ -299,6 +305,13 @@ class life:
 			return _highest['ret']
 		else:
 			return _highest
+	
+	def has_event(self,what):
+		for event in self.events:
+			if event['what'] == what:
+				return event
+		
+		return False
 	
 	def remove_event(self,what):
 		for event in self.events:
@@ -903,6 +916,24 @@ class life:
 		
 		return _ret
 	
+	def get_pain(self):
+		_ret = -self.pain_tolerance
+		
+		for limb in self.limbs.keys():
+			for key in self.limbs[limb]:
+				for part in self.limbs[limb][key]:
+					if self.limbs[limb][key][part]:
+						if part=='last_hit': continue
+						_ret+=self.limbs[limb][key][part]
+		
+		return _ret
+	
+	def is_near_passout(self):
+		if self.pain_tolerance-self.get_pain()<=5:
+			return True
+		
+		return False
+	
 	def get_base_damage(self):
 		"""Calculates damage with mods added in."""
 		_ret = 0
@@ -1183,7 +1214,7 @@ class life:
 		if tuple(pos) in _blocking:
 			_blocking.remove(tuple(pos))
 		
-		if len(_l)>=50: return False
+		if len(_l)>=20: return False
 		
 		for _pos in _l:
 			if self.level.map[_pos[0]][_pos[1]] in var.solid:
@@ -1288,6 +1319,20 @@ class life:
 				self.limbs[limb][key]['bleeding']-=1
 		
 		self.hp-=_bleed
+		
+		#Pain
+		if self.get_pain()>=self.pain_tolerance and not self.has_event('passed_out'):
+			self.add_event('passed_out',self.get_pain()*12)
+			self.say('collapses.',action=True)
+			#print 'pass out',self.get_pain(),self.pain_tolerance/2
+			logging.debug('[ALife.%s] Passed out' % self.name)
+		elif self.has_event('passed_out') and self.get_pain()<=self.pain_tolerance/2:
+			print self.name,'I WOKE UP',self.get_pain(),self.pain_tolerance/2
+			self.remove_event('passed_out')
+		elif self.has_event('passed_out'):
+			#self.pain_tolerance+=1
+			#print self.name,self.get_pain(),self.pain_tolerance
+			self.add_event('passed_out',self.get_pain()*12)
 		
 		if self.hp<=0:
 			if _hit_by:
@@ -1433,7 +1478,7 @@ class life:
 					if seen['who'].hp<=0: continue
 					self.lowest['who'] = seen['who']
 					
-					if _score < self.lowest['score']:
+					if _score < self.lowest['score'] and not self.task['what'] in ['attack','flee']:
 						self.on_enemy_spotted(self.lowest['who'])
 					
 					#print self.name,'is scared of',self.lowest['who'].name,_score
@@ -1475,11 +1520,14 @@ class life:
 				self.lowest['score'] = 0
 				self.remove_event('attack')
 			
-			if not self.can_attack():
-				self.on_submission(self.lowest['who'])
+			if not self.can_attack() or self.hp<=self.submit_at or self.is_near_passout():
+				if not self.task['what']=='flee':
+					print self.name,self.can_attack(),self.hp
+					self.on_submission(self.lowest['who'])
+				self.add_event('flee',100)
 				self.lowest['who'] = None
 				self.lowest['score'] = 0
-				self.remove_event('attack')
+				self.remove_event('attack')				
 				
 		else:
 			if self.task == 'attacking':
@@ -1547,6 +1595,7 @@ class life:
 				if tuple(self.pos) == tuple(self.task['who'].pos):
 					self.push(self.task['who'])
 				
+				print self.task['who']
 				_score = self.lowest['who'].get_relationship_with(self)
 			
 		elif self.task['what'] == 'run_shop':
@@ -1561,6 +1610,7 @@ class life:
 			if self.get_claimed('home'):
 				self.go_to(self.level.get_items_in_building(self.get_claimed('home'),type='bed')[0]['pos'])
 			else:
+				
 				self.go_to((5,5))
 			
 			if self.get_relationship_with(self.task['who'])>0:
@@ -2297,14 +2347,13 @@ class life:
 		
 		who.xp += self.xp
 		
-		for r in range(10+random.randint(0,3)):
-			_x = self.pos[0]+random.randint(-2,2)#+pos[0]
-			_y = self.pos[1]+random.randint(-2,2)#+pos[1]
-			
-			if 0>_x or _x>=self.level.size[0]: continue
-			if 0>_y or _y>=self.level.size[1]: continue
-			
-			self.level.tmap[_x][_y] = 255
+		#for r in range(10+random.randint(0,3)):
+		#	_x = self.pos[0]+random.randint(-2,2)#+pos[0]
+		#	_y = self.pos[1]+random.randint(-2,2)#+pos[1]
+		#	
+		#	if 0>_x or _x>=self.level.size[0]: continue
+		#	if 0>_y or _y>=self.level.size[1]: continue
+		#		self.level.tmap[_x][_y] = 255
 		
 		self.level.tmap[self.pos[0]][self.pos[1]] = 255
 		
@@ -2333,7 +2382,7 @@ class human(life):
 		self.faction = 'good'
 		self.trading = False
 		
-		self.limbs = {'left arm':{'skin':{'cut':5,'bruised':0,'bleeding':0},
+		self.limbs = {'left arm':{'skin':{'cut':0,'bruised':0,'bleeding':0},
 				'muscle':{'cut':0,'bruised':0,'bleeding':0},
 				'bone':{'chipped':0}},
 			'right arm':{'skin':{'cut':0,'bruised':0,'bleeding':0},
@@ -2766,6 +2815,10 @@ class dog(life):
 		self.race = 'dog'
 		self.faction = 'good'
 		
+		self.hp = 20
+		self.hp_max = 20
+		self.submit_at = 5
+		
 		if male:
 			self.gender = 'male'
 			self.name = functions.get_dog_name_by_gender('male')
@@ -2779,7 +2832,7 @@ class dog(life):
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
 		
-		self.limbs = {'front left leg':{'skin':{'cut':5,'bruised':0,'bleeding':0},
+		self.limbs = {'front left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
 				'muscle':{'cut':0,'bruised':0,'bleeding':0},
 				'bone':{'chipped':0}},
 			'front right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
