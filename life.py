@@ -614,7 +614,7 @@ class life:
 		
 		if _open:
 			who.pos = list(random.choice(_open))
-	
+
 	def equip_item(self,item):
 		"""Helper function. Equips item 'item'"""
 		if item.has_key('item'): item=item['item']
@@ -902,6 +902,21 @@ class life:
 		if not _lowest['name']: return False
 		return _lowest['name']
 	
+	def get_weapon_name(self):
+		_name = ''
+		
+		if self.weapon['rank']>1:
+			if self.weapon['rank']==2:
+				_name+='shining '
+		
+		_name+='%s' % self.weapon['material']
+		_name+=' %s' % self.weapon['name']
+		
+		if self.weapon['status']:
+			_name+=' covered in %s' % self.weapon['status']
+			
+		return _name
+
 	def get_max_speed(self):
 		_ret = self.speed_max
 		
@@ -1478,7 +1493,7 @@ class life:
 					if seen['who'].hp<=0: continue
 					self.lowest['who'] = seen['who']
 					
-					if _score < self.lowest['score'] and not self.task['what'] in ['attack','flee']:
+					if _score < self.lowest['score']:
 						self.on_enemy_spotted(self.lowest['who'])
 					
 					self.lowest['score'] = _score
@@ -1504,9 +1519,10 @@ class life:
 					self.highest['last_seen'] = seen['last_seen'][:]
 		
 		if self.lowest['who']:
-			if self.add_event('attack',100,who=self.lowest['who']):
-				if self.lowest['who'].player:
-					self.lowest['who'].is_in_danger(self)
+			self.add_event('attack',100,who=self.lowest['who'])
+			
+			if self.lowest['who'].player and not self.lowest['who'].in_danger:
+				self.lowest['who'].is_in_danger(self)
 			
 			_relationship = self.get_relationship_with(self.lowest['who'])
 			if _relationship and _relationship['score']>=0:
@@ -1520,7 +1536,8 @@ class life:
 			
 			if not self.can_attack() or self.hp<=self.submit_at or self.is_near_passout():
 				if not self.task['what']=='flee':
-					print self.name,self.can_attack(),self.hp
+					if self.lowest['who'].in_danger == self:
+						self.lowest['who'].in_danger = None
 					self.on_submission(self.lowest['who'])
 				self.add_event('flee',100)
 				self.lowest['who'] = None
@@ -1593,7 +1610,8 @@ class life:
 				if tuple(self.pos) == tuple(self.task['who'].pos):
 					self.push(self.task['who'])
 				
-				_score = self.lowest['who'].get_relationship_with(self)
+				#i self.lowest['who']
+				#_score = self.lowest['who'].get_relationship_with(self)
 			
 		elif self.task['what'] == 'run_shop':
 			self.run_shop(self.task['where'])
@@ -2419,20 +2437,6 @@ class human(life):
 		
 		self.in_danger = who
 	
-	def get_weapon_name(self):
-		_name = ''
-		
-		if self.weapon['rank']>1:
-			if self.weapon['rank']==2:
-				_name+='shining '
-		
-		_name+='%s' % self.weapon['name']
-		
-		if self.weapon['status']:
-			_name+=' covered in %s' % self.weapon['status']
-			
-		return _name
-	
 	def mine(self):
 		if self.mine_dest and self.path_dest == self.mine_dest: return
 		
@@ -2815,23 +2819,21 @@ class dog(life):
 			self.name = functions.get_dog_name_by_gender('female')
 		
 		self.weapon = {'name':'teeth','solid':False,'type':'weapon','damage':3,\
-			'status':None,'sharp':True,'tile':19,'price':0}
+			'status':None,'rank':1,'sharp':True,'material':'ivory','tile':19,'price':0}
 		
 		self.icon['icon'] = 'd'
 		self.icon['color'][0] = 'brown'
 		
 		self.limbs = {'front left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'front right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'back left leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
 			'back right leg':{'skin':{'cut':0,'bruised':0,'bleeding':0},
-				'muscle':{'cut':0,'bruised':0,'bleeding':0},
-				'bone':{'chipped':0}}}
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}},
+			'chest':{'skin':{'cut':0,'bruised':0,'bleeding':0},
+				'muscle':{'cut':0,'bruised':0,'bleeding':0}}}
 	
 	def on_enemy_spotted(self,who):
 		life.on_enemy_spotted(self,who)

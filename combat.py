@@ -13,8 +13,8 @@ def damage_limb(attacker,defender,limb):
 		
 		if attacker.player:
 			_msg += 'You strike %s in the %s' % (defender.name,limb)
-		elif defender.player:
-			_msg += '%s strikes you in the %s' % (attacker.name,limb)
+			#elif defender.player:
+			#_msg += '%s strikes you in the %s' % (attacker.name,limb)
 		else:
 			if attacker.race=='human':
 				_msg += '%s strikes %s in the %s' % (attacker.name,defender.name,limb)
@@ -228,7 +228,7 @@ def attack(attacker,defender):
 			_atk_msg = 'The %s swings at you.' % (attacker.race)
 	
 	if attacker.weapon and attacker.weapon['sharp']:
-		_pos = random.choice(defender.level.get_open_space_around(defender.pos,dist=2))
+		_pos = random.choice(defender.level.get_open_space_around(defender.pos,dist=1))
 		attacker.level.tmap[_pos[0]][_pos[1]] = random.randint(150,255)
 	
 	if not defender.limbs:

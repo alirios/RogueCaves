@@ -281,14 +281,8 @@ else:
 	for i in range(9):
 		var.player.add_item_raw(21)
 	
-	for i in range(1):
-		test = life.dog(male=random.randint(0,1))
-		test.z = 1
-		test.speed = 1
-		test.speed_max = 1
-		test.level = var.world.get_level(test.z)
-		test.pos = test.level.get_open_space_around(var.player.pos)[0]
-		test.owner = var.player
+	_i = var.player.add_item_raw(33)
+	var.player.equip_item(_i)
 
 def draw_tile(tile,pos,color):
 	_x = pos[0]-var.camera[0]
@@ -497,7 +491,9 @@ def draw_screen(refresh=False):
 				fgcolor=_fgcolor,
 				bgcolor='black')
 		else:
-			if entry.startswith('You hit'):
+			entry = entry.replace(' %s ' % var.player.name,' you ')
+			
+			if entry.startswith('You hit') or entry.startswith('You strike'):
 				_r = 0
 				_g = 250
 				_b = 0

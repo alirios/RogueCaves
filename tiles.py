@@ -24,7 +24,9 @@ var.items = {'11':{'name':'dirt','solid':True,'type':'solid','life':2,'tile':11}
 	'30':{'name':'forge','solid':False,'type':'forge','tile':30,'price':100,'forging':None,
 		'forge_time':0},
 	'31':{'name':'iron','solid':False,'type':'ore','tile':31,'price':16},
-	'32':{'name':'tree','solid':True,'type':'tree','tile':32,'price':-1}}
+	'32':{'name':'tree','solid':True,'type':'tree','tile':32,'price':-1},
+	'33':{'name':'dagger','solid':False,'type':'weapon','damage':4,\
+		'status':None,'rank':1,'sharp':True,'material':'steel','tile':19,'price':15}}
 
 var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'1':{'icon':' ','color':['black','darkgray']},

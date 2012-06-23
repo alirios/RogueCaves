@@ -198,7 +198,7 @@ def generate_human(job):
 		_high_attractions_score+=2
 		_mid_attractions_score+=1
 		_attractive_score = 2
-		_ret.speed_max = 1
+		_ret.speed_max = 2
 		_ret.atk = 3
 	elif _rand_value>4:
 		_ret.traits.append('fit')
@@ -206,14 +206,14 @@ def generate_human(job):
 		_mid_attractions_score+=2
 		_low_attractions_score+=1
 		_attractive_score = 4
-		_ret.speed_max = 2
+		_ret.speed_max = 3
 		_ret.atk = 2
 	else:
 		_ret.traits.append('slow')
 		_mid_attractions_score+=1
 		_low_attractions_score+=2
 		_attractive_score = 6
-		_ret.speed_max = 3
+		_ret.speed_max = 4
 	
 	_ret.speed = _ret.speed_max
 	
@@ -282,6 +282,14 @@ def generate_human(job):
 	
 	return _ret
 
-def generate_dog():
-	#obedient
-	pass
+def generate_dog(owner=None,wild=False):
+	_ret = life.dog(male=random.randint(0,1))
+	_ret.z = 1
+	_ret.speed = 1
+	_ret.speed_max = 1
+	_ret.level = var.world.get_level(_ret.z)
+	_ret.pos = [2,5]
+	_ret.owner = owner
+	
+	if wild:
+		_ret.faction='bad'
