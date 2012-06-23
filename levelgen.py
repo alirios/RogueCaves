@@ -1086,6 +1086,8 @@ class LevelGen:
 				for y in range(_building.size[1]):
 					_x = _pos[0]+y
 					_y = _pos[1]+x
+					self.real_estate.append((_x,_y))
+					
 					if not _building.house[y,x]:
 						self.map[_x][_y] = 15
 						_room_walls.append((_x,_y))
@@ -1152,6 +1154,7 @@ class LevelGen:
 			if self.map[_pos[0]][_pos[1]] in var.GRASS:
 				_tree = self.add_item(32,_pos)
 				_tree['limbs'] = self.generate_tree()
+				self.claim_real_estate(_pos,(1,1))
 		
 		for pos in exits:
 			self.map[pos[0]][pos[1]] = 4

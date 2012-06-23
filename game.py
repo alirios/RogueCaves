@@ -288,8 +288,9 @@ def draw_tile(tile,pos,color):
 	_x = pos[0]-var.camera[0]
 	_y = pos[1]-var.camera[1]
 	
-	if var.player.level.tmap[pos[0]][pos[1]]:
-		libtcod.console_set_char_background(var.tree,_x,_y,libtcod.Color(var.player.level.tmap[pos[0]][pos[1]],0,0), flag=libtcod.BKGND_SET)
+	if var.output=='libtcod':
+		if var.player.level.tmap[pos[0]][pos[1]]:
+			libtcod.console_set_char_background(var.tree,_x,_y,libtcod.Color(var.player.level.tmap[pos[0]][pos[1]],0,0), flag=libtcod.BKGND_SET)
 	
 	if tile.has_key('id'):
 		_icon = False

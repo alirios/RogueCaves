@@ -38,7 +38,13 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.22.2012A
+Current Version: 06.23.2012A
+----------------------------
+Changed
+-------
+* Fixed ALife locking up after combat
+
+Previous Version: 06.22.2012A
 ----------------------------
 Changed
 -------

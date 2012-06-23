@@ -1098,7 +1098,7 @@ class life:
 		return False
 	
 	def claim_work_at(self,type):
-		if self.task.has_key('where'):
+		if self.task.has_key('where') and self.task['where']:
 			_owner = self.level.get_room(self.task['where'])['owner']
 			if _owner and not _owner == self:
 				self.remove_event(self.task['what'])
@@ -1349,6 +1349,11 @@ class life:
 			#print self.name,self.get_pain(),self.pain_tolerance
 			self.add_event('passed_out',self.get_pain()*12)
 		
+		#Make sure we're not targetting someone who is dead...
+		if self.task['what'] == 'attack' and self.task['who'].hp<=0:
+			self.remove_event('attack')
+			print 'This happened'
+		
 		if self.hp<=0:
 			if _hit_by:
 				_who = functions.get_alife_by_id(_hit_by)
@@ -1485,12 +1490,14 @@ class life:
 					_temp['in_los'] = False
 		
 		for seen in self.seen:
+			if seen['who'].hp<=0:
+				self.seen.remove(seen)
+			
 			if seen['in_los']:
 				_score = self.judge(seen['who'])
 				seen['score'] = _score
 				
 				if _score < 0 and _score <= self.lowest['score']:
-					if seen['who'].hp<=0: continue
 					self.lowest['who'] = seen['who']
 					
 					if _score < self.lowest['score']:
@@ -2117,6 +2124,9 @@ class life:
 					_lowest['dist'] = _dist
 					_lowest['entry'] = entry
 			
+			if not _lowest['entry']:
+				print 'No space available'
+				return
 			where = (_lowest['entry'][0],_lowest['entry'][1],3,3)
 			self.task['where'] = where
 			
