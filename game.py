@@ -89,27 +89,6 @@ var.gametime = time.time()
 var.fpstime = time.time()
 var.dirty = []
 
-var.color_codes = {'black':(0,0,0),
-	'white':(255,255,255),
-	'gray':(128,128,128),
-	'red':(255,0,0),
-	'green':(0,130,0),
-	'blue':(0,0,255),
-	'purple':(128,0,128),
-	'silver':(192, 192, 192),
-	'darkgray':(86, 86, 86),
-	'darkergray':(46, 46, 46),
-	'altgray':(148, 148, 148),
-	'lightgreen':(0, 150, 0),
-	'altlightgreen':(0, 140, 0),
-	'palebrown':(255, 197, 115),
-	'sand':(255, 197, 138),
-	'lightsand':(255, 211, 148),
-	'brown':(205, 133, 63),
-	'darkbrown':(129, 84, 0),
-	'darkishbrown':(111,72,0),
-	'gold':(253, 233, 16)}
-
 if not var.server and var.output=='pygame':
 	#Colors...
 	for color in var.color_codes:
@@ -268,8 +247,8 @@ else:
 	var.player.speed = 1
 	var.player.speed_max = 1
 	var.player.level = var.world.get_level(var.player.z)
-	var.player.pos = list(var.player.level.get_open_buildings_of_type('bar')[0]['door'])
-	#var.player.pos = [11,10]
+	var.player.pos = [5,5]#list(var.player.level.exits[0])
+	#list(var.player.level.get_open_buildings_of_type('bar')[0]['door'])
 	var.player.god = var.ivan
 	var.player.talents.append('Animal Husbandry')
 	
@@ -283,31 +262,36 @@ else:
 	
 	_i = var.player.add_item_raw(33)
 	var.player.equip_item(_i)
+	
+	for r in range(0):
+		functions.generate_dog(wild=True,z=0)
 
 def draw_tile(tile,pos,color):
 	_x = pos[0]-var.camera[0]
 	_y = pos[1]-var.camera[1]
 	
-	if var.output=='libtcod':
+	if var.output=='libtcod':# and var.player.level.outside:
+		#print var.player.level.tmap
 		if var.player.level.tmap[pos[0]][pos[1]]:
 			libtcod.console_set_char_background(var.tree,_x,_y,libtcod.Color(var.player.level.tmap[pos[0]][pos[1]],0,0), flag=libtcod.BKGND_SET)
 	
-	if tile.has_key('id'):
-		_icon = False
-		if var.buffer[_x][_y] == tile['id'] and var.player.level.outside: return
-		else: var.buffer[_x][_y] = tile['id']
-	elif tile.has_key('icon'):
-		_icon = True
-		if tile.has_key('limbs') and var.output=='libtcod':
-			for __x in xrange(-6,7):
-				for __y in xrange(-6,7):
-					if tile['limbs'][__x][__y]:
-						libtcod.console_set_char_background(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50), flag=libtcod.BKGND_SET)
-						libtcod.console_set_char_foreground(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50))
-						libtcod.console_set_char(var.tree, _x+__x, _y+__y, '#')
-			
-		if var.buffer[_x][_y] == tile['icon'] and var.player.level.outside: return
-		else: var.buffer[_x][_y] = tile['icon']
+	if var.player.level.outside:
+		if tile.has_key('id'):
+			_icon = False
+			if var.buffer[_x][_y] == tile['id'] and var.player.level.outside: return
+			else: var.buffer[_x][_y] = tile['id']
+		elif tile.has_key('icon'):
+			_icon = True
+			if tile.has_key('limbs') and var.output=='libtcod':
+				for __x in xrange(-6,7):
+					for __y in xrange(-6,7):
+						if tile['limbs'][__x][__y]:
+							libtcod.console_set_char_background(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50), flag=libtcod.BKGND_SET)
+							libtcod.console_set_char_foreground(var.tree, _x+__x, _y+__y, libtcod.Color(50,50,50))
+							libtcod.console_set_char(var.tree, _x+__x, _y+__y, '#')
+				
+			if var.buffer[_x][_y] == tile['icon'] and var.player.level.outside: return
+			else: var.buffer[_x][_y] = tile['icon']
 	
 	var.dirty.append((_x,_y))
 	
@@ -318,8 +302,8 @@ def draw_tile(tile,pos,color):
 		var.view.putchar(tile['icon'],x=_x,y=_y,fgcolor=color[0],bgcolor=color[1])
 	else:
 		_color = (var.color_codes[color[0]],var.color_codes[color[1]])
-		#if _icon:
-		#	libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
+		if not var.player.level.outside:
+			libtcod.console_set_char_background(var.view, _x, _y, libtcod.Color(_color[1][0],_color[1][1],_color[1][2]), flag=libtcod.BKGND_SET)
 		libtcod.console_set_char_foreground(var.view, _x, _y, libtcod.Color(_color[0][0],_color[0][1],_color[0][2]))
 		libtcod.console_set_char(var.view, _x, _y, tile['icon'])
 
@@ -332,6 +316,9 @@ def draw_screen(refresh=False):
 	
 	if not var.camera == var.camera_last and var.output=='libtcod':
 		libtcod.console_clear(var.tree)
+		
+		if not var.player.level.outside:
+			libtcod.console_clear(var.view)
 	
 	var.player.level.light(var.player.pos)
 	#_m.tick_lights()
@@ -341,14 +328,14 @@ def draw_screen(refresh=False):
 		_xrange = [var.camera[0],var.camera[0]+var.window_size[0]]
 		_yrange = [var.camera[1],var.camera[1]+var.window_size[1]]
 		
-		if _xrange[1]>=var.world_size[0]:
-			_xrange[0]=var.world_size[0]-var.window_size[0]
-			_xrange[1]=var.world_size[0]
+		if _xrange[1]>=var.player.level.size[0]:
+			_xrange[0]=var.player.level.size[0]-var.window_size[0]
+			_xrange[1]=var.player.level.size[0]
 			var.camera[0]=_xrange[0]
 		
-		if _yrange[1]>=var.world_size[1]-1:
-			_yrange[0]=var.world_size[1]-var.window_size[1]
-			_yrange[1]=var.world_size[1]
+		if _yrange[1]>=var.player.level.size[1]-1:
+			_yrange[0]=var.player.level.size[1]-var.window_size[1]
+			_yrange[1]=var.player.level.size[1]
 			var.camera[1]=_yrange[0]-1
 		
 	else:
@@ -395,7 +382,7 @@ def draw_screen(refresh=False):
 						draw_tile(_tile,(x,y),(_tile['color'][0],_bgcolor))
 				
 				elif _tile['color'][1]=='blue':
-					draw_tile(_tile,(x,y),(_tile['color'][0],pygame.Color(0, 0, random.randint(150,200))))
+					draw_tile(_tile,(x,y),(_tile['color'][0],'blue'))
 				else:
 					draw_tile(_tile,(x,y),_tile['color'])
 				
@@ -404,13 +391,8 @@ def draw_screen(refresh=False):
 				
 			elif var.player.level.fmap[x][y]:
 				if not _tile: _tile = var.tile_map[str(var.player.level.map[x][y])]
-				
-				#var.view.putchar(_tile['icon'],\
-				#	x=x,\
-				#	y=y,\
-				#	fgcolor=_tile['color'][0],\
-				#	bgcolor='altgray')
-				#var.view.darken(100,(x,y,1,1))
+				draw_tile(_tile,(x,y),('darkergray','black'))
+
 			elif refresh and var.output=='pygame':
 				var.view.putchar(' ',x=x,y=y,fgcolor='black',bgcolor='black')
 	
@@ -501,9 +483,9 @@ def draw_screen(refresh=False):
 			elif entry.count(' you '):
 				_r,_g,_b = (250,0,0)
 			else:
-				_r = 50+(_i*50)
-				_g = 50+(_i*50)
-				_b = 50+(_i*50)
+				_r = 200
+				_g = 200
+				_b = 200
 			
 			libtcod.console_set_default_foreground(var.log, libtcod.Color(_r,_g,_b))
 			libtcod.console_print(var.log,0,1+_i,entry)
@@ -542,6 +524,7 @@ def draw_screen(refresh=False):
 		var.temp_fps += 1
 
 def on_scroll():
+	if not var.player.level.outside: return
 	_map = var.player.level.color_map
 	libtcod.console_fill_background(var.view,
 		_map[0][var.camera[1]:var.camera[1]+var.window_size[1],var.camera[0]:var.camera[0]+var.window_size[0]],
@@ -625,7 +608,7 @@ def tick():
 	if var.player.level.outside:
 		draw_screen(refresh=True)
 	else:
-		draw_screen()
+		draw_screen(refresh=True)
 	
 	if var.output=='pygame': var.clock.tick(var.max_fps)
 

@@ -461,7 +461,8 @@ class LevelGen:
 				y = pos[1]+y1
 				if y<0 or y>=self.size[1]: continue
 				
-				if self.map[x][y] in var.solid: continue
+				if self.map[x][y] in var.solid or self.map[x][y] in var.blocking:
+					continue
 				_ret.append((x,y))
 		
 		return _ret
@@ -618,7 +619,10 @@ class LevelGen:
 					if not (_pos) in light['children']: 
 						light['children'].append(_pos)
 	
-	def decompose(self,times,edgesonly=True,count=4,tile=-1,to=1,all=False):
+	def decompose(self,times,edgesonly=True,count=4,tile=-1,to=None,all=False):
+		if not to:
+			to = var.STONE
+		
 		for i in xrange(times):
 			_map = copy.deepcopy(self.map)
 			
@@ -647,11 +651,13 @@ class LevelGen:
 							_count+=1
 					
 					if _count>=count:
-						_map[x][y]=to
+						_map[x][y]=random.choice(to)
 		
 			self.map = _map
 	
-	def decompose_ext(self,times,all=False,find=-1,to=-1,count=3):
+	def decompose_ext(self,times,all=False,find=-1,to=-1,count=3,breakon=[]):
+		_ret = []
+		
 		for i in xrange(times):
 			_map = copy.deepcopy(self.map)
 			
@@ -668,14 +674,21 @@ class LevelGen:
 						
 						if 0>_x or _x>self.size[0]-1: continue
 						if 0>_y or _y>self.size[1]-1: continue
+						if self.map[_x][_y] in breakon:
+							_count = 0
+							break
 						
 						if self.map[_x][_y] == find:
 							_count+=1			
 					
 					if _count>=count:
 						_map[x][y]=to
+						if not (x,y) in _ret:
+							_ret.append((x,y))
 		
 			self.map = _map
+		
+		return _ret
 
 	def walk(self,walkers=7,intensity=(25,45),types=[],where=[]):
 		#Okay, this is a bit tricky...
@@ -704,7 +717,7 @@ class LevelGen:
 					_x = walker[0]+_pos[0]
 					_y = walker[1]+_pos[1]
 					
-					if (_x,_y) in self.landmarks: continue
+					#if (_x,_y) in self.landmarks: continue
 					if 1>_x or _x>self.size[0]-2: continue
 					if 1>_y or _y>self.size[1]-2: continue
 					
@@ -712,23 +725,25 @@ class LevelGen:
 					walker[1] = _y
 					
 					for pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
-						if (_x+pos[0],_y+pos[1]) in self.landmarks: continue
+						#if (_x+pos[0],_y+pos[1]) in self.landmarks: continue
 						if 1>_x+pos[0] or _x+pos[0]>=self.size[0]-2: continue
 						if 1>_y+pos[1] or _y+pos[1]>=self.size[1]-2: continue
 						
 						self.map[_x+pos[0]][_y+pos[1]] = walker[3]
 						_ret.append((_x+pos[0],_y+pos[1]))
 						
-						if walker[3] in var.blocking:
-							if (_x+pos[0],_y+pos[1]) in self.walking_space:
-								self.walking_space.remove((_x+pos[0],_y+pos[1]))
+						#if walker[3] in var.blocking:
+						#	if (_x+pos[0],_y+pos[1]) in self.walking_space:
+						#		self.walking_space.remove((_x+pos[0],_y+pos[1]))
 						
 					self.map[_x][_y] = walker[3]
-					_ret.append((_x,_y))
+					
+					if not (_x,_y) in _ret:
+						_ret.append((_x,_y))
 			
 		return _ret
 	
-	def generate_cave(self, entrances=[(4,4)],exits=[]):
+	def generate_cave(self, entrances=[(4,4)],exits=[],overlaprooms=False):
 		#We'll be generating the level in the following
 		#way:
 		#  Place a small room around the entrance
@@ -865,7 +880,7 @@ class LevelGen:
 						#IF a floor tile is detected, then the loop breaks
 						#and we restart the whole process.
 	
-						if not self.map[_x][_y] in [0,2] and not self.overlaprooms:
+						if not overlaprooms and not self.map[_x][_y] in [0,2]:
 							_found = False
 							break
 						else:
@@ -889,7 +904,7 @@ class LevelGen:
 						#and add this position to the "walking_space"
 						#array.
 						
-						self.map[pos[0]][pos[1]] = 1
+						self.map[pos[0]][pos[1]] = random.choice(var.STONE)
 						self.walking_space.append(pos)
 						
 						#Remove the position from the REAL self.walls
@@ -963,7 +978,7 @@ class LevelGen:
 							if __pos[0]<=0 or __pos[0]>=self.size[0]: continue
 							if __pos[1]<=0 or __pos[1]>=self.size[1]: continue
 							
-							self.map[__pos[0]][__pos[1]] = 2
+							self.map[__pos[0]][__pos[1]] = random.choice(var.STONE)
 							
 							if not __pos in self.walking_space:
 								self.walking_space.append(__pos)
@@ -974,7 +989,7 @@ class LevelGen:
 						#Else, change the map to a tunnel tile!
 						if pos[0]<0 or pos[0]>=self.size[0]: continue
 						if pos[1]<0 or pos[1]>=self.size[1]: continue
-						self.map[pos[0]][pos[1]] = 2
+						self.map[pos[0]][pos[1]] = random.choice(var.STONE)
 						
 						#Add it to the walking_space array if it isn't there already...
 						if not pos in self.walking_space:
@@ -1017,7 +1032,7 @@ class LevelGen:
 					_x = wall[0]+_pos[0]
 					_y = wall[1]+_pos[1]
 					
-					if self.map[_x][_y] == 1:
+					if self.map[_x][_y] in var.STONE:
 						_open = True
 					
 					if self.map[_x][_y] == 16:
@@ -1038,17 +1053,30 @@ class LevelGen:
 		
 		for x in xrange(self.size[0]):
 			for y in xrange(self.size[1]):
-				if not self.map[x][y]:
-					self.map[x][y] = random.choice(var.GRASS)
+				self.map[x][y] = random.choice(var.GRASS)
 				self.walking_space.append((x,y))
 		
-		#self.walk(where=self.walking_space,types=[6,7])
+		#Lakes
+		self.walk(walkers=14,where=self.walking_space,types=[10],intensity=(50,75))	
+		self.decompose_ext(6,find=10,to=10,breakon=[15])
+		self.decompose_ext(1,find=10,to=8,count=1)
+		self.decompose_ext(1,find=8,to=36,count=2,breakon=[10])
+		self.decompose_ext(1,find=36,to=37,count=1,breakon=[10])
+
+		self.walking_space = []
 		
-		#self.decompose_ext(3,find=8,to=8)
-		#self.decompose_ext(3,find=8,to=7)
-		#self.decompose_ext(1,find=7,to=7,count=1)
-		#self.decompose_ext(3,find=6,to=6)
-		#self.decompose_ext(3,find=7,to=7)
+		#Faster to do this here.
+		#We'll randomize some features of the landscape and build an array
+		#of open spaces.
+		for x in xrange(self.size[0]):
+			for y in xrange(self.size[1]):
+				#Randomize water
+				if self.map[x][y] == 10:
+					self.map[x][y] = random.choice(var.WATER)
+				
+				#Building list of open spaces
+				if not self.map[x][y] in var.solid and not self.map[x][y] in var.blocking:
+					self.walking_space.append((x,y))
 		
 		_town = town()
 		_town.generate()
@@ -1064,19 +1092,51 @@ class LevelGen:
 			if _zone['open'][0]==1:
 				__pos[0]+=((_zone['open'][0]*_room_size[0])-1)
 				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,_room_size[1]-1))
+				_bridge_dir = 'right'
 			elif _zone['open'][0]==-1:
 				__pos[1]+=((_zone['open'][1]*_room_size[1])+random.randint(2,_room_size[1]-1))
+				_bridge_dir = 'left'
 			if _zone['open'][1]==1:
 				__pos[1]+=((_zone['open'][1]*_room_size[1])-1)
 				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
+				_bridge_dir = 'up'
 			elif _zone['open'][1]==-1:
 				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
+				_bridge_dir = 'down'
 			
+			_touches_land = True
 			for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
 				____pos = (__pos[0]+___pos[0],__pos[1]+___pos[1])
 				if not ____pos in self.real_estate:
 					self.real_estate.append(____pos)
+					if self.map[____pos[0]][____pos[1]] in var.WATER:
+						_touches_land = False
+						print 'Need bridge!'
 			
+			#Build a bridge
+			if not _touches_land:
+				_bpos = list(__pos)
+				#print _bpos
+				
+				while 1:
+					#print self.map[_bpos[0]][_bpos[1]],_bpos
+					
+					self.map[_bpos[0]][_bpos[1]] = 16
+					print 'building bridge'
+					
+					if _bridge_dir == 'down':
+						_bpos[1]+=1
+					elif _bridge_dir == 'up':
+						_bpos[1]-=1
+					elif _bridge_dir == 'left':
+						_bpos[0]-=1
+					elif _bridge_dir == 'right':
+						_bpos[0]+=1
+					
+					if not self.map[_bpos[0]][_bpos[1]] in var.blocking:
+						print 'done bridge building!!!'
+						break
+				
 			_door = (__pos[0]-_pos[0],__pos[1]-_pos[1])
 			_building = self.generate_building(_door)
 			
@@ -1151,7 +1211,7 @@ class LevelGen:
 		for t in xrange(140):
 			_pos = (random.randint(10,self.size[0]-10),
 				random.randint(10,self.size[1]-10))
-			if self.map[_pos[0]][_pos[1]] in var.GRASS:
+			if self.map[_pos[0]][_pos[1]] in var.GRASS and not _pos in self.real_estate:
 				_tree = self.add_item(32,_pos)
 				_tree['limbs'] = self.generate_tree()
 				self.claim_real_estate(_pos,(1,1))
@@ -1179,6 +1239,60 @@ class LevelGen:
 			_limbs[pos[0]][pos[1]]=1	
 		
 		return _limbs
+
+	def add_landmark(self,area,name):
+		self.landmarks.append({'area':area,'name':name})
+	
+	def is_landmark(self,pos):
+		for landmark in self.landmarks:
+			if pos in landmark['area']:
+				return landmark['name']
+		
+		return False
+	
+	def flood_fill(self,pos,look_for):
+		_ret = []
+		_dirs = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
+		_open = [pos]
+		
+		while len(_open):
+			_last_open = _open[:]
+			
+			for spot in _open:
+				for dir in _dirs:
+					_pos = (spot[0]+dir[0],spot[1]+dir[1])
+					if _pos[0]<0 or _pos[0]>=self.size[0]: continue
+					if _pos[1]<0 or _pos[1]>=self.size[1]: continue
+			
+					if self.map[_pos[0]][_pos[1]] in look_for:
+						if not _pos in _open:
+							_open.append(_pos)
+			
+			if _open == _last_open:
+				return _open
+	
+	def find_landmarks(self):
+		#It should be easy to find certain places on the map
+		#(like bodies of water, etc) fairly easy if we flood
+		#fill areas of the map and search for connections
+		_landmarks = []
+		
+		for x in xrange(self.size[0]):
+			for y in xrange(self.size[1]):
+				if (x,y) in _landmarks:#self.is_landmark((x,y)):
+					continue
+				
+				if self.map[x][y] in var.WATER:
+					_area = self.flood_fill((x,y),var.WATER)
+					_landmarks.extend(_area)
+					
+					if len(_area)<=550:
+						self.add_landmark(_area,'Pond')
+						logging.debug('[WorldGen.Landmarks] Found pond: %s,%s' % ((x,y)))
+					else:
+						self.add_landmark(_area,'Lake')
+						logging.debug('[WorldGen.Landmarks] Found lake: %s,%s' % ((x,y)))
+							
 
 class town:
 	def __init__(self,size=(78,36)):

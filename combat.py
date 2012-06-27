@@ -17,9 +17,9 @@ def damage_limb(attacker,defender,limb):
 			#_msg += '%s strikes you in the %s' % (attacker.name,limb)
 		else:
 			if attacker.race=='human':
-				_msg += '%s strikes %s in the %s' % (attacker.name,defender.name,limb)
+				_msg += 'strikes %s in the %s' % (defender.name,limb)
 			else:
-				_msg += '%s bites %s in the %s' % (attacker.name,defender.name,limb)
+				_msg += 'bites %s in the %s' % (defender.name,limb)
 		
 		if limb.count('arm') or limb.count('leg'):
 			if defender.limbs[limb]['skin']['cut']<=3:
@@ -173,7 +173,10 @@ def damage_limb(attacker,defender,limb):
 				_what = 'Hit %s in the %s, bruising the muscle severely!' % (defender.name,limb)
 				logging.debug('[ALife.%s] %s' % (attacker.name,_what))
 	
-	functions.log(_msg)
+	if attacker.player:
+		functions.log(_msg)
+	else:
+		attacker.say(_msg,action=True)
 	
 	if _in_pain==1:
 		if defender.player:

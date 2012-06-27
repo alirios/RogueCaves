@@ -38,7 +38,20 @@ Bugs
 * Roomgen can lead to impossible levels.
 * Walls should be destroyable, either with a pickaxe or something else.
 
-Current Version: 06.23.2012A
+Current Version: 06.27.2012A
+----------------------------
+Changed
+-------
+* Didn't document a lot of the work done in the past few days
+* Lakes/ponds
+* Naming lakes/ponds
+* Bridges to buildings built on water
+* levelgen.add_landmark()
+* levelgen.is_landmark()
+* levelgen.find_landmarks()
+* levelgen.flood_fill()
+
+Previous Version: 06.23.2012A
 ----------------------------
 Changed
 -------

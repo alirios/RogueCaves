@@ -33,18 +33,18 @@ class World:
 			#Place our first cave...
 			if level['z']==1:
 				_entrances=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))]
-				_exits=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))] 
+				_exits=[(random.randint(4,100),random.randint(4,100))] 
 			else:
 				_entrances=_exits[:]
-				_exits=[(random.randint(4,self.size[0]-4),random.randint(4,self.size[1]-4))] 
+				_exits=[(random.randint(4,100),random.randint(4,100))] 
 			
 			#logging.debug('DEPTH: %s' % str(level['z']))
 			if level['type']=='cave':
-				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*5),size=self.size,diagtunnels=random.randint(0,1),outside=False)
+				level['level'] = levelgen.LevelGen(rooms=abs((level['z']-1)*10),size=(100,100),diagtunnels=random.randint(0,1),outside=False)
 				level['level'].z = level['z']
 				_ctime = time.time()
-				level['level'].generate_cave(entrances=_entrances,exits=_exits)
-				#logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))
+				level['level'].generate_cave(entrances=_entrances,exits=_exits,overlaprooms=True)
+				logging.debug('\tCaveGen took: %s' % (time.time()-_ctime))
 				
 				_dtime = time.time()
 				level['level'].decompose(self.depth-abs(level['z']),edgesonly=False)
@@ -67,6 +67,7 @@ class World:
 				level['level'] = levelgen.LevelGen(rooms=abs(level['z']*10),size=self.size,diagtunnels=False,outside=True)
 				level['level'].generate_forest(exits=_exits)
 				level['level'].z = level['z']
+				level['level'].find_landmarks()
 			
 			level['level'].build_color_map()
 			#logging.debug('\tTotal: %s' % (time.time()-_ltime))
@@ -74,11 +75,11 @@ class World:
 		logging.debug('[LevelGen] Took: %s' % (time.time()-_stime))
 		logging.debug('[World.ALife] Creating ALife...')
 		
-		for r in range(3): functions.generate_human('trade')
-		for r in range(4): functions.generate_human('farmer')
+		for r in range(1): functions.generate_human('trade')
+		for r in range(1): functions.generate_human('farmer')
 		for r in range(1): functions.generate_human('blacksmith')
 		for r in range(1): functions.generate_human('barkeep')
-		for r in range(1): functions.generate_human('bandit')
+		for r in range(0): functions.generate_human('bandit')
 		for r in range(1): functions.generate_dog(wild=True)
 	
 	def save(self):

@@ -61,10 +61,42 @@ var.tile_map = {'0':{'icon':'#','color':['gray','darkgray']},
 	'30':{'icon':'#','color':['white','black']},
 	'31':{'icon':'i','color':['gray','darkgray']},
 	'32':{'icon':'#','color':['brown','darkbrown']},
-	'33':{'icon':'#','color':['darkishbrown','darkbrown']}}
+	'33':{'icon':'#','color':['darkishbrown','darkbrown']},
+	'34':{'icon':'.','color':['gray','kindadarkgray2']},
+	'35':{'icon':';','color':['gray','kindadarkgray']},
+	'36':{'icon':';','color':['sand','lightsand']},
+	'37':{'icon':';','color':['sand','lightersand']},
+	'38':{'icon':'.','color':['blue','darkerblue']}}
+
+var.color_codes = {'black':(0,0,0),
+	'white':(255,255,255),
+	'gray':(128,128,128),
+	'red':(255,0,0),
+	'green':(0,130,0),
+	'blue':(0,0,255),
+	'darkerblue':(0,0,230),
+	'purple':(128,0,128),
+	'silver':(192, 192, 192),
+	'darkgray':(86, 86, 86),
+	'darkergray':(46, 46, 46),
+	'altgray':(148, 148, 148),
+	'kindadarkgray':(90,90,90),
+	'kindadarkgray2':(80,80,80),
+	'lightgreen':(0, 150, 0),
+	'altlightgreen':(0, 140, 0),
+	'palebrown':(255, 197, 115),
+	'sand':(255, 197, 138),
+	'lightsand':(255, 211, 148),
+	'lightersand':(255, 224, 179),
+	'brown':(205, 133, 63),
+	'darkbrown':(129, 84, 0),
+	'darkishbrown':(111,72,0),
+	'gold':(253, 233, 16)}
 
 var.solid = [0,11,15,33]
-var.blocking = [10]
+var.blocking = [10,38]
 
+var.WATER = [10,38]
 var.DIRT = [28,29]
 var.GRASS = [6,7,9]
+var.STONE = [1,34,35]

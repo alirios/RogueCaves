@@ -1345,14 +1345,11 @@ class life:
 			self.remove_event('passed_out')
 			self.say('wakes up.',action=True)
 		elif self.has_event('passed_out'):
-			#self.pain_tolerance+=1
-			#print self.name,self.get_pain(),self.pain_tolerance
 			self.add_event('passed_out',self.get_pain()*12)
 		
-		#Make sure we're not targetting someone who is dead...
+		#Make sure we're not targetting someone who is dead
 		if self.task['what'] == 'attack' and self.task['who'].hp<=0:
 			self.remove_event('attack')
-			print 'This happened'
 		
 		if self.hp<=0:
 			if _hit_by:

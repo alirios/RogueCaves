@@ -282,13 +282,13 @@ def generate_human(job):
 	
 	return _ret
 
-def generate_dog(owner=None,wild=False):
+def generate_dog(owner=None,wild=False,z=1):
 	_ret = life.dog(male=random.randint(0,1))
-	_ret.z = 1
+	_ret.z = z
 	_ret.speed = 1
 	_ret.speed_max = 1
 	_ret.level = var.world.get_level(_ret.z)
-	_ret.pos = [2,5]
+	_ret.pos = random.choice(_ret.level.walking_space)
 	_ret.owner = owner
 	
 	if wild:
