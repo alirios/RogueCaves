@@ -690,7 +690,7 @@ class LevelGen:
 		
 		return _ret
 
-	def walk(self,walkers=7,intensity=(25,45),types=[],where=[]):
+	def walk(self,walkers=7,intensity=(25,45),distance=(3,4),types=[],where=[]):
 		#Okay, this is a bit tricky...
 		#I did this kind of levelgen for a previous
 		#game and it looked okay...
@@ -709,7 +709,7 @@ class LevelGen:
 				_pos=random.choice(walker[2])
 				walker[2].remove(_pos)
 				
-				for i2 in xrange(random.randint(3,4)):
+				for i2 in xrange(random.randint(distance[0],distance[1])):
 					
 					if not len(walker[2]):
 						walker[2] = _dirs[:]
@@ -1057,7 +1057,7 @@ class LevelGen:
 				self.walking_space.append((x,y))
 		
 		#Lakes
-		self.walk(walkers=14,where=self.walking_space,types=[10],intensity=(50,75))	
+		self.walk(walkers=7,where=self.walking_space,types=[10],intensity=(50,75),distance=(6,8))	
 		self.decompose_ext(6,find=10,to=10,breakon=[15])
 		self.decompose_ext(1,find=10,to=8,count=1)
 		self.decompose_ext(1,find=8,to=36,count=2,breakon=[10])
@@ -1099,10 +1099,10 @@ class LevelGen:
 			if _zone['open'][1]==1:
 				__pos[1]+=((_zone['open'][1]*_room_size[1])-1)
 				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
-				_bridge_dir = 'up'
+				_bridge_dir = 'down'
 			elif _zone['open'][1]==-1:
 				__pos[0]+=((_zone['open'][0]*_room_size[0])+random.randint(2,_room_size[0]-1))
-				_bridge_dir = 'down'
+				_bridge_dir = 'up'
 			
 			_touches_land = True
 			for ___pos in [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]:
@@ -1111,18 +1111,26 @@ class LevelGen:
 					self.real_estate.append(____pos)
 					if self.map[____pos[0]][____pos[1]] in var.WATER:
 						_touches_land = False
-						print 'Need bridge!'
 			
 			#Build a bridge
 			if not _touches_land:
 				_bpos = list(__pos)
-				#print _bpos
 				
-				while 1:
-					#print self.map[_bpos[0]][_bpos[1]],_bpos
+				while 1:					
+					if _bridge_dir in ['down','up']:
+						for spot in [-1,2]:
+							if _bpos[1]%2:
+								self.map[_bpos[0]+spot][_bpos[1]] = 15
+						
+						self.map[_bpos[0]][_bpos[1]] = 16
+						self.map[_bpos[0]+1][_bpos[1]] = 16
+					else:
+						for spot in [-1,2]:
+							if _bpos[0]%2:
+								self.map[_bpos[0]][_bpos[1]+spot] = 15
 					
-					self.map[_bpos[0]][_bpos[1]] = 16
-					print 'building bridge'
+						self.map[_bpos[0]][_bpos[1]] = 16
+						self.map[_bpos[0]][_bpos[1]+1] = 16
 					
 					if _bridge_dir == 'down':
 						_bpos[1]+=1
@@ -1134,7 +1142,6 @@ class LevelGen:
 						_bpos[0]+=1
 					
 					if not self.map[_bpos[0]][_bpos[1]] in var.blocking:
-						print 'done bridge building!!!'
 						break
 				
 			_door = (__pos[0]-_pos[0],__pos[1]-_pos[1])
@@ -1208,6 +1215,7 @@ class LevelGen:
 		#			except:
 		#				pass
 		
+		#Trees
 		for t in xrange(140):
 			_pos = (random.randint(10,self.size[0]-10),
 				random.randint(10,self.size[1]-10))
