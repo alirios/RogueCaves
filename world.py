@@ -79,8 +79,8 @@ class World:
 		for r in range(1): functions.generate_human('farmer')
 		for r in range(1): functions.generate_human('blacksmith')
 		for r in range(1): functions.generate_human('barkeep')
-		for r in range(0): functions.generate_human('bandit')
-		for r in range(1): functions.generate_dog(wild=True)
+		for r in range(1): functions.generate_human('bandit')
+		for r in range(2): functions.generate_dog(wild=True)
 	
 	def save(self):
 		logging.debug('[World.save] Gathering ALife strings...')

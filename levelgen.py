@@ -475,7 +475,9 @@ class LevelGen:
 				if x1+x2>=self.size[0]: _break=True;break
 				for y2 in xrange(size[1]):
 					if y1+y2>=self.size[1]-1: _break=True;break
-					if (x1+x2,y1+y2) in self.real_estate:
+					_pos = (x1+x2,y1+y2)
+					if (x1+x2,y1+y2) in self.real_estate or self.map[_pos[0]][_pos[1]] in var.blocking or\
+						self.map[_pos[0]][_pos[1]] in var.solid:
 						_break = True
 						break
 				

@@ -226,7 +226,7 @@ for line in _fdnames.readlines():
 _fdnames.close()
 
 #Generate level
-var.world = world.World(size=(var.world_size[0],var.world_size[1]),depth=0)
+var.world = world.World(size=(var.world_size[0],var.world_size[1]),depth=5)
 
 if '-load' in sys.argv:
 	var.world.load()
@@ -264,8 +264,8 @@ else:
 	_i = var.player.add_item_raw(33)
 	var.player.equip_item(_i)
 	
-	for r in range(0):
-		functions.generate_dog(wild=True,z=0)
+	for r in range(4):
+		functions.generate_dog(wild=True,z=-r)
 
 def draw_tile(tile,pos,color):
 	_x = pos[0]-var.camera[0]
